@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId } from "@/actions/auth";
 import { SwapStatus } from "@prisma/client";
 
 export async function createSwapFromApplication(applicationId: string) {

@@ -17,13 +17,20 @@ model User {
   avatarUrl     String?
   phoneNumber   String?
   createdAt     DateTime  @default(now())
-  skills        UserSkill[]
-  proposals     Proposal[]    @relation("ProposalOwner")
-  applications  Application[] @relation("Applicant")
-  swapsAsTeacher  Swap[]      @relation("Teacher")
-  swapsAsStudent  Swap[]      @relation("Student")
-  reviewsReceived Review[]    @relation("ReviewReceiver")
-  reviewsGiven    Review[]    @relation("ReviewAuthor")
+  
+  // Relations
+  skills           UserSkill[]
+  proposals        Proposal[]    @relation("ProposalOwner")
+  applications     Application[] @relation("Applicant")
+  swapsAsTeacher   Swap[]        @relation("Teacher")
+  swapsAsStudent   Swap[]        @relation("Student")
+  reviewsReceived  Review[]      @relation("ReviewReceiver")
+  reviewsGiven     Review[]      @relation("ReviewAuthor")
+  
+  // New Relations for Chat & Notifications
+  sentMessages     Message[]      @relation("Sender")
+  receivedMessages Message[]      @relation("Receiver")
+  notifications    Notification[]
 }
 
 model Skill {
@@ -102,6 +109,7 @@ model Swap {
   startedAt   DateTime   @default(now())
   completedAt DateTime?
   reviews     Review[]
+  messages    Message[]
 }
 
 enum SwapStatus {
@@ -121,4 +129,30 @@ model Review {
   rating      Int
   comment     String?
   createdAt   DateTime @default(now())
+}
+
+// --- NEW MODELS ---
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  senderId  String
+  sender    User     @relation("Sender", fields: [senderId], references: [id])
+  receiverId String
+  receiver  User     @relation("Receiver", fields: [receiverId], references: [id])
+  swapId    String
+  swap      Swap     @relation(fields: [swapId], references: [id])
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   
+  message   String
+  link      String?  
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

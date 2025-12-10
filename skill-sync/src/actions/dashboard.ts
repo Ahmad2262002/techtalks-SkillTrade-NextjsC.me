@@ -1,14 +1,15 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId } from "@/actions/auth";
 import { getReputationStats } from "./reviews";
 
 export async function getDashboardOverview() {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("Not authenticated");
 
-  const [user, proposals, applications, swaps, reputation] = await Promise.all([
+  const [user, proposals, applications, sentApplications, swaps, reputation] = await Promise.all([
+    // 1. User Profile
     prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -20,6 +21,7 @@ export async function getDashboardOverview() {
         },
       },
     }),
+    // 2. My Proposals
     prisma.proposal.findMany({
       where: { ownerId: userId },
       include: {
@@ -34,9 +36,24 @@ export async function getDashboardOverview() {
       },
       orderBy: { createdAt: "desc" },
     }),
+    // 3. Incoming Applications (received)
     prisma.application.findMany({
-      where: { applicantId: userId },
+      where: {
+        proposal: {
+          ownerId: userId,
+        },
+      },
       include: {
+        applicant: {
+          include: {
+            skills: {
+              where: { isVisible: true },
+              include: {
+                skill: true,
+              },
+            },
+          },
+        },
         proposal: {
           include: {
             owner: true,
@@ -46,8 +63,14 @@ export async function getDashboardOverview() {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 10,
+      take: 20,
     }),
+    // 4. Outgoing Applications (sent) - needed to disable "Apply" button
+    prisma.application.findMany({
+      where: { applicantId: userId },
+      select: { proposalId: true },
+    }),
+    // 5. Swaps
     prisma.swap.findMany({
       where: {
         OR: [{ teacherId: userId }, { studentId: userId }],
@@ -65,6 +88,7 @@ export async function getDashboardOverview() {
       orderBy: { startedAt: "desc" },
       take: 10,
     }),
+    // 6. Reputation
     getReputationStats(userId),
   ]);
 
@@ -72,9 +96,8 @@ export async function getDashboardOverview() {
     user,
     proposals,
     applications,
+    sentApplications,
     swaps,
     reputation,
   };
 }
-
-

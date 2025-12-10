@@ -47,16 +47,33 @@ export async function listPublicProposals(params: {
     skip = 0,
   } = params;
 
+  // --- SEARCH LOGIC ---
+  // If search is present, look in Title OR Description OR Owner Name OR Skills
+  const searchFilter = search
+    ? {
+        OR: [
+          { title: { contains: search, mode: "insensitive" as const } },
+          { description: { contains: search, mode: "insensitive" as const } },
+          { owner: { name: { contains: search, mode: "insensitive" as const } } },
+          {
+            offeredSkills: {
+              some: { name: { contains: search, mode: "insensitive" as const } },
+            },
+          },
+          {
+            neededSkills: {
+              some: { name: { contains: search, mode: "insensitive" as const } },
+            },
+          },
+        ],
+      }
+    : {};
+
   return prisma.proposal.findMany({
     where: {
       status: "OPEN",
       modality: modality ?? undefined,
-      title: search
-        ? {
-            contains: search,
-            mode: "insensitive",
-          }
-        : undefined,
+      ...searchFilter,
       AND: [
         wantSkillIds && wantSkillIds.length
           ? {
@@ -154,7 +171,6 @@ export async function updateProposalStatus(params: {
     throw new Error("Proposal not found");
   }
 
-  // optimistic booking: once IN_PROGRESS or CLOSED, we consider it not open to new deals
   return prisma.proposal.update({
     where: { id: params.proposalId },
     data: {
@@ -176,7 +192,6 @@ export async function rescindProposal(proposalId: string) {
     throw new Error("Proposal not found");
   }
 
-  // Only allow rescind if no swaps exist (nothing has started)
   if (proposal.swaps.length > 0) {
     throw new Error("Cannot rescind a proposal with swaps");
   }
@@ -188,5 +203,3 @@ export async function rescindProposal(proposalId: string) {
     },
   });
 }
-
-
