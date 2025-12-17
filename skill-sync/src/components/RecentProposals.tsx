@@ -42,7 +42,7 @@ function ProposalCard({
       if (result.success) {
         onDelete(proposal.id);
       } else {
-        console.error("[ProposalCard] Delete failed:", result.error);
+        console.error("[ProposalCard] Delete failed:", result.message);
         setIsDeleting(false);
       }
     } catch (error) {

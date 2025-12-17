@@ -43,21 +43,20 @@ export default async function DashboardPage({
 
   const userId = await getCurrentUserId();
   if (!userId) {
-     redirect("/login");
+    redirect("/login");
   }
 
   let overview: any;
   let publicProposals: any[] = [];
 
   try {
-    const [fetchedOverview, fetchedPublicProposals] = await Promise.all([
-      getDashboardOverview(),
-      listPublicProposals({
-        search: search || undefined,
-        modality: modalityFilter,
-        take: 20,
-      }),
-    ]);
+    const fetchedOverview = await getDashboardOverview();
+
+    const fetchedPublicProposals = await listPublicProposals({
+      search: search || undefined,
+      modality: modalityFilter,
+      take: 20,
+    });
 
     overview = fetchedOverview;
     publicProposals = fetchedPublicProposals;
@@ -69,7 +68,7 @@ export default async function DashboardPage({
   // Filter: Exclude my own proposals AND proposals I've already applied to
   const proposalById = new Map<string, Proposal>();
   for (const p of publicProposals || []) {
-      proposalById.set(p.id, p);
+    proposalById.set(p.id, p);
   }
   const allProposals = Array.from(proposalById.values());
 
@@ -78,7 +77,7 @@ export default async function DashboardPage({
   const publicOnlyProposals = allProposals.filter(
     (p) => p.ownerId !== userId && !appliedProposalIds.has(p.id),
   );
-  
+
   const myProposals = overview.proposals;
 
   return (

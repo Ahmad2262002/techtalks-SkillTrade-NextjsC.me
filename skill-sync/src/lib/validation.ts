@@ -1,5 +1,6 @@
 export interface ProposalValues {
   title: string;
+  description: string;
   modality: string;
   offeredSkill: string;
   neededSkill: string;
@@ -29,6 +30,12 @@ export function validateProposal(values: ProposalValues) {
 
   if (!neededSkill) {
     errors.neededSkill = "Describe the skill you want to learn.";
+  }
+
+  if (!values.description) {
+    errors.description = "Description is required.";
+  } else if (values.description.length < 20) {
+    errors.description = "Description must be at least 20 characters.";
   }
 
   return {

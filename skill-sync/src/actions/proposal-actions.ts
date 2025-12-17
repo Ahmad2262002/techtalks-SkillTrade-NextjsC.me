@@ -67,7 +67,7 @@ export async function createProposal(
     // 4. Create the Proposal in the Database
     const dbModality = modality === 'Remote' ? 'REMOTE' : 'IN_PERSON';
 
-    await prisma.proposal.create({
+    const proposal = await prisma.proposal.create({
       data: {
         ownerId: userId,
         title,
@@ -89,6 +89,7 @@ export async function createProposal(
 
     return {
       success: true,
+      proposalId: proposal.id,
       message: 'Proposal posted successfully!',
     };
 

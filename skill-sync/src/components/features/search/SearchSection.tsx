@@ -5,6 +5,20 @@ import "./search.css";
 import { listPublicProposals } from "@/actions/proposals";
 
 /* ---------------- TYPES ---------------- */
+// Add support for ion-icon web component
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'ion-icon': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        name?: string;
+        size?: string;
+        class?: string;
+        [key: string]: any;
+      };
+    }
+  }
+}
+
 type ProposalWithDetails = Awaited<ReturnType<typeof listPublicProposals>>[number];
 
 /* ---------------- FILTER OPTIONS ---------------- */
@@ -17,7 +31,7 @@ export default function SearchSection() {
   const [searchText, setSearchText] = useState("");
   const [proposals, setProposals] = useState<ProposalWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // NEW: State for switching views
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
@@ -69,7 +83,7 @@ export default function SearchSection() {
 
   useEffect(() => {
     cardsRef.current = [];
-    
+
     // Create observer
     const observer = new IntersectionObserver(
       (entries) => {
@@ -102,15 +116,17 @@ export default function SearchSection() {
       <div className="first-layer">
         {/* FILTER BUTTON */}
         <button className="filter-btn" onClick={() => setMenuOpen(!menuOpen)} title="Filter">
+          {/* @ts-ignore */}
           <ion-icon name="filter-outline"></ion-icon>
         </button>
 
         {/* VIEW TOGGLE BUTTON (NEW) */}
-        <button 
-          className="filter-btn" 
+        <button
+          className="filter-btn"
           onClick={() => setViewMode(prev => prev === 'list' ? 'grid' : 'list')}
           title={viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'}
         >
+          {/* @ts-ignore */}
           <ion-icon name={viewMode === 'list' ? 'grid-outline' : 'list-outline'}></ion-icon>
         </button>
 
@@ -154,6 +170,7 @@ export default function SearchSection() {
             onChange={(e) => setSearchText(e.target.value)}
           />
           <button className="search-btn">
+            {/* @ts-ignore */}
             <ion-icon name="search-outline"></ion-icon>
           </button>
         </div>
@@ -186,8 +203,8 @@ export default function SearchSection() {
                   <p className="description">{item.description}</p>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px', fontSize: '12px', color: '#888' }}>
-                     <span>by {item.owner.name || "Unknown"}</span>
-                     <span>{item._count.applications} apps &bull; {item._count.swaps} swaps</span>
+                    <span>by {item.owner.name || "Unknown"}</span>
+                    <span>{item._count.applications} apps &bull; {item._count.swaps} swaps</span>
                   </div>
 
                   <div className="skills">
