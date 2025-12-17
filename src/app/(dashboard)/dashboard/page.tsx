@@ -1,30 +1,12 @@
-// Real server actions
-import { upsertProfile } from "@/actions/profile";
-import { addSkillToCurrentUser } from "@/actions/skills";
 import { listPublicProposals } from "@/actions/proposals";
-import {
-  createApplication,
-  updateApplicationStatus,
-} from "@/actions/applications";
-import { createSwapFromApplication, updateSwapStatus } from "@/actions/swaps";
-import { createReview } from "@/actions/reviews";
 import { getDashboardOverview } from "@/actions/dashboard";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId } from "@/actions/auth";
 import DashboardClientContent from "./client";
-
-// --- Type Definitions based on PRD/SRS ---
+import { redirect } from "next/navigation";
 
 type Skill = {
   id: string;
   name: string;
-};
-
-type User = {
-  id: string;
-  name: string;
-  industry: string;
-  bio: string;
-  skills: Skill[];
 };
 
 type Proposal = {
@@ -37,69 +19,6 @@ type Proposal = {
   neededSkills: Skill[];
 };
 
-type DashboardOverview = {
-  user: User;
-  proposals: Proposal[];
-  applications: any[]; // Define Application type if needed
-  swaps: any[]; // Define Swap type if needed
-};
-
-// --- Mock data fallback ---
-const MOCK_USER_ID = "user-12345";
-
-const mockUserData = {
-  user: {
-    id: MOCK_USER_ID,
-    name: "Alex Johnson",
-    industry: "Software Engineering",
-    bio: "Passionate about full-stack development and teaching beginner Python. Looking to swap for design principles.",
-    skills: [
-      { id: "s1", name: "Python" },
-      { id: "s2", name: "React/Next.js" },
-      { id: "s3", name: "SQL" },
-    ],
-  },
-  reputation: {
-    averageRating: 4.8,
-    completedSwaps: 12,
-  },
-  applications: [],
-  proposals: [],
-};
-
-const mockPublicProposals = [
-  {
-    id: "prop1",
-    ownerId: "other-user-1",
-    title: "Seeking React Mentorship",
-    description:
-      "Offering French language conversation practice for an hour of React/Next.js mentorship per week.",
-    modality: "REMOTE",
-    offeredSkill: { name: "French" },
-    neededSkills: [{ id: "s2", name: "React/Next.js" }],
-  },
-  {
-    id: "prop2",
-    ownerId: "other-user-2",
-    title: "Spanish Lessons for Web Design",
-    description:
-      "Native Spanish speaker looking for help setting up a personal website.",
-    modality: "IN_PERSON",
-    offeredSkill: { name: "Spanish" },
-    neededSkills: [{ id: "s5", name: "Web Design" }],
-  },
-];
-
-const mockSwaps = [
-  {
-    id: "swap1",
-    proposal: { title: "Guitar Lessons" },
-    status: "IN_PROGRESS",
-    partner: { name: "Charlie" },
-    myReviewId: null,
-  },
-];
-
 type DashboardSearchParams = {
   tab?: "browse" | "my-proposals" | "active-swaps";
   q?: string;
@@ -111,8 +30,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<DashboardSearchParams>
 }) {
-  // Next.js 16: searchParams is now a Promise and MUST be awaited
-  const params = await searchParams; // Await the promise to get search params
+  const params = await searchParams;
 
   const activeTab = params?.tab || "browse";
   const search = params?.q ?? "";
@@ -123,59 +41,44 @@ export default async function DashboardPage({
     ? undefined
     : rawModality;
 
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    redirect("/login");
+  }
+
   let overview: any;
   let publicProposals: any[] = [];
-  let useMockData = false;
 
   try {
-    // Fetch dashboard overview and public proposals in parallel for performance
-    const [fetchedOverview, fetchedPublicProposals] = await Promise.all([
-      getDashboardOverview(),
-      listPublicProposals({
-        search: search || undefined,
-        modality: modalityFilter,
-        take: 20,
-      }),
-    ]);
+    const fetchedOverview = await getDashboardOverview();
+
+    const fetchedPublicProposals = await listPublicProposals({
+      search: search || undefined,
+      modality: modalityFilter,
+      take: 20,
+    });
 
     overview = fetchedOverview;
     publicProposals = fetchedPublicProposals;
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
-    // Fallback to mock data if the backend is unavailable
-    useMockData = true;
-    overview = mockUserData;
-    publicProposals = mockPublicProposals;
+    return <div>Error loading dashboard. Please try again.</div>;
   }
 
-  const userId = await getCurrentUserId();
-  if (!userId) {
-    // In a real app, you'd redirect. For this demo, we'll use the mock ID.
-    // redirect("/login");
-  }
-
-  // Use a Map to merge proposals from the user's overview and the public list,
-  // ensuring there are no duplicates.
+  // Filter: Exclude my own proposals AND proposals I've already applied to
   const proposalById = new Map<string, Proposal>();
-  for (const p of overview.proposals || []) {
-    if (p?.id) proposalById.set(p.id, p);
-  }
   for (const p of publicProposals || []) {
-    // Add public proposals only if they aren't already in the map (e.g., owned by the user)
-    if (p?.id && !proposalById.has(p.id)) {
-      proposalById.set(p.id, p);
-    }
+    proposalById.set(p.id, p);
   }
   const allProposals = Array.from(proposalById.values());
 
-  // Create a Set of proposal IDs the user has already applied to
   const appliedProposalIds = new Set(overview.sentApplications?.map((app: any) => app.proposalId) || []);
 
-  // Filter proposals into "mine" and "public" for the different dashboard tabs
   const publicOnlyProposals = allProposals.filter(
-    (p) => p.ownerId !== (userId || MOCK_USER_ID) && !appliedProposalIds.has(p.id),
+    (p) => p.ownerId !== userId && !appliedProposalIds.has(p.id),
   );
-  const myProposals = allProposals.filter((p) => p.ownerId === (userId || MOCK_USER_ID));
+
+  const myProposals = overview.proposals;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/10 transition-colors duration-300">
@@ -191,16 +94,7 @@ export default async function DashboardPage({
                 {overview.user?.bio ||
                   "Ready to swap skills and grow together? Let's get started!"}
               </p>
-              {useMockData && (
-                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white/20 dark:bg-black/20 backdrop-blur-sm rounded-lg border border-white/30">
-                  <span className="text-sm font-medium">
-                    Using mock data - backend not available
-                  </span>
-                </div>
-              )}
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24 blur-3xl"></div>
           </div>
         </div>
 
@@ -211,8 +105,8 @@ export default async function DashboardPage({
           search={search}
           rawModality={rawModality}
           activeTab={activeTab}
-          swaps={overview.swaps || (useMockData ? mockSwaps : [])}
-          applications={overview.applications || []}
+          swaps={overview.swaps}
+          applications={overview.applications}
         />
       </div>
     </main>

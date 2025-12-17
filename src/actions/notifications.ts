@@ -5,7 +5,7 @@ import { getCurrentUserId } from "@/lib/auth";
 
 export async function getNotifications() {
     const userId = await getCurrentUserId();
-    if (!userId) throw new Error("Not authenticated");
+    if (!userId) return []; // Return empty array if not auth
 
     return prisma.notification.findMany({ 
         where: { userId },

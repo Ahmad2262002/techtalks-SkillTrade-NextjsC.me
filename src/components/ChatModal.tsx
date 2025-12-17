@@ -25,13 +25,7 @@ interface Message {
     };
 }
 
-interface ChatModalProps {
-    swapId: string;
-    currentUserId: string;
-    otherUserName: string;
-}
-
-export function ChatModal({ swapId, currentUserId, otherUserName }: ChatModalProps) {
+export function ChatModal({ swapId, currentUserId, otherUserName }: { swapId: string, currentUserId: string, otherUserName: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
@@ -41,7 +35,7 @@ export function ChatModal({ swapId, currentUserId, otherUserName }: ChatModalPro
     const fetchMessages = async () => {
         try {
             const data = await getSwapMessages(swapId);
-            setMessages(data);
+            setMessages(data as unknown as Message[]);
         } catch (error) {
             console.error("Failed to fetch messages", error);
         }
@@ -50,7 +44,7 @@ export function ChatModal({ swapId, currentUserId, otherUserName }: ChatModalPro
     useEffect(() => {
         if (isOpen) {
             fetchMessages();
-            const interval = setInterval(fetchMessages, 5000); // Poll every 5 seconds
+            const interval = setInterval(fetchMessages, 5000);
             return () => clearInterval(interval);
         }
     }, [isOpen, swapId]);
@@ -81,67 +75,34 @@ export function ChatModal({ swapId, currentUserId, otherUserName }: ChatModalPro
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
-                    <MessageSquare className="w-4 h-4" />
-                    Chat
+                    <MessageSquare className="w-4 h-4" /> Chat
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] h-[600px] flex flex-col">
+            <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-primary" />
-                        Chat with {otherUserName}
-                    </DialogTitle>
+                    <DialogTitle>Chat with {otherUserName}</DialogTitle>
                 </DialogHeader>
-
-                <ScrollArea className="flex-1 pr-4 border rounded-md p-4 bg-muted/30">
+                <ScrollArea className="h-[300px] border rounded-md p-4">
                     <div className="space-y-4">
-                        {messages.length === 0 ? (
-                            <div className="text-center text-muted-foreground py-10">
-                                No messages yet. Start the conversation!
-                            </div>
-                        ) : (
-                            messages.map((msg) => {
-                                const isMe = msg.senderId === currentUserId;
-                                return (
-                                    <div
-                                        key={msg.id}
-                                        className={`flex gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
-                                    >
-                                        <Avatar className="w-8 h-8 border">
-                                            <AvatarFallback className={isMe ? "bg-primary text-primary-foreground" : "bg-muted"}>
-                                                {msg.sender.name.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div
-                                            className={`max-w-[70%] rounded-lg p-3 text-sm ${isMe
-                                                    ? "bg-primary text-primary-foreground"
-                                                    : "bg-white dark:bg-gray-800 border shadow-sm"
-                                                }`}
-                                        >
-                                            <p>{msg.content}</p>
-                                            <span className={`text-[10px] block mt-1 ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
+                        {messages.map((msg) => {
+                            const isMe = msg.senderId === currentUserId;
+                            return (
+                                <div key={msg.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                                    <Avatar className="w-6 h-6">
+                                        <AvatarFallback className="text-xs">{msg.sender.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className={`rounded-lg p-2 text-sm max-w-[80%] ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                                        <p>{msg.content}</p>
                                     </div>
-                                );
-                            })
-                        )}
+                                </div>
+                            );
+                        })}
                         <div ref={scrollRef} />
                     </div>
                 </ScrollArea>
-
-                <form onSubmit={handleSendMessage} className="flex gap-2 mt-4">
-                    <Input
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        disabled={loading}
-                        className="flex-1"
-                    />
-                    <Button type="submit" disabled={loading || !newMessage.trim()} size="icon">
-                        <Send className="w-4 h-4" />
-                    </Button>
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." disabled={loading} />
+                    <Button type="submit" size="icon" disabled={loading}><Send className="w-4 h-4" /></Button>
                 </form>
             </DialogContent>
         </Dialog>

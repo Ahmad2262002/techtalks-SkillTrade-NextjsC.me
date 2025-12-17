@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId } from "@/actions/auth";
 import { SwapStatus } from "@prisma/client";
 
 export async function createSwapFromApplication(applicationId: string) {
@@ -38,16 +38,6 @@ export async function createSwapFromApplication(applicationId: string) {
   await prisma.proposal.update({
     where: { id: application.proposalId },
     data: { status: "IN_PROGRESS" },
-  });
-
-  // Notify student (applicant) that swap has started
-  await prisma.notification.create({
-    data: {
-      userId: application.applicantId,
-      type: "SWAP_STARTED",
-      message: `Swap started for "${application.proposal.title}"`,
-      link: `/dashboard?tab=active-swaps`,
-    },
   });
 
   return swap;

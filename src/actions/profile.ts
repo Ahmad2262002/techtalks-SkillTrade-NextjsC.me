@@ -10,11 +10,7 @@ export async function getCurrentUserProfile() {
   return prisma.user.findUnique({
     where: { id: userId },
     include: {
-      skills: {
-        include: {
-          skill: true,
-        },
-      },
+      skills: { include: { skill: true } },
       reviewsReceived: true,
       reviewsGiven: true,
     },
@@ -22,13 +18,16 @@ export async function getCurrentUserProfile() {
 }
 
 export async function getUserProfile(userId: string) {
+  // --- FIX: Guard against undefined userId ---
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
       skills: {
-        include: {
-          skill: true,
-        },
+        include: { skill: true },
       },
       reviewsReceived: true,
       swapsAsTeacher: {
@@ -44,7 +43,6 @@ export async function getUserProfile(userId: string) {
     throw new Error("User not found");
   }
 
-  // Calculate reputation
   const completedSwaps = user.swapsAsTeacher.length + user.swapsAsStudent.length;
   const totalRating = user.reviewsReceived.reduce((sum, review) => sum + review.rating, 0);
   const averageRating = user.reviewsReceived.length > 0
@@ -89,8 +87,6 @@ export async function upsertProfile(input: {
       select: { email: true },
     })) ?? {};
 
-  // In many setups Supabase user.id and email are source of truth.
-  // Here we ensure a row exists in our User table.
   return prisma.user.upsert({
     where: { id: userId },
     update: {
@@ -111,5 +107,3 @@ export async function upsertProfile(input: {
     },
   });
 }
-
-

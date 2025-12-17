@@ -1,827 +1,459 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-    Zap,
-    MapPin,
-    Search,
-    Layers,
-    Bell,
-    LogOut,
-    User,
-    GraduationCap,
-    UserCircle,
-    MessageSquare,
-    CheckCircle,
-    Share2,
-    ArrowRight,
-    Calendar,
-    XCircle,
-    Phone,
-    Briefcase,
-    Award,
-} from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signOut } from "@/actions/auth";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "@/actions/notifications";
-import { PostProposalModal } from "@/components/PostProposalModal";
-import { ChatModal } from "@/components/ChatModal";
-import { ProposalDetailsModal } from "@/components/ProposalDetailsModal";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead
+} from "@/actions/notifications";
+import NavSearchButton from "../../../components/features/search/NavSearchButton";
+
+
+
+import { deleteProposal } from "@/actions/proposal-actions";
 import { createSwapFromApplication } from "@/actions/swaps";
 import { updateApplicationStatus } from "@/actions/applications";
+
+// UI Components
+import { ProposalModal } from "@/components/ProposalModal"; // OLD Visuals
+import { ChatModal } from "@/components/ChatModal"; // NEW Feature
+import { ProposalDetailsModal } from "@/components/ProposalDetailsModal"; // NEW Feature logic wrapped
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Bell,
+  LogOut,
+  Zap,
+  MapPin,
+  Search,
+  Layers,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  MessageSquare,
+  UserCircle,
+  Loader2
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-// Dashboard Header Component
-function DashboardHeader({ user }: { user: any }) {
-    const userId = user?.id;
-    const userName = user?.name;
-    const [notifications, setNotifications] = useState<any[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [isOpen, setIsOpen] = useState(false);
-
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const data = await getNotifications();
-                setNotifications(data);
-                setUnreadCount(data.filter((n: any) => !n.isRead).length);
-            } catch (error) {
-                console.error("Failed to fetch notifications", error);
-            }
-        };
-
-        fetchNotifications();
-        // Poll for notifications every minute
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const handleMarkAsRead = async (id: string) => {
-        try {
-            await markNotificationAsRead(id);
-            setNotifications(prev =>
-                prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-            );
-            setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (error) {
-            console.error("Failed to mark notification as read", error);
-        }
-    };
-
-    const handleMarkAllRead = async () => {
-        try {
-            await markAllNotificationsAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            setUnreadCount(0);
-        } catch (error) {
-            console.error("Failed to mark all as read", error);
-        }
-    };
-
-    const getNotificationIcon = (type: string) => {
-        switch (type) {
-            case 'APPLICATION_RECEIVED': return <UserCircle className="w-4 h-4 text-blue-500" />;
-            case 'APPLICATION_ACCEPTED': return <CheckCircle className="w-4 h-4 text-green-500" />;
-            case 'APPLICATION_REJECTED': return <LogOut className="w-4 h-4 text-red-500" />;
-            case 'SWAP_STARTED': return <Zap className="w-4 h-4 text-yellow-500" />;
-            case 'MESSAGE_RECEIVED': return <MessageSquare className="w-4 h-4 text-purple-500" />;
-            case 'REVIEW_RECEIVED': return <GraduationCap className="w-4 h-4 text-orange-500" />;
-            default: return <Bell className="w-4 h-4" />;
-        }
-    };
-
-    return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/80 dark:bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href="/dashboard" className="flex items-center gap-3 group">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 shadow-lg group-hover:scale-105 transition-transform">
-                                <Zap className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                                    SkillSwap
-                                </h1>
-                                <p className="text-xs text-muted-foreground hidden sm:block">Learn by Teaching</p>
-                            </div>
-                        </Link>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        {/* Create Proposal Button */}
-                        <div className="hidden md:block">
-                            <PostProposalModal />
-                        </div>
-
-                        {/* Theme Toggle */}
-                        <ThemeToggle />
-
-                        {/* Notifications */}
-                        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-                            <DropdownMenuTrigger asChild suppressHydrationWarning>
-                                <Button variant="ghost" size="icon" className="relative" suppressHydrationWarning>
-                                    <Bell className="w-5 h-5" />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background animate-pulse" />
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-80">
-                                <DropdownMenuLabel className="flex items-center justify-between">
-                                    <span>Notifications</span>
-                                    {unreadCount > 0 && (
-                                        <Button variant="ghost" size="sm" className="text-xs h-auto py-1" onClick={handleMarkAllRead}>
-                                            Mark all read
-                                        </Button>
-                                    )}
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <ScrollArea className="h-[300px]">
-                                    {notifications.length === 0 ? (
-                                        <div className="p-4 text-center text-sm text-muted-foreground">
-                                            No notifications yet
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col">
-                                            {notifications.map((notification) => (
-                                                <DropdownMenuItem
-                                                    key={notification.id}
-                                                    className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${!notification.isRead ? 'bg-muted/50' : ''}`}
-                                                    onClick={() => handleMarkAsRead(notification.id)}
-                                                >
-                                                    <div className="flex items-start gap-2 w-full">
-                                                        <div className="mt-1 shrink-0">
-                                                            {getNotificationIcon(notification.type)}
-                                                        </div>
-                                                        <div className="flex-1 space-y-1">
-                                                            <p className="text-sm leading-none font-medium">
-                                                                {notification.message}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                                                                {new Date(notification.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                            </p>
-                                                        </div>
-                                                        {!notification.isRead && (
-                                                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5" />
-                                                        )}
-                                                    </div>
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </div>
-                                    )}
-                                </ScrollArea>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* User Profile */}
-                        <div className="flex items-center gap-3 pl-3 border-l">
-                            <Link href={`/profile/${userId}`} title="My Profile">
-                                <Avatar className="border-2 border-transparent hover:border-primary transition-colors">
-                                    <AvatarImage
-                                        src={user?.avatarUrl || ""}
-                                        key={user?.avatarUrl}
-                                    />
-                                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white">
-                                        {userName?.charAt(0) || "U"}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </Link>
-                            <Button variant="ghost" size="icon" title="Logout" onClick={() => signOut()}>
-                                <LogOut className="w-5 h-5 text-muted-foreground hover:text-red-500 transition-colors" />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
-}
-
-// Proposal Card Component
-function ProposalCard({ proposal, isOwner = false }: { proposal: any; isOwner?: boolean }) {
-    const modalityIcon =
-        proposal.modality === "REMOTE" ? (
-            <Zap className="w-4 h-4" />
-        ) : (
-            <MapPin className="w-4 h-4" />
-        );
-
-    const offeredSkill =
-        proposal.offeredSkills?.[0]?.skill?.name ||
-        proposal.offeredSkills?.[0]?.name ||
-        proposal.offeredSkill?.name ||
-        "No skill specified";
-    const neededSkills = proposal.neededSkills || [];
-
-    // Debug logging for missing skills (can be removed after verification)
-    if (offeredSkill === "No skill specified") {
-        console.log('Missing offered skill for proposal:', {
-            id: proposal.id,
-            title: proposal.title,
-            offeredSkills: proposal.offeredSkills,
-            offeredSkill: proposal.offeredSkill
-        });
-    }
+import SearchSection from "../../../components/features/search/SearchSection";
 
 
-    return (
-        <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20 dark:hover:border-primary/30 overflow-hidden">
-            {/* Gradient Header */}
-            <div className="h-24 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-600 dark:via-purple-600 dark:to-pink-600 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/10 dark:bg-white/5"></div>
-                <div className="absolute top-3 right-3">
-                    <Badge
-                        variant="secondary"
-                        className="flex items-center gap-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm"
-                    >
-                        {modalityIcon}
-                        <span className="text-xs">
-                            {String(proposal.modality).replace("_", " ")}
-                        </span>
-                    </Badge>
-                </div>
-            </div>
-
-            <CardContent className="p-5 flex flex-col flex-1">
-                <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-bold text-lg line-clamp-1 text-foreground group-hover:text-primary transition-colors">
-                        {proposal.title}
-                    </h4>
-                    {proposal._count && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <MessageSquare className="w-3 h-3" />
-                            {proposal._count.applications || 0}
-                            <CheckCircle className="w-3 h-3" />
-                            {proposal._count.swaps || 0}
-                        </div>
-                    )}
-                </div>
-
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                    {proposal.description}
-                </p>
-
-                {/* Skills Display */}
-                <div className="space-y-3 mb-4">
-                    <div className="flex items-start gap-2">
-                        <UserCircle className="w-4 h-4 mt-0.5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                        <div className="flex-1">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                Offering
-                            </span>
-                            <div className="mt-1">
-                                <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700">
-                                    {offeredSkill}
-                                </Badge>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                        <GraduationCap className="w-4 h-4 mt-0.5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-                        <div className="flex-1">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                Seeking
-                            </span>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                                {neededSkills.length > 0 ? (
-                                    neededSkills.map((skill: any) => (
-                                        <Badge
-                                            key={skill.id}
-                                            variant="outline"
-                                            className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-700"
-                                        >
-                                            {skill.skill ? skill.skill.name : skill.name}
-                                        </Badge>
-                                    ))
-                                ) : (
-                                    <span className="text-xs text-muted-foreground italic">
-                                        Not specified
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Action Button */}
-                <div className="mt-auto pt-4 border-t flex gap-2">
-                    <ProposalDetailsModal proposal={proposal} isOwner={isOwner} />
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/dashboard?tab=browse&q=${proposal.title}`);
-                            alert("Link copied to clipboard!");
-                        }}
-                        title="Share Proposal"
-                    >
-                        <Share2 className="w-4 h-4" />
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    );
+// --- Types ---
+interface DashboardProps {
+  overview: any;
+  myProposals: any[];
+  publicOnlyProposals: any[];
+  search: string;
+  rawModality: string;
+  activeTab: string;
+  swaps: any[];
+  applications: any[];
 }
 
 export default function DashboardClientContent({
-    overview,
-    myProposals,
-    publicOnlyProposals,
-    search,
-    rawModality,
-    activeTab,
-    swaps,
-    applications,
-}: any) {
-    const totalProposals = myProposals.length + publicOnlyProposals.length;
-    const router = useRouter();
-    const { toast } = useToast();
+  overview,
+  myProposals,
+  publicOnlyProposals,
+  search,
+  rawModality,
+  activeTab,
+  swaps,
+  applications,
+}: DashboardProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const router = useRouter();
+  const { toast } = useToast();
 
-    const handleAcceptApplication = async (appId: string) => {
-        try {
-            await createSwapFromApplication(appId);
-            toast({ title: "Accepted!", description: "Swap started." });
-            router.refresh();
-        } catch (error) {
-            toast({ variant: "destructive", title: "Error", description: "Failed to accept." });
-        }
+  // --- Notifications Logic (New Feature) ---
+  useEffect(() => {
+    const fetchNotifs = async () => {
+      try {
+        const data = await getNotifications();
+        setNotifications(data);
+        setUnreadCount(data.filter((n: any) => !n.isRead).length);
+      } catch (e) { console.error(e); }
     };
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, []);
 
-    const handleRejectApplication = async (appId: string) => {
-        try {
-            await updateApplicationStatus({ applicationId: appId, status: "REJECTED" });
-            toast({ title: "Rejected", description: "Application rejected." });
-            router.refresh();
-        } catch (error) {
-            toast({ variant: "destructive", title: "Error", description: "Failed to reject." });
-        }
-    };
+  const handleMarkRead = async (id: string) => {
+    await markNotificationAsRead(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
 
+  // --- Delete Logic (Old Feature, New Action) ---
+  const handleDeleteProposal = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this proposal?")) return;
+    try {
+      const res = await deleteProposal(id);
+      if (res.success) {
+        toast({ title: "Deleted", description: "Proposal removed successfully" });
+        router.refresh();
+      } else {
+        alert(res.message);
+      }
+    } catch (e) { alert("Failed to delete"); }
+  };
+
+  // --- Swap Logic (New Feature) ---
+  const handleAccept = async (appId: string) => {
+    try {
+      await createSwapFromApplication(appId);
+      toast({ title: "Accepted!", description: "Swap started." });
+      router.refresh();
+    } catch (e) { alert("Error accepting application"); }
+  };
+
+  const handleReject = async (appId: string) => {
+    try {
+      await updateApplicationStatus({ applicationId: appId, status: "REJECTED" });
+      router.refresh();
+    } catch (e) { alert("Error rejecting application"); }
+  };
+
+  // --- Render Helpers ---
+  const TabButton = ({ id, label, icon: Icon }: any) => {
+    const isActive = activeTab === id;
+    // Construct URL preserving other params if needed, but for now simple links
+    const href = `?tab=${id}`;
+    
     return (
-        <>
-            <DashboardHeader user={overview.user} />
-
-            {/* Stats Overview */}
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <Card>
-                        <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Total Proposals</p>
-                                    <p className="text-2xl font-bold">{totalProposals}</p>
-                                </div>
-                                <Layers className="w-8 h-8 text-indigo-500" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Active Swaps</p>
-                                    <p className="text-2xl font-bold">{swaps?.filter((s: any) => s.status === 'ACTIVE').length || 0}</p>
-                                </div>
-                                <Zap className="w-8 h-8 text-green-500" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Pending Applications</p>
-                                    <p className="text-2xl font-bold">{applications?.filter((a: any) => a.status === 'PENDING').length || 0}</p>
-                                </div>
-                                <Bell className="w-8 h-8 text-orange-500" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Tabs Navigation */}
-                <div className="bg-card rounded-xl border p-1 shadow-sm mb-6">
-                    <nav className="flex space-x-1">
-                        <a
-                            href={`?tab=browse${search || rawModality
-                                ? `&q=${encodeURIComponent(search)}&modality=${encodeURIComponent(rawModality)}`
-                                : ""
-                                }`}
-                            className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${activeTab === "browse"
-                                ? "bg-primary text-primary-foreground shadow-md"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                }`}
-                        >
-                            <div className="flex items-center justify-center gap-2">
-                                <Search className="w-4 h-4" />
-                                <span>Browse</span>
-                            </div>
-                        </a>
-                        <a
-                            href="?tab=my-proposals"
-                            className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${activeTab === "my-proposals"
-                                ? "bg-primary text-primary-foreground shadow-md"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                }`}
-                        >
-                            <div className="flex items-center justify-center gap-2">
-                                <Layers className="w-4 h-4" />
-                                <span>My Proposals</span>
-                            </div>
-                        </a>
-                        <a
-                            href="?tab=active-swaps"
-                            className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${activeTab === "active-swaps"
-                                ? "bg-primary text-primary-foreground shadow-md"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                }`}
-                        >
-                            <div className="flex items-center justify-center gap-2">
-                                <Zap className="w-4 h-4" />
-                                <span>Active Swaps</span>
-                            </div>
-                        </a>
-                    </nav>
-                </div>
-
-                {/* Tab Content */}
-                {activeTab === "browse" && (
-                    <div className="space-y-6">
-                        {/* Search & Filter Bar */}
-                        <Card className="border-2 shadow-lg">
-                            <CardContent className="p-6">
-                                <form
-                                    className="flex flex-col gap-4 md:flex-row md:items-end"
-                                    method="get"
-                                >
-                                    <div className="flex-1 space-y-2">
-                                        <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                            <Search className="w-4 h-4" />
-                                            Search Proposals
-                                        </label>
-                                        <Input
-                                            name="q"
-                                            defaultValue={search}
-                                            placeholder="I want to learn..."
-                                            className="h-11"
-                                        />
-                                    </div>
-                                    <div className="space-y-2 md:w-48">
-                                        <label className="text-sm font-semibold text-foreground">
-                                            Modality
-                                        </label>
-                                        <Select
-                                            name="modality"
-                                            defaultValue={rawModality || "ALL"}
-                                        >
-                                            <SelectTrigger className="h-11" suppressHydrationWarning>
-                                                <SelectValue placeholder="Any modality" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ALL">Any modality</SelectItem>
-                                                <SelectItem value="REMOTE">Remote</SelectItem>
-                                                <SelectItem value="IN_PERSON">In-Person</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <input type="hidden" name="tab" value="browse" />
-                                    <Button type="submit" className="h-11 md:w-auto w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                                        <Search className="w-4 h-4 mr-2" />
-                                        Search
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
-
-                        {/* Proposals Grid */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-bold text-foreground">
-                                    Discover Opportunities
-                                </h3>
-                                <Badge variant="secondary" className="text-sm">
-                                    {publicOnlyProposals.length} available
-                                </Badge>
-                            </div>
-                            <div className="grid sm:grid-cols-2 gap-6 items-stretch">
-                                {publicOnlyProposals.map((proposal: any) => (
-                                    <ProposalCard
-                                        key={proposal.id}
-                                        proposal={proposal}
-                                    />
-                                ))}
-                                {publicOnlyProposals.length === 0 && (
-                                    <div className="sm:col-span-2">
-                                        <Card className="border-dashed">
-                                            <CardContent className="p-12 text-center">
-                                                <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                                                <p className="text-muted-foreground font-medium">
-                                                    No proposals match your search yet.
-                                                </p>
-                                                <p className="text-sm text-muted-foreground mt-2">
-                                                    Try adjusting your filters or check back later!
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === "my-proposals" && (
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-xl font-bold text-foreground">
-                                    My Proposals
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Manage the offers you've posted to the SkillSwap marketplace
-                                </p>
-                            </div>
-                            <Badge variant="secondary" className="text-sm">
-                                {myProposals.length} active
-                            </Badge>
-                        </div>
-                        <div className="grid sm:grid-cols-2 gap-6 items-stretch">
-                            {myProposals.map((proposal: any) => (
-                                <ProposalCard
-                                    key={proposal.id}
-                                    proposal={proposal}
-                                    isOwner
-                                />
-                            ))}
-                            {myProposals.length === 0 && (
-                                <div className="sm:col-span-2">
-                                    <Card className="border-dashed">
-                                        <CardContent className="p-12 text-center">
-                                            <Layers className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                                            <p className="text-muted-foreground font-medium">
-                                                No proposals yet
-                                            </p>
-                                            <p className="text-sm text-muted-foreground mt-2">
-                                                Create your first proposal to start swapping skills!
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === "active-swaps" && (
-                    <div className="space-y-6">
-                        {/* Pending Requests Section */}
-                        {applications && applications.filter((a: any) => a.status === 'PENDING').length > 0 && (
-                            <div className="mb-8">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-foreground">Pending Requests</h3>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Review applications for your proposals
-                                        </p>
-                                    </div>
-                                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                                        {applications.filter((a: any) => a.status === 'PENDING').length} pending
-                                    </Badge>
-                                </div>
-                                <div className="grid gap-4">
-                                    {applications.filter((a: any) => a.status === 'PENDING').map((app: any) => {
-                                        const applicant = app.applicant;
-                                        const applicantSkills = applicant?.skills || [];
-
-                                        return (
-                                            <Card key={app.id} className="overflow-hidden border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
-                                                <div className="p-6 space-y-4">
-                                                    {/* Header: Proposal Title */}
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div>
-                                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Application for</p>
-                                                            <h4 className="font-bold text-lg text-foreground">"{app.proposal.title}"</h4>
-                                                        </div>
-                                                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 shrink-0">
-                                                            Pending
-                                                        </Badge>
-                                                    </div>
-
-                                                    {/* Applicant Profile Section */}
-                                                    <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border-2 border-indigo-100 dark:border-indigo-900/30">
-                                                        <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-                                                            <UserCircle className="w-4 h-4" />
-                                                            Applicant Profile
-                                                        </h5>
-
-                                                        <div className="flex flex-col sm:flex-row gap-4">
-                                                            {/* Avatar and Basic Info */}
-                                                            <div className="flex items-start gap-3">
-                                                                <Link href={`/profile/${applicant.id}`} className="group">
-                                                                    <Avatar className="w-16 h-16 border-4 border-white dark:border-gray-800 shadow-md group-hover:scale-105 transition-transform">
-                                                                        <AvatarImage src={applicant.avatarUrl || ""} />
-                                                                        <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white text-xl">
-                                                                            {applicant.name?.charAt(0) || "U"}
-                                                                        </AvatarFallback>
-                                                                    </Avatar>
-                                                                </Link>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <Link href={`/profile/${applicant.id}`} className="hover:underline">
-                                                                        <h3 className="text-lg font-bold text-foreground truncate">{applicant.name || "Unknown"}</h3>
-                                                                    </Link>
-                                                                    {applicant.industry && (
-                                                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                                                                            <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                                                                            <span className="truncate">{applicant.industry}</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {applicant.phoneNumber && (
-                                                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                                                                            <Phone className="w-3.5 h-3.5 shrink-0" />
-                                                                            <a href={`tel:${applicant.phoneNumber}`} className="hover:text-primary truncate">
-                                                                                {applicant.phoneNumber}
-                                                                            </a>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Bio */}
-                                                            {applicant.bio && (
-                                                                <div className="flex-1 min-w-0">
-                                                                    <h6 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">About</h6>
-                                                                    <p className="text-sm text-foreground leading-relaxed line-clamp-3">
-                                                                        {applicant.bio}
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Applicant Skills */}
-                                                        {applicantSkills.length > 0 && (
-                                                            <div className="mt-3 pt-3 border-t border-indigo-200 dark:border-indigo-900/30">
-                                                                <h6 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                                                                    <Award className="w-3.5 h-3.5" />
-                                                                    Skills
-                                                                </h6>
-                                                                <div className="flex flex-wrap gap-1.5">
-                                                                    {applicantSkills.map((userSkill: any) => (
-                                                                        <Badge
-                                                                            key={userSkill.id}
-                                                                            variant="secondary"
-                                                                            className={`text-xs ${userSkill.source === "ENDORSED"
-                                                                                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700"
-                                                                                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                                                                                }`}
-                                                                        >
-                                                                            {userSkill.source === "ENDORSED" && <Award className="w-3 h-3 mr-1" />}
-                                                                            {userSkill.skill?.name}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Pitch Message */}
-                                                    <div className="bg-muted/50 p-4 rounded-lg border">
-                                                        <h6 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                                                            <MessageSquare className="w-3.5 h-3.5" />
-                                                            Pitch Message
-                                                        </h6>
-                                                        <p className="text-sm text-foreground italic leading-relaxed">
-                                                            "{app.pitchMessage}"
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Action Buttons */}
-                                                    <div className="flex gap-2 pt-2">
-                                                        <Button
-                                                            size="sm"
-                                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                                            onClick={() => handleAcceptApplication(app.id)}
-                                                        >
-                                                            <CheckCircle className="w-4 h-4 mr-2" /> Accept Application
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-900/30"
-                                                            onClick={() => handleRejectApplication(app.id)}
-                                                        >
-                                                            <XCircle className="w-4 h-4 mr-2" /> Reject
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </Card>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-xl font-bold text-foreground">Active Swaps</h3>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Track your ongoing skill exchanges and chat with partners
-                                </p>
-                            </div>
-                            <Badge variant="secondary">{swaps?.length || 0} active</Badge>
-                        </div>
-
-                        {swaps && swaps.length > 0 ? (
-                            <div className="grid gap-4">
-                                {swaps.map((swap: any) => {
-                                    const isTeacher = swap.teacherId === overview.user.id;
-                                    const otherUser = isTeacher ? swap.student : swap.teacher;
-
-                                    return (
-                                        <Card key={swap.id} className="flex flex-col sm:flex-row items-center p-4 gap-4 hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-4 flex-1">
-                                                <Avatar className="w-12 h-12 border">
-                                                    <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <h4 className="font-bold text-lg">{otherUser.name}</h4>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {swap.proposal.title}
-                                                    </p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-xs">
-                                                            {isTeacher ? "Teaching" : "Learning"}
-                                                        </Badge>
-                                                        <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-                                                            Started {new Date(swap.startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                                <ChatModal
-                                                    swapId={swap.id}
-                                                    currentUserId={overview.user.id}
-                                                    otherUserName={otherUser.name}
-                                                />
-                                                <Button variant="outline" size="sm">
-                                                    Details
-                                                </Button>
-                                            </div>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <Card className="border-dashed">
-                                <CardContent className="p-12 text-center">
-                                    <Zap className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                                    <p className="text-muted-foreground font-medium">
-                                        No active swaps yet
-                                    </p>
-                                    <p className="text-sm text-muted-foreground mt-2">
-                                        Accept an application or have yours accepted to start swapping!
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-                )}
-            </div>
-        </>
+      <Link
+        href={href}
+        className={`relative flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
+          isActive
+            ? "bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/50 shadow-[0_0_15px_rgba(56,189,248,0.2)]"
+            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+        }`}
+      >
+        <Icon className={`w-4 h-4 ${isActive ? "text-sky-400" : "text-slate-500"}`} />
+        {label}
+        {isActive && (
+          <span className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-sky-500/50 to-transparent" />
+        )}
+      </Link>
     );
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-50 selection:bg-sky-500/30 font-sans pb-20">
+      {/* Background Gradients (Old Style) */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-900/10 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-6xl px-4 md:px-8">
+        
+        {/* --- HEADER --- */}
+        <header className="flex flex-col gap-6 py-8 md:flex-row md:items-end md:justify-between mb-8">
+          <div>
+       <Link href="/">
+  <p className="text-xs font-bold uppercase tracking-[0.25em] text-sky-400 mb-2">
+    SkillTrade Dashboard
+  </p>
+</Link>
+            <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
+              Welcome,{" "}
+              <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                {overview.user?.name || "User"}
+              </span>
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+<NavSearchButton />
+
+
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border border-sky-500/40 bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 px-6 py-2.5 text-sm font-bold text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(56,189,248,0.6)]"
+            >
+              <span className="mr-2 text-lg leading-none">+</span>
+              <span className="inline-flex items-center justify-center">Post Proposal</span>
+            </button>
+
+            {/* Notifications (New Feature) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-900/50 text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-100">
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 bg-slate-900 border-slate-800 text-slate-200">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-slate-800" />
+                <div className="max-h-[300px] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-500">No notifications</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <DropdownMenuItem 
+                        key={n.id} 
+                        onClick={() => handleMarkRead(n.id)}
+                        className={`cursor-pointer border-b border-slate-800 py-3 ${!n.isRead ? 'bg-slate-800/50' : ''}`}
+                      >
+                        <div>
+                          <p className="text-sm text-slate-300">{n.message}</p>
+                          <p className="text-[10px] text-slate-500 mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Profile Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-10 w-10 rounded-full border border-slate-700 overflow-hidden hover:border-sky-400 transition-all">
+                  <Avatar>
+                    <AvatarImage src={overview.user?.avatarUrl || ""} />
+                    <AvatarFallback className="bg-slate-800 text-slate-200">
+                      {overview.user?.name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-200">
+                <DropdownMenuItem asChild>
+                  <Link href={`/profile/${overview.user?.id}`} className="cursor-pointer hover:bg-slate-800">
+                    My Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-rose-400 hover:bg-slate-800 hover:text-rose-300">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* --- TABS --- */}
+<div className="mb-8 flex items-center justify-start gap-2 overflow-x-auto border-b border-slate-800/60 pb-1 h-[50px]  pl-[10px]">
+          <TabButton id="browse" label="Browse" icon={Search} />
+          <TabButton id="my-proposals" label="My Proposals" icon={Layers} />
+          <TabButton id="active-swaps" label="Active Swaps" icon={Zap} />
+        </div>
+
+        {/* --- CONTENT AREA --- */}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          
+          {/* TAB: BROWSE */}
+          {activeTab === "browse" && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {publicOnlyProposals.length === 0 ? (
+                <EmptyState message="No public proposals found. Be the first to post!" />
+              ) : (
+                publicOnlyProposals.map((proposal) => (
+                  <GlassCard key={proposal.id} proposal={proposal}>
+                    {/* New functionality injected into Old Style card */}
+                    <div className="mt-4 flex gap-2 pt-4 border-t border-slate-700/50">
+                      <ProposalDetailsModal proposal={proposal} isOwner={false} />
+                    </div>
+                  </GlassCard>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB: MY PROPOSALS */}
+          {activeTab === "my-proposals" && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {myProposals.length === 0 ? (
+                <EmptyState message="You haven't posted any proposals yet." />
+              ) : (
+                myProposals.map((proposal) => (
+                  <GlassCard key={proposal.id} proposal={proposal} isOwner>
+                    <div className="mt-4 flex gap-2 pt-4 border-t border-slate-700/50 justify-between items-center">
+                      <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                        {proposal._count?.applications || 0} Applicants
+                      </span>
+                      <button 
+                        onClick={() => handleDeleteProposal(proposal.id)}
+                        className="p-2 rounded-full hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors"
+                        title="Delete Proposal"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </GlassCard>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB: ACTIVE SWAPS */}
+          {activeTab === "active-swaps" && (
+            <div className="space-y-8">
+              
+              {/* Incoming Applications */}
+              {applications.filter((a: any) => a.status === "PENDING").length > 0 && (
+                <section>
+                  <h3 className="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <UserCircle className="text-orange-400" /> Pending Requests
+                  </h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {applications.filter((a: any) => a.status === "PENDING").map((app: any) => (
+                      <div key={app.id} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-md">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <p className="text-xs text-slate-500 uppercase">Applicant</p>
+                            <Link href={`/profile/${app.applicant.id}`} className="text-base font-bold text-white hover:text-sky-400">
+                              {app.applicant.name}
+                            </Link>
+                          </div>
+                          <span className="rounded-full bg-orange-500/10 px-2 py-1 text-[10px] font-bold text-orange-400 border border-orange-500/20">
+                            PENDING
+                          </span>
+                        </div>
+                        <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800 mb-4">
+                          <p className="text-xs text-slate-400 italic">"{app.pitchMessage}"</p>
+                          <p className="text-[10px] text-slate-600 mt-2 text-right">For: {app.proposal.title}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleAccept(app.id)} className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all">
+                            <CheckCircle className="w-3 h-3" /> Accept
+                          </button>
+                          <button onClick={() => handleReject(app.id)} className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-rose-500/10 border border-rose-500/20 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-all">
+                            <XCircle className="w-3 h-3" /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Active Conversations */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                    <Zap className="text-sky-400" /> Active Swaps
+                  </h3>
+                  <span className="text-xs text-slate-500">{swaps.length} Active</span>
+                </div>
+                
+                {swaps.length === 0 ? (
+                  <EmptyState message="No active swaps yet. Accept a proposal to get started!" />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {swaps.map((swap: any) => {
+                      const isTeacher = swap.teacherId === overview.user.id;
+                      const partner = isTeacher ? swap.student : swap.teacher;
+                      return (
+                        <div key={swap.id} className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-1 transition-all hover:border-sky-500/30 hover:bg-slate-900/60">
+                          <div className="p-4 flex items-center gap-4">
+                            <Avatar className="h-12 w-12 border border-slate-700">
+                              <AvatarImage src={partner.avatarUrl} />
+                              <AvatarFallback className="bg-slate-800 text-slate-400">{partner.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-slate-200">{partner.name}</h4>
+                              <p className="text-xs text-sky-400/80 mb-0.5">{swap.proposal.title}</p>
+                              <p className="text-[10px] text-slate-500">Started {new Date(swap.startedAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              {/* Chat Modal Integration */}
+                              <ChatModal 
+                                swapId={swap.id} 
+                                currentUserId={overview.user.id} 
+                                otherUserName={partner.name} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* Post Modal - Controlled by State */}
+      <ProposalModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={() => toast({ title: "Posted!", description: "Your proposal is live." })}
+      />
+    </div>
+  );
+}
+
+// --- Internal Helper: Glass Card (Old Style) ---
+function GlassCard({ proposal, children, isOwner }: any) {
+  const modalityIcon = proposal.modality === "REMOTE" ? <Zap className="w-3 h-3" /> : <MapPin className="w-3 h-3" />;
+  
+  // Extract skill names safely
+  const offered = proposal.offeredSkills?.[0]?.name || proposal.offeredSkill?.name || "General";
+  const needed = proposal.neededSkills?.map((s:any) => s.name).join(", ") || "Open";
+
+  return (
+    <div className="group relative flex flex-col rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-lg backdrop-blur-md transition-all hover:-translate-y-1 hover:border-sky-500/30 hover:shadow-[0_10px_40px_-10px_rgba(56,189,248,0.1)]">
+      {/* Glow Effect */}
+      <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-sky-500/10 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3 relative z-10">
+        <h3 className="font-bold text-lg text-slate-100 line-clamp-1">{proposal.title}</h3>
+        <span className="flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-400 uppercase">
+          {modalityIcon} {proposal.modality}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 space-y-3 relative z-10">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Offered</p>
+          <p className="text-sm text-emerald-400 font-medium">{offered}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Needed</p>
+          <p className="text-sm text-orange-300 font-medium line-clamp-1">{needed}</p>
+        </div>
+        <p className="text-xs text-slate-400 line-clamp-2 mt-2">{proposal.description}</p>
+      </div>
+
+      {/* Footer / Children (Buttons) */}
+      <div className="relative z-10">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="col-span-full py-12 text-center">
+      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-slate-900/50 border border-slate-800 mb-4">
+        <Layers className="h-8 w-8 text-slate-600" />
+      </div>
+      <p className="text-slate-400">{message}</p>
+    </div>
+  );
 }

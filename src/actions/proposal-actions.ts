@@ -45,7 +45,6 @@ export async function createProposal(
 
   try {
     // 2. Get or Create Offered Skill
-    // We use upsert to ensure the skill exists without creating duplicates
     const offeredSkill = await prisma.skill.upsert({
       where: { name: offeredSkillName },
       update: {},
@@ -53,7 +52,6 @@ export async function createProposal(
     });
 
     // 3. Get or Create Needed Skills
-    // Split the comma-separated string and process each skill
     const neededSkillsList = neededSkillNames.split(',').map(s => s.trim()).filter(s => s);
     const neededSkillIds: string[] = [];
 
@@ -67,10 +65,9 @@ export async function createProposal(
     }
 
     // 4. Create the Proposal in the Database
-    // Map UI modality to DB enum
     const dbModality = modality === 'Remote' ? 'REMOTE' : 'IN_PERSON';
 
-    await prisma.proposal.create({
+    const proposal = await prisma.proposal.create({
       data: {
         ownerId: userId,
         title,
@@ -86,13 +83,13 @@ export async function createProposal(
       },
     });
 
-    // 5. Revalidate Path to refresh the dashboard view
     if (options.revalidate) {
       revalidatePath('/dashboard');
     }
 
     return {
       success: true,
+      proposalId: proposal.id,
       message: 'Proposal posted successfully!',
     };
 
@@ -105,6 +102,7 @@ export async function createProposal(
   }
 }
 
+// Wrapper for form actions if needed elsewhere
 export async function createProposalAction(
   prevState: any,
   formData: FormData
@@ -149,9 +147,4 @@ export async function deleteProposal(proposalId: string) {
     console.error("Delete Error:", error);
     return { success: false, message: 'Failed to delete proposal.' };
   }
-}
-
-export async function getProposals() {
-  // This is a placeholder if needed, but usually we use the specific list functions in src/actions/proposals.ts
-  return [];
 }

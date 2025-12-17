@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId } from "@/actions/auth";
 import { ApplicationStatus } from "@prisma/client";
 
 export async function createApplication(input: {
@@ -40,25 +40,13 @@ export async function createApplication(input: {
   }
   // --- FIX END ---
 
-  const application = await prisma.application.create({
+  return prisma.application.create({
     data: {
       proposalId: input.proposalId,
       applicantId: userId,
       pitchMessage: input.pitchMessage,
     },
   });
-
-  // Notify proposal owner
-  await prisma.notification.create({
-    data: {
-      userId: proposal.ownerId,
-      type: "APPLICATION_RECEIVED",
-      message: `New application for "${proposal.title}"`,
-      link: `/dashboard?tab=applications`,
-    },
-  });
-
-  return application;
 }
 
 export async function listApplicationsForProposal(proposalId: string) {
@@ -117,22 +105,8 @@ export async function updateApplicationStatus(params: {
     throw new Error("Application not found");
   }
 
-  const updatedApplication = await prisma.application.update({
+  return prisma.application.update({
     where: { id: params.applicationId },
     data: { status: params.status },
   });
-
-  // Notify applicant
-  if (params.status === "ACCEPTED" || params.status === "REJECTED") {
-    await prisma.notification.create({
-      data: {
-        userId: application.applicantId,
-        type: params.status === "ACCEPTED" ? "APPLICATION_ACCEPTED" : "APPLICATION_REJECTED",
-        message: `Your application for "${application.proposal.title}" was ${params.status.toLowerCase()}`,
-        link: params.status === "ACCEPTED" ? `/dashboard?tab=active-swaps` : `/dashboard?tab=my-proposals`,
-      },
-    });
-  }
-
-  return updatedApplication;
 }
