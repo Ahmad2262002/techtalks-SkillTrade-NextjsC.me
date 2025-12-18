@@ -1,3 +1,4 @@
+<<<<<<< HEAD:src/components/landing/Footer.tsx
 
 import React from 'react';
 
@@ -17,4 +18,23 @@ export default function Footer() {
       </div>
     </footer>
   );
+=======
+import React from 'react';
+import styles from '@/app/(public)/Landing.module.css';
+import Link from 'next/link';
+
+export default function Footer() {
+  return (
+    <footer className={styles.footer}>
+      <div className={`${styles.container} ${styles.footerContent}`}>
+        <Link href="/" className={styles.logo}>
+          Skill<span>Swap</span>
+        </Link>
+        <p className={styles.footerCopyright}>
+          © {new Date().getFullYear()} SkillSwap. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  );
+>>>>>>> 51fea53e9c3c640ee6fd7ebf5d71800b1e27a859:skill-sync/src/components/landing/Footer.tsx
 }
