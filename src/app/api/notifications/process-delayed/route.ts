@@ -17,15 +17,15 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Find unread MESSAGE_RECEIVED notifications older than 1 minute
-        const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+        // Find unread MESSAGE_RECEIVED notifications older than 10 minutes
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
 
         const unreadNotifications = await prisma.notification.findMany({
             where: {
                 type: "MESSAGE_RECEIVED",
                 isRead: false,
                 createdAt: {
-                    lte: oneMinuteAgo,
+                    lte: tenMinutesAgo,
                 },
             },
             include: {
