@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/actions/auth";
+import { getCurrentUserId } from "@/lib/auth";
 
 export async function createReview(input: {
   swapId: string;
@@ -83,7 +83,7 @@ export async function createReview(input: {
             source: "ENDORSED" // Upgrade status
           }
         });
-      } catch (e) {
+      } catch {
         // Ignore if userSkill doesn't exist (edge case)
       }
     }
@@ -105,27 +105,38 @@ export async function listReviewsForUser(userId: string) {
   });
 }
 
-// --- THIS WAS MISSING ---
-export async function getReputationStats(userId: string) {
-  const [completedSwaps, reviews, endorsements] = await Promise.all([
-    prisma.swap.count({
-      where: {
-        OR: [{ teacherId: userId }, { studentId: userId }],
-        status: "COMPLETED",
+export async function getPublicReviews(limit = 6) {
+  return prisma.review.findMany({
+    include: {
+      author: true,
+      swap: {
+        include: { proposal: true },
       },
-    }),
-    prisma.review.findMany({
-      where: { receiverId: userId },
-      select: { rating: true }
-    }),
-    prisma.userSkill.count({
-      where: {
-        userId,
-        source: "ENDORSED"
-      }
-    })
-  ]);
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+}
 
+
+export type ReputationStats = {
+  completedSwaps: number;
+  totalReviews: number;
+  positiveReviews: number;
+  averageRating: number;
+  totalEndorsements: number;
+  reputationPoints: number;
+  level: number;
+  title: string;
+  color: string;
+  battingAverage: number;
+};
+
+function calculateReputation(
+  completedSwaps: number,
+  reviews: { rating: number }[],
+  endorsements: number
+): ReputationStats {
   const totalReviews = reviews.length;
   const positiveReviews = reviews.filter((r) => r.rating >= 4).length;
   const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
@@ -171,4 +182,71 @@ export async function getReputationStats(userId: string) {
     battingAverage:
       totalReviews === 0 ? 0 : Number((positiveReviews / totalReviews).toFixed(2)),
   };
+}
+
+export async function getReputationStats(userId: string): Promise<ReputationStats> {
+  const completedSwaps = await prisma.swap.count({
+    where: {
+      OR: [{ teacherId: userId }, { studentId: userId }],
+      status: "COMPLETED",
+    },
+  });
+
+  const reviews = await prisma.review.findMany({
+    where: { receiverId: userId },
+    select: { rating: true }
+  });
+
+  const endorsements = await prisma.userSkill.count({
+    where: {
+      userId,
+      source: "ENDORSED"
+    }
+  });
+
+  return calculateReputation(completedSwaps, reviews, endorsements);
+}
+
+export async function getBatchReputationStats(userIds: string[]): Promise<Record<string, ReputationStats>> {
+  if (userIds.length === 0) return {};
+
+  const uniqueUserIds = [...new Set(userIds)];
+
+  // 1. Fetch data sequentially to respect small connection pool (limit 5)
+  const swaps = await prisma.swap.findMany({
+    where: {
+      status: "COMPLETED",
+      OR: [
+        { teacherId: { in: uniqueUserIds } },
+        { studentId: { in: uniqueUserIds } }
+      ]
+    },
+    select: { teacherId: true, studentId: true }
+  });
+
+  const reviews = await prisma.review.findMany({
+    where: { receiverId: { in: uniqueUserIds } },
+    select: { receiverId: true, rating: true }
+  });
+
+  const userSkills = await prisma.userSkill.findMany({
+    where: {
+      userId: { in: uniqueUserIds },
+      source: "ENDORSED"
+    },
+    select: { userId: true }
+  });
+
+  // 2. Process data into maps
+  const statsMap: Record<string, ReputationStats> = {};
+
+  for (const userId of uniqueUserIds) {
+    const userSwaps = swaps.filter(s => s.teacherId === userId || s.studentId === userId).length;
+    const userReviews = reviews.filter(r => r.receiverId === userId);
+    const userEndorsements = userSkills.filter(us => us.userId === userId).length;
+
+    statsMap[userId] = calculateReputation(userSwaps, userReviews, userEndorsements);
+  }
+
+  return statsMap;
 }

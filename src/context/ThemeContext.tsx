@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type Theme = "light" | "dark";
+type Theme = "light" | "dark";
 export type Accent = "default" | "sunset" | "emerald" | "ocean" | "midnight";
 
 interface ThemeContextType {
@@ -23,14 +23,20 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const storedAccent = localStorage.getItem('accent') as Accent | null;
     const preferredTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 
-    setTheme(storedTheme || preferredTheme);
-    setAccent(storedAccent || 'default');
+    const newTheme = (storedTheme === 'light' || storedTheme === 'dark') ? storedTheme : preferredTheme;
+
+    // Defer state updates to avoid concurrent render warnings
+    const timeoutId = setTimeout(() => {
+      setTheme(newTheme);
+      if (storedAccent) setAccent(storedAccent);
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, []);
+
 
   useEffect(() => {
     const root = document.documentElement;
-
-    // Theme
     if (theme === 'light') {
       root.classList.add('light');
       root.classList.remove('dark');
@@ -38,15 +44,19 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       root.classList.add('dark');
       root.classList.remove('light');
     }
-
-    // Accent
-    const allAccents: Accent[] = ['default', 'sunset', 'emerald', 'ocean', 'midnight'];
-    allAccents.forEach(a => root.classList.remove(`accent-${a}`));
-    root.classList.add(`accent-${accent}`);
-
     localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    // Remove old accent classes
+    root.classList.forEach(cls => {
+      if (cls.startsWith('accent-')) root.classList.remove(cls);
+    });
+    // Add new accent class
+    root.classList.add(`accent-${accent}`);
     localStorage.setItem('accent', accent);
-  }, [theme, accent]);
+  }, [accent]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));

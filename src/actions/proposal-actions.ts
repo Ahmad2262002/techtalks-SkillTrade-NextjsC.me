@@ -130,7 +130,7 @@ export async function createProposalAction(
     title: formData.get("title") as string,
     description: formData.get("description") as string,
     modality: formData.get("modality") as "Remote" | "In-Person",
-    offeredSkillNames: formData.get("offeredSkillName") as string,
+    offeredSkillNames: formData.get("offeredSkillNames") as string,
     neededSkillNames: formData.get("neededSkillNames") as string,
     imageUrl: formData.get("imageUrl") as string,
   };

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
-import { getCurrentUserId } from "@/actions/auth";
+import { getCurrentUserId } from "@/lib/auth";
 
 /**
  * Manual trigger for testing delayed email notifications
@@ -9,7 +9,7 @@ import { getCurrentUserId } from "@/actions/auth";
  * 
  * Usage: GET /api/notifications/process-delayed
  */
-export async function GET() { // eslint-disable-line @typescript-eslint/no-unused-vars
+export async function GET() {
     try {
         // Optional: Require authentication for manual trigger
         const userId = await getCurrentUserId();

@@ -21,54 +21,139 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Image as ImageIcon, Check, X, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { createProposal } from "@/actions/proposal-actions";
+import { createProposal, updateProposal } from "@/actions/proposal-actions";
+import { searchUnsplashImages } from "@/actions/unsplash-actions";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Proposal } from "@/types/dashboard";
 
 export function PostProposalModal({
   triggerClassName,
-  buttonText = "Post a Proposal"
+  buttonText = "Post a Proposal",
+  userSkills = [],
+  proposal, // If provided, we are in EDIT mode
+  isOpen: externalIsOpen,
+  onOpenChange: externalOnOpenChange
 }: {
   triggerClassName?: string,
-  buttonText?: string
+  buttonText?: string,
+  userSkills?: any[],
+  proposal?: Proposal,
+  isOpen?: boolean,
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnOpenChange || setInternalIsOpen;
+
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
+  // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [modality, setModality] = useState<"Remote" | "In-Person">("Remote");
-  const [offeredSkill, setOfferedSkill] = useState("");
+  const [offeredSkills, setOfferedSkills] = useState<string[]>([]);
+  const [manualOfferedSkill, setManualOfferedSkill] = useState("");
   const [neededSkills, setNeededSkills] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+
+  // Initialize form if editing
+  React.useEffect(() => {
+    if (isOpen && proposal) {
+      setTitle(proposal.title);
+      setDescription(proposal.description);
+      setModality(proposal.modality === 'REMOTE' ? 'Remote' : 'In-Person');
+
+      const offered = Array.isArray(proposal.offeredSkills) ? proposal.offeredSkills : [proposal.offeredSkills];
+      setOfferedSkills(offered.map((s: any) => s.name || s.skill?.name).filter(Boolean));
+
+      const needed = Array.isArray(proposal.neededSkills) ? proposal.neededSkills : [proposal.neededSkills];
+      setNeededSkills(needed.map((s: any) => s.name || s.skill?.name).filter(Boolean).join(', '));
+
+      setImageUrl(proposal.imageUrl || "");
+    } else if (isOpen && !proposal) {
+      // Clear if opening fresh
+      // clearForm(); // Avoid auto-clearing if user just closed by mistake, but depends on UX preference.
+    }
+  }, [isOpen, proposal]);
+
+  // Image Browser State
+  const [isImageBrowserOpen, setImageBrowserOpen] = useState(false);
+  const [imageSearchQuery, setImageSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; url: string; alt?: string; user: { name: string } }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleImageSearch = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const query = imageSearchQuery || offeredSkills[0] || title || "education";
+    setIsSearching(true);
+    setSearchResults([]);
+    try {
+      const results = await searchUnsplashImages(query);
+      setSearchResults(results);
+      if (results.length === 0) {
+        toast({ title: "No images found", description: "Try a different search term." });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Could not search for images." });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleImageSelect = (url: string) => {
+    setImageUrl(url);
+    setImageBrowserOpen(false);
+    setImageSearchQuery(""); // Clear search query after selection
+    setSearchResults([]); // Clear search results after selection
+  };
+
+  const clearForm = () => {
+    setTitle("");
+    setDescription("");
+    setOfferedSkills([]);
+    setManualOfferedSkill("");
+    setNeededSkills("");
+    setImageUrl("");
+    setImageSearchQuery("");
+    setSearchResults([]);
+    setImageBrowserOpen(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (title.length < 10) {
+      toast({ variant: "destructive", title: "Error", description: "Title is too short." });
+      return;
+    }
     setIsLoading(true);
 
     const dataToSend = {
       title,
       description,
       modality,
-      offeredSkillName: offeredSkill,
+      offeredSkillNames: offeredSkills.join(','),
       neededSkillNames: neededSkills,
+      imageUrl,
     };
 
     try {
-      const result = await createProposal(dataToSend);
+      let result;
+      if (proposal) {
+        result = await updateProposal(proposal.id, dataToSend);
+      } else {
+        result = await createProposal(dataToSend);
+      }
 
       if (result.success) {
-        toast({ title: "Success!", description: result.message });
+        toast({ variant: "success", title: "Success!", description: result.message });
         setIsOpen(false);
-        // Clear form
-        setTitle("");
-        setDescription("");
-        setOfferedSkill("");
-        setNeededSkills("");
-        router.refresh(); // Refresh server components
+        clearForm();
+        router.refresh();
       } else {
         const errorMsg = result.errors ? Object.values(result.errors).flat().join(' ') : result.message;
         toast({ variant: "destructive", title: "Error", description: errorMsg || "Failed to post proposal." });
@@ -80,115 +165,229 @@ export function PostProposalModal({
     }
   };
 
+  const addOfferedSkill = (skill: string) => {
+    if (skill && !offeredSkills.includes(skill)) {
+      setOfferedSkills([...offeredSkills, skill]);
+      setManualOfferedSkill("");
+    }
+  };
+
+  const removeOfferedSkill = (skill: string) => {
+    setOfferedSkills(offeredSkills.filter(s => s !== skill));
+  };
+
+  // Render the Image Browser UI
+  const renderImageBrowser = () => (
+    <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12 rounded-[2.5rem]">
+      <DialogHeader className="mb-8">
+        <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">Select Photo</DialogTitle>
+        <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2 opacity-70">
+          Find a high-quality cover for your proposal.
+        </DialogDescription>
+      </DialogHeader>
+
+      <form onSubmit={handleImageSearch} className="flex gap-3 mb-6">
+        <Input
+          value={imageSearchQuery}
+          onChange={(e) => setImageSearchQuery(e.target.value)}
+          placeholder="Search Unsplash..."
+          className="h-12 rounded-xl border-2 border-border focus:border-primary font-bold px-4"
+        />
+        <Button type="submit" size="icon" disabled={isSearching} className="h-12 w-12 rounded-xl bg-primary">
+          {isSearching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+        </Button>
+      </form>
+
+      <div className="min-h-[300px] border-2 border-dashed border-border rounded-3xl p-4 mt-2 bg-muted/20 relative overflow-hidden">
+        {isSearching && (
+          <div className="absolute inset-0 flex justify-center items-center bg-background/40 backdrop-blur-sm z-10 rounded-2xl">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          </div>
+        )}
+
+        {searchResults.length === 0 && !isSearching && (
+          <div className="flex flex-col justify-center items-center h-full min-h-[260px] text-sm text-muted-foreground opacity-50">
+            <ImageIcon className="w-12 h-12 mb-4" />
+            <p className="font-black uppercase tracking-widest text-xs text-center">Enter a keyword above to<br />browse premium cover photos</p>
+          </div>
+        )}
+
+        {searchResults.length > 0 && (
+          <div className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {searchResults.map(img => (
+              <button
+                key={img.id}
+                type="button"
+                onClick={() => handleImageSelect(img.url)}
+                className={cn(
+                  "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all hover:scale-105 active:scale-95 group",
+                  imageUrl === img.url ? 'border-primary ring-4 ring-primary/20' : 'border-transparent'
+                )}
+              >
+                <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
+                {imageUrl === img.url && (
+                  <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
+                    <Check className="h-10 w-10 text-white drop-shadow-lg" />
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="text-[8px] font-black text-white truncate text-left uppercase tracking-tighter">Photo by {img.user.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <DialogFooter className="mt-8">
+        <Button type="button" variant="ghost" onClick={() => setImageBrowserOpen(false)} className="h-12 rounded-xl font-black uppercase tracking-widest text-[10px] w-full border border-border">
+          Back to Proposal Form
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+
+  // Render the Main Proposal Form UI
+  const renderProposalForm = () => (
+    <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12 rounded-[2.5rem]">
+      <DialogHeader className="mb-10">
+        <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">{proposal ? "Edit Sync" : "Create a Sync"}</DialogTitle>
+        <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2 opacity-70">
+          {proposal ? "Update your proposal details." : "Share your expertise and find your perfect skill match."}
+        </DialogDescription>
+      </DialogHeader>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="title" className="text-xs font-black uppercase tracking-widest text-primary ml-1">Proposal Title</Label>
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} placeholder="e.g., Master Classical Piano" className="h-12 rounded-xl border-2 border-border focus:border-primary font-bold px-4 transition-all" required />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description" className="text-xs font-black uppercase tracking-widest text-primary ml-1">Description</Label>
+          <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe what you're offering and what you'd like in return..." className="min-h-[100px] rounded-xl border-2 border-border focus:border-primary font-medium p-4 transition-all" required />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1">Cover Image (Optional)</Label>
+          <div className="flex items-center gap-4">
+            <div className="w-24 h-24 rounded-2xl bg-muted flex items-center justify-center overflow-hidden border-2 border-border group relative">
+              {imageUrl ? (
+                <>
+                  <img src={imageUrl} className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setImageUrl('')} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <X className="w-6 h-6 text-white" />
+                  </button>
+                </>
+              ) : (
+                <ImageIcon className="text-muted-foreground opacity-30 w-8 h-8" />
+              )}
+            </div>
+            <div className="flex-1">
+              <Button type="button" variant="outline" className="h-12 w-full rounded-xl border-2 border-border font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 hover:text-primary transition-all" onClick={() => setImageBrowserOpen(true)}>
+                <ImageIcon className="w-4 h-4 mr-2" />
+                {imageUrl ? "Change Photo" : "Add Cover Photo"}
+              </Button>
+              <p className="text-[9px] text-muted-foreground mt-2 font-bold uppercase tracking-widest text-center opacity-60">Search from millions of photos</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1">Modality</Label>
+            <Select value={modality} onValueChange={(val: "Remote" | "In-Person") => setModality(val)}>
+              <SelectTrigger className="h-12 rounded-xl border-2 border-border font-bold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-2 border-border">
+                <SelectItem value="Remote" className="font-bold">Remote</SelectItem>
+                <SelectItem value="In-Person" className="font-bold">In-Person</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-black uppercase tracking-widest text-emerald-500 ml-1">Skills You Teach</Label>
+
+            {/* Selected Skills Badges */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {offeredSkills.map(skill => (
+                <div key={skill} className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-2">
+                  {skill}
+                  <button type="button" onClick={() => removeOfferedSkill(skill)} className="hover:text-emerald-800">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                value={manualOfferedSkill}
+                onChange={(e) => setManualOfferedSkill(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addOfferedSkill(manualOfferedSkill);
+                  }
+                }}
+                placeholder="Type a skill and press Enter..."
+                className="h-12 rounded-xl border-2 border-emerald-500/20 focus:border-emerald-500 font-bold px-4 transition-all flex-1"
+              />
+              {userSkills && userSkills.length > 0 && (
+                <Select onValueChange={(val) => addOfferedSkill(val)}>
+                  <SelectTrigger className="h-12 w-12 p-0 flex items-center justify-center border-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 rounded-xl hover:bg-emerald-500/10">
+                    <Plus className="w-5 h-5" />
+                  </SelectTrigger>
+                  <SelectContent align="end" className="rounded-xl border-2 border-border">
+                    {userSkills.map((s) => {
+                      const skillName = (s as any).skill?.name || s.name;
+                      const skillId = (s as any).skill?.id || s.id;
+                      return (
+                        <SelectItem key={skillId} value={skillName} className="font-bold">
+                          {skillName}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            <p className="text-[9px] text-muted-foreground ml-1 font-bold uppercase tracking-wider opacity-60">
+              Press Enter to add custom skills
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="needed" className="text-xs font-black uppercase tracking-widest text-orange-500 ml-1">Skills You Seek (comma separated)</Label>
+          <Input id="needed" value={neededSkills} onChange={(e) => setNeededSkills(e.target.value)} placeholder="e.g. Cooking, French" className="h-12 rounded-xl border-2 border-orange-500/20 focus:border-orange-500 font-bold px-4 transition-all" required />
+        </div>
+
+        <DialogFooter className="pt-4">
+          <Button type="submit" disabled={isLoading} className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3">
+            {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+            {proposal ? "Save Changes" : "Publish Proposal"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className={cn(
-          "flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold py-6 px-8 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95",
-          triggerClassName
-        )}>
-          <Plus className="w-6 h-6" /> {buttonText}
-        </Button>
+        {(!externalIsOpen && !externalOnOpenChange) && (
+          <Button className={cn(
+            "flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold py-6 px-8 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95",
+            triggerClassName
+          )}>
+            <Plus className="w-6 h-6" /> {buttonText}
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
-        <div className="bg-gradient-to-br from-primary/10 to-background p-8">
-          <DialogHeader className="mb-8">
-            <DialogTitle className="text-3xl font-black text-foreground">Create Proposal</DialogTitle>
-            <DialogDescription className="text-muted-foreground font-medium">Share your expertise and find someone to learn from.</DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <Label htmlFor="title" className="text-xs font-black uppercase tracking-widest text-primary">Proposal Title</Label>
-                <span className={cn("text-[10px] font-bold", title.length < 10 ? "text-rose-500" : "text-emerald-500")}>
-                  {title.length}/80
-                </span>
-              </div>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value.slice(0, 80))}
-                placeholder="e.g., Master Classical Piano"
-                className="h-12 rounded-xl border-2 border-border focus:border-primary transition-all font-bold px-4"
-                required
-              />
-              {title.length > 0 && title.length < 10 && (
-                <p className="text-[10px] text-rose-500 font-bold ml-1 animate-in fade-in slide-in-from-left-2">Title must be at least 10 characters.</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <Label htmlFor="description" className="text-xs font-black uppercase tracking-widest text-primary">Description</Label>
-                <span className={cn("text-[10px] font-bold", description.length < 30 ? "text-rose-500" : "text-emerald-500")}>
-                  {description.length}/500
-                </span>
-              </div>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, 500))}
-                placeholder="Tell us about what you can teach and what you are looking for..."
-                className="min-h-[100px] rounded-xl border-2 border-border focus:border-primary transition-all font-medium p-4"
-                required
-              />
-              {description.length > 0 && description.length < 30 && (
-                <p className="text-[10px] text-rose-500 font-bold ml-1 animate-in fade-in slide-in-from-left-2">Give a bit more detail (min 30 chars).</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1">Modality</Label>
-                <Select value={modality} onValueChange={(val: any) => setModality(val)}>
-                  <SelectTrigger className="h-12 rounded-xl border-2 border-border font-bold">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-2 border-border">
-                    <SelectItem value="Remote" className="font-bold">Remote</SelectItem>
-                    <SelectItem value="In-Person" className="font-bold">In-Person</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="offered" className="text-xs font-black uppercase tracking-widest text-emerald-500 ml-1">Skill You Teach</Label>
-                <Input
-                  id="offered"
-                  value={offeredSkill}
-                  onChange={(e) => setOfferedSkill(e.target.value)}
-                  placeholder="e.g. Piano"
-                  className="h-12 rounded-xl border-2 border-emerald-500/20 focus:border-emerald-500 transition-all font-bold px-4"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="needed" className="text-xs font-black uppercase tracking-widest text-orange-500 ml-1">Skills You Seek (comma separated)</Label>
-              <Input
-                id="needed"
-                value={neededSkills}
-                onChange={(e) => setNeededSkills(e.target.value)}
-                placeholder="e.g. Cooking, French"
-                className="h-12 rounded-xl border-2 border-orange-500/20 focus:border-orange-500 transition-all font-bold px-4"
-                required
-              />
-            </div>
-
-            <DialogFooter className="pt-4">
-              <Button
-                type="submit"
-                disabled={isLoading || title.length < 10 || description.length < 30}
-                className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale"
-              >
-                {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Plus className="mr-2 h-6 w-6" />}
-                Publish Proposal
-              </Button>
-            </DialogFooter>
-          </form>
-        </div>
+      <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-background max-h-[90vh] overflow-y-auto custom-scrollbar">
+        {isImageBrowserOpen ? renderImageBrowser() : renderProposalForm()}
       </DialogContent>
     </Dialog>
   );

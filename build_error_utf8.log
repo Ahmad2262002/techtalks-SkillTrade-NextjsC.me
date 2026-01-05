@@ -1,0 +1,46 @@
+﻿
+> skill-sync@0.1.0 build
+> next build
+
+   Γû▓ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 38.6s
+   Running TypeScript ...
+node.exe : Failed to compile.
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/app/(dashboard)/dashboard/client.tsx:234:12
+Type error: Property 'id' is missing in type '{ href: string; active: boolean; icon: Element; label: string; 
+activeTab: string; setIsSidebarOpen: Dispatch<SetStateAction<boolean>>; }' but required in type '{ id: string; label: 
+string; icon: any; delay?: number | undefined; href?: string | undefined; active?: boolean | undefined; activeTab: 
+string; setIsSidebarOpen: (open: boolean) => void; }'.
+
+[0m [90m 232 |[39m         [33m<[39m[33mnav[39m className[33m=[39m[32m"flex flex-col gap-1"[39m[33m>[39m
+ [90m 233 |[39m           [33m<[39m[33mp[39m className[33m=[39m{cn(styles[33m.[39mnavGroupTitle[33m,[39m 
+styles[33m.[39manimateSlideInRight)} style[33m=[39m{{ animationDelay[33m:[39m [32m'100ms'[39m 
+}}[33m>[39m[33mPlatform[39m[33m<[39m[33m/[39m[33mp[39m[33m>[39m
+[31m[1m>[22m[39m[90m 234 |[39m           [33m<[39m[33mNavLink[39m 
+href[33m=[39m[32m"/dashboard?tab=browse"[39m active[33m=[39m{activeTab [33m===[39m [32m"browse"[39m} 
+icon[33m=[39m{[33m<[39m[33mLayers[39m className[33m=[39m[32m"w-5 h-5"[39m [35m/>} label="Browse" 
+activeTab={activeTab} setIsSidebarOpen={setIsSidebarOpen} /[39m[33m>[39m
+ [90m     |[39m            [31m[1m^[22m[39m
+ [90m 235 |[39m           [33m<[39m[33mNavLink[39m href[33m=[39m[32m"/dashboard?tab=my-proposals"[39m 
+active[33m=[39m{activeTab [33m===[39m [32m"my-proposals"[39m} icon[33m=[39m{[33m<[39m[33mZap[39m 
+className[33m=[39m[32m"w-5 h-5"[39m [35m/>} label="My Proposals" activeTab={activeTab} 
+setIsSidebarOpen={setIsSidebarOpen} /[39m[33m>[39m
+ [90m 236 |[39m           [33m<[39m[33mNavLink[39m href[33m=[39m[32m"/dashboard?tab=active-swaps"[39m 
+active[33m=[39m{activeTab [33m===[39m [32m"active-swaps"[39m} icon[33m=[39m{[33m<[39m[33mMessageSquare[39m 
+className[33m=[39m[32m"w-5 h-5"[39m [35m/>} label="Active Swaps" activeTab={activeTab} 
+setIsSidebarOpen={setIsSidebarOpen} /[39m[33m>[39m
+ [90m 237 |[39m           [33m<[39m[33mNavLink[39m href[33m=[39m[32m"/dashboard?tab=leaderboard"[39m 
+active[33m=[39m{activeTab [33m===[39m [32m"leaderboard"[39m} icon[33m=[39m{[33m<[39m[33mTrophy[39m 
+className[33m=[39m[32m"w-5 h-5"[39m [35m/>} label="Leaderboard" activeTab={activeTab} 
+setIsSidebarOpen={setIsSidebarOpen} /[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

@@ -17,7 +17,7 @@ export function ProposalModal({ isOpen, onClose, onSuccess }: ProposalModalProps
   const [modality, setModality] = useState("");
   const [offeredSkill, setOfferedSkill] = useState("");
   const [neededSkill, setNeededSkill] = useState("");
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -53,13 +53,13 @@ export function ProposalModal({ isOpen, onClose, onSuccess }: ProposalModalProps
       title,
       description: `Offering: ${offeredSkill}\nSeeking: ${neededSkill}\n\nLet's swap!`,
       modality: modality as "Remote" | "In-Person",
-      offeredSkillName: offeredSkill,
+      offeredSkillNames: offeredSkill,
       neededSkillNames: neededSkill,
     };
 
     try {
       const result = await createProposal(formData);
-      
+
       if (result.success) {
         if (onSuccess) onSuccess();
         onClose();
@@ -86,7 +86,7 @@ export function ProposalModal({ isOpen, onClose, onSuccess }: ProposalModalProps
     <div className={styles.backdrop}>
       <div className={styles.card}>
         <div className={styles.glow} aria-hidden="true" />
-        
+
         <div className={styles.cardInner}>
           <header className="flex items-start justify-between gap-4 border-b border-slate-700/40 px-6 pb-4 pt-5">
             <div>

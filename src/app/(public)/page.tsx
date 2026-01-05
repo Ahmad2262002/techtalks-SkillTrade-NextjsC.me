@@ -1,25 +1,30 @@
+import React from "react";
 import Navbar from "@/components/landing/Navbar";
-import Hero from "@/components/landing/Hero";
-import HowItWorks from "@/components/landing/HowItWorks";
-import Features from "@/components/landing/Features";
-import Footer from "@/components/landing/Footer";
-import Contact from "@/components/landing/Contact";
+import AnimatedBackground from "@/components/landing/AnimatedBackground";
+import LandingLayout from "@/components/landing/LandingLayout"; // We will create this
+
 import { getCurrentUserId } from "@/actions/auth";
-import styles from "./Landing.module.css";
+import { listPublicProposals } from "@/actions/proposals";
+import { getPublicReviews } from "@/actions/reviews";
 
 export default async function Home() {
   const userId = await getCurrentUserId();
 
+  const [proposals, reviews] = await Promise.all([
+    listPublicProposals({ take: 6, includeAllStatuses: true }),
+    getPublicReviews(3)
+  ]);
+
   return (
-    <div className={styles.pageWrapper}>
+    <>
+      <AnimatedBackground />
       <Navbar userId={userId} />
-      <main className={styles.mainContent}>
-        <Hero />
-        <HowItWorks />
-        <Features />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+      {/* Move the smooth scroll and wrapper logic here */}
+      <LandingLayout 
+        userId={userId} 
+        proposals={proposals} 
+        reviews={reviews} 
+      />
+    </>
   );
 }

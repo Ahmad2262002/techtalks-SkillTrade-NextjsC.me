@@ -1,0 +1,49 @@
+﻿
+> skill-sync@0.1.0 lint
+> eslint
+
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\next.config.ts
+  1:1  warning  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\app\(dashboard)\dashboard\client.tsx
+   42:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   44:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   46:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   54:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   62:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  234:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:91  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  266:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  279:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  303:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  393:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  413:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  458:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  478:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  516:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  521:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\app\profile\[userid]\page.tsx
+  21:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\components\ChatModal.tsx
+   53:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  111:8   warning  React Hook useEffect has a missing dependency: 'fetchMessages'. Either include it or remove the dependency array                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\components\features\search\SearchSection.tsx
+  31:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\components\landing\Hero.tsx
+  17:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\components\ui\use-toast.ts
+  19:7  warning  'actionTypes' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+
+Γ£û 28 problems (23 errors, 5 warnings)
+

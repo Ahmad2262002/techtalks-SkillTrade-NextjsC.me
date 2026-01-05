@@ -66,6 +66,7 @@ model Proposal {
   description String
   modality    String   
   status      ProposalStatus @default(OPEN)
+  imageUrl    String?
   createdAt   DateTime @default(now())
   offeredSkills Skill[] @relation("OfferedSkills")
   neededSkills  Skill[]
@@ -83,8 +84,8 @@ model Application {
   id          String   @id @default(cuid())
   proposalId  String
   applicantId String
-  proposal    Proposal @relation(fields: [proposalId], references: [id])
-  applicant   User     @relation("Applicant", fields: [applicantId], references: [id])
+  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  applicant   User     @relation("Applicant", fields: [applicantId], references: [id], onDelete: Cascade)
   pitchMessage String
   status       ApplicationStatus @default(PENDING)
   createdAt    DateTime @default(now())
@@ -98,34 +99,37 @@ enum ApplicationStatus {
 }
 
 model Swap {
-  id          String   @id @default(cuid())
-  proposalId  String
-  proposal    Proposal @relation(fields: [proposalId], references: [id])
-  teacherId   String
-  studentId   String
-  teacher     User     @relation("Teacher", fields: [teacherId], references: [id])
-  student     User     @relation("Student", fields: [studentId], references: [id])
-  status      SwapStatus @default(ACTIVE)
-  startedAt   DateTime   @default(now())
-  completedAt DateTime?
-  reviews     Review[]
-  messages    Message[]
+  id                    String      @id @default(cuid())
+  proposalId            String
+  proposal              Proposal    @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  teacherId             String
+  studentId             String
+  teacher               User        @relation("Teacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  student               User        @relation("Student", fields: [studentId], references: [id], onDelete: Cascade)
+  status                SwapStatus  @default(ACTIVE)
+  startedAt             DateTime    @default(now())
+  completedAt           DateTime?
+  teacherHasCompleted   Boolean     @default(false)
+  studentHasCompleted   Boolean     @default(false)
+  reviews               Review[]
+  messages              Message[]
 }
 
 enum SwapStatus {
   ACTIVE
   COMPLETED
+  CLOSED
   CANCELLED
 }
 
 model Review {
   id          String   @id @default(cuid())
   swapId      String
-  swap        Swap     @relation(fields: [swapId], references: [id])
+  swap        Swap     @relation(fields: [swapId], references: [id], onDelete: Cascade)
   authorId    String
-  author      User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  author      User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   receiverId  String
-  receiver    User     @relation("ReviewReceiver", fields: [receiverId], references: [id])
+  receiver    User     @relation("ReviewReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   rating      Int
   comment     String?
   createdAt   DateTime @default(now())
@@ -137,22 +141,28 @@ model Message {
   id        String   @id @default(cuid())
   content   String
   senderId  String
-  sender    User     @relation("Sender", fields: [senderId], references: [id])
+  sender    User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
   receiverId String
-  receiver  User     @relation("Receiver", fields: [receiverId], references: [id])
-  swapId    String?
-  swap      Swap?     @relation(fields: [swapId], references: [id])
+  receiver  User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  swapId    String
+  swap      Swap     @relation(fields: [swapId], references: [id], onDelete: Cascade)
+  mediaUrl  String?
+  mediaType MediaType?
   createdAt DateTime @default(now())
   isRead    Boolean  @default(false)
-  mediaUrl  String?
-  mediaType String? // IMAGE, VIDEO, DOCUMENT
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
 }
 
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  type      String?   
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   
   message   String
   link      String?  
   isRead    Boolean  @default(false)

@@ -1,8 +1,9 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/actions/auth";
+import { getCurrentUserId } from "@/lib/auth";
 import { ApplicationStatus } from "@prisma/client";
+import { sendEmail } from "@/lib/email";
 
 export async function createApplication(input: {
   proposalId: string;
@@ -46,23 +47,40 @@ export async function createApplication(input: {
       applicantId: userId,
       pitchMessage: input.pitchMessage,
     },
-    include: {
-      applicant: true,
-    }
   });
 
-  // Create notification for owner (will be checked for delayed email after 10m)
+  // Notify proposal owner
   await prisma.notification.create({
     data: {
       userId: proposal.ownerId,
       type: "APPLICATION_RECEIVED",
-      message: `New application for "${proposal.title}" from ${application.applicant.name}`,
-      link: `/dashboard?tab=active-swaps`,
+      message: `New application for "${proposal.title}"`,
+      link: `/dashboard?tab=applications`,
     },
   });
 
-  return application;
+  // Fetch owner email for instant notification
+  const owner = await prisma.user.findUnique({
+    where: { id: proposal.ownerId },
+    select: { email: true }
+  });
 
+  if (owner?.email) {
+    await sendEmail({
+      to: owner.email,
+      subject: `New Application: ${proposal.title}`,
+      html: `
+        <p>You have a new application for your proposal: <strong>${proposal.title}</strong></p>
+        <p>Message from applicant:</p>
+        <blockquote style="border-left: 4px solid #6366f1; padding-left: 15px; margin: 15px 0;">
+          ${input.pitchMessage}
+        </blockquote>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=applications" style="color: #6366f1; font-weight: bold;">Review application in Dashboard</a></p>
+      `
+    });
+  }
+
+  return application;
 }
 
 export async function listApplicationsForProposal(proposalId: string) {
@@ -114,7 +132,6 @@ export async function updateApplicationStatus(params: {
     where: { id: params.applicationId },
     include: {
       proposal: true,
-      applicant: true,
     },
   });
 
@@ -127,28 +144,39 @@ export async function updateApplicationStatus(params: {
     data: { status: params.status },
   });
 
-  // IMMEDIATE EMAIL for critical status updates
-  if (application.applicant.email && params.status !== ApplicationStatus.PENDING) {
-    const { sendEmail } = await import("@/lib/email");
-    const statusText = params.status === ApplicationStatus.ACCEPTED ? "Accepted" : "Rejected";
-    const statusColor = params.status === ApplicationStatus.ACCEPTED ? "#10b981" : "#ef4444";
-
-    await sendEmail({
-      to: application.applicant.email,
-      subject: `Application ${statusText}: ${application.proposal.title}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: ${statusColor};">Application ${statusText}</h2>
-          <p>Your application for <strong>${application.proposal.title}</strong> has been <strong>${statusText.toLowerCase()}</strong>.</p>
-          ${params.status === ApplicationStatus.ACCEPTED ? `
-            <p>🎉 Congratulations! The proposal owner has accepted your application. You can now start collaborating!</p>
-          ` : `
-            <p>Unfortunately, your application was not accepted this time. Keep exploring other opportunities!</p>
-          `}
-          <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=my-applications" style="background-color: ${statusColor}; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">View Dashboard</a></p>
-        </div>
-      `,
+  // Notify applicant
+  if (params.status === "ACCEPTED" || params.status === "REJECTED") {
+    await prisma.notification.create({
+      data: {
+        userId: application.applicantId,
+        type: params.status === "ACCEPTED" ? "APPLICATION_ACCEPTED" : "APPLICATION_REJECTED",
+        message: `Your application for "${application.proposal.title}" was ${params.status.toLowerCase()}`,
+        link: params.status === "ACCEPTED" ? `/dashboard?tab=active-swaps` : `/dashboard?tab=my-proposals`,
+      },
     });
+
+    // Fetch applicant email for instant notification
+    const applicant = await prisma.user.findUnique({
+      where: { id: application.applicantId },
+      select: { email: true }
+    });
+
+    if (applicant?.email) {
+      const isAccepted = params.status === "ACCEPTED";
+      await sendEmail({
+        to: applicant.email,
+        subject: `Application ${isAccepted ? 'Accepted' : 'Rejected'}: ${application.proposal.title}`,
+        html: `
+          <p>Your application for <strong>${application.proposal.title}</strong> has been <strong>${params.status.toLowerCase()}</strong>.</p>
+          ${isAccepted
+            ? `<p>Congratulations! You can now start chatting and collaborate on this project.</p>
+               <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=active-swaps" style="color: #6366f1; font-weight: bold;">Go to Swaps</a></p>`
+            : `<p>Don't worry, there are many other opportunities waiting for you.</p>
+               <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=browse" style="color: #6366f1; font-weight: bold;">Browse more proposals</a></p>`
+          }
+        `
+      });
+    }
   }
 
   return updatedApplication;

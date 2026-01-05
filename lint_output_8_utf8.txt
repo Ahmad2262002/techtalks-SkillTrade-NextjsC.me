@@ -1,0 +1,13 @@
+﻿
+> skill-sync@0.1.0 lint
+> eslint
+
+
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\src\app\(dashboard)\dashboard\client.tsx
+   95:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  321:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 4 problems (4 errors, 0 warnings)
+

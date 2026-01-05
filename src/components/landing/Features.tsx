@@ -1,8 +1,20 @@
-import styles from '@/app/(public)/Landing.module.css';
+"use client";
+
+import { useRef } from "react";
+import styles from "@/app/(public)/Landing.module.css";
 import { Search, Zap, Award, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function Features() {
+  const container = useRef<HTMLDivElement>(null);
+
   const steps = [
     {
       icon: <Search className="w-8 h-8" />,
@@ -34,11 +46,62 @@ export default function Features() {
     },
   ];
 
+  useGSAP(() => {
+    const cards = gsap.utils.toArray<HTMLElement>(".feature-card");
+
+    // Title reveal (Smoother)
+    gsap.fromTo([`.${styles.sectionTitle}`, `.${styles.sectionDescription}`],
+      { filter: "blur(20px)", opacity: 0, y: 50 },
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        y: 0,
+        scrollTrigger: {
+          trigger: container.current,
+          start: "top 95%",
+          end: "top 75%",
+          scrub: 3, // Even slower scrub
+        },
+      }
+    );
+
+    // Physical wave reveal (Elegantly slow)
+    cards.forEach((card, i) => {
+      gsap.fromTo(card,
+        {
+          y: 80, // Less aggressive jump
+          rotateZ: 4,
+          opacity: 0,
+          scale: 0.9
+        },
+        {
+          y: 0,
+          rotateZ: 0,
+          opacity: 1,
+          scale: 1,
+          ease: "expo.out",
+          scrollTrigger: {
+            trigger: card,
+            start: () => `top+=${i * 100} 100%`,
+            end: () => `top+=${i * 100} 70%`,
+            scrub: 3.5, // Much smoother scrub
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+    });
+  }, { scope: container });
+
   return (
-    <section id="features" className={styles.features}>
+    <section id="features" ref={container} className={styles.features}>
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>The SkillSwap Ecosystem</h2>
+          <span className={styles.eyebrow}>
+            Platform Capabilities
+          </span>
+          <h2 className={styles.sectionTitle}>
+            The SkillSync <span className="text-primary">Ecosystem</span>
+          </h2>
           <p className={styles.sectionDescription}>
             Unlocking human potential through collaborative knowledge exchange. No money, just mastery.
           </p>
@@ -48,9 +111,10 @@ export default function Features() {
           {steps.map((step, i) => (
             <div
               key={i}
-              style={{ animationDelay: `${i * 150}ms` }}
-              className={cn(styles.featureCard, "group", styles.animateSlideUp)}
+              className={cn(styles.featureCard, "group feature-card")}
+              style={{ willChange: "transform, opacity" }}
             >
+              <div className={styles.viscousGlow} />
               <div className={cn(
                 styles.featureIcon,
                 "bg-gradient-to-br transition-all duration-500 group-hover:scale-110",

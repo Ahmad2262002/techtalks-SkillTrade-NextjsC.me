@@ -53,10 +53,10 @@ const DialogTrigger = React.forwardRef<
     }
 
     if (asChild && React.isValidElement(children)) {
-        return React.cloneElement(children as React.ReactElement<any>, {
+        return React.cloneElement(children as React.ReactElement<{ onClick?: (e: React.MouseEvent) => void }>, {
             onClick: (e: React.MouseEvent) => {
-                // @ts-ignore
-                children.props.onClick?.(e)
+                const childProps = children.props as { onClick?: (e: React.MouseEvent) => void };
+                childProps.onClick?.(e)
                 onOpenChange(true)
             }
         })
@@ -104,7 +104,7 @@ const DialogContent = React.forwardRef<
 
     return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200 overflow-y-auto"
             onClick={() => onOpenChange(false)}
         >
             <div

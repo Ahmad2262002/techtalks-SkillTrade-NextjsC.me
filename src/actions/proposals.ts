@@ -30,7 +30,7 @@ export async function createProposal(input: {
   });
 }
 
-import { getReputationStats } from "./reviews";
+import { getReputationStats, getBatchReputationStats } from "./reviews";
 
 export async function listPublicProposals(params: {
   wantSkillIds?: string[];
@@ -39,6 +39,7 @@ export async function listPublicProposals(params: {
   search?: string;
   take?: number;
   skip?: number;
+  includeAllStatuses?: boolean;
 } = {}) {
   const {
     wantSkillIds,
@@ -47,6 +48,7 @@ export async function listPublicProposals(params: {
     search,
     take = 20,
     skip = 0,
+    includeAllStatuses = false,
   } = params;
 
   // --- SEARCH LOGIC ---
@@ -72,7 +74,7 @@ export async function listPublicProposals(params: {
 
   const proposals = await prisma.proposal.findMany({
     where: {
-      status: "OPEN",
+      status: includeAllStatuses ? undefined : "OPEN",
       modality: modality ?? undefined,
       ...searchFilter,
       AND: [
@@ -118,19 +120,19 @@ export async function listPublicProposals(params: {
     skip,
   });
 
-  // Attach reputation to each owner
-  const proposalsWithReputation = await Promise.all(
-    proposals.map(async (p) => {
-      const reputation = await getReputationStats(p.ownerId);
-      return {
-        ...p,
-        owner: {
-          ...p.owner,
-          reputation,
-        },
-      };
-    })
-  );
+  // Batch fetch reputation for all owners
+  const ownerIds = proposals.map(p => p.ownerId);
+  const reputationMap = await getBatchReputationStats(ownerIds);
+
+  const proposalsWithReputation = proposals.map((p) => {
+    return {
+      ...p,
+      owner: {
+        ...p.owner,
+        reputation: reputationMap[p.ownerId],
+      },
+    };
+  });
 
   return proposalsWithReputation;
 }
@@ -177,19 +179,19 @@ export async function getProposalById(proposalId: string) {
   // Attach reputation to owner
   const ownerReputation = await getReputationStats(proposal.ownerId);
 
-  // Attach reputation to applicants
-  const applicationsWithReputation = await Promise.all(
-    proposal.applications.map(async (app) => {
-      const rep = await getReputationStats(app.applicantId);
-      return {
-        ...app,
-        applicant: {
-          ...app.applicant,
-          reputation: rep,
-        },
-      };
-    })
-  );
+  // Attach reputation to applicants in batch
+  const applicantIds = proposal.applications.map(app => app.applicantId);
+  const reputationMap = await getBatchReputationStats(applicantIds);
+
+  const applicationsWithReputation = proposal.applications.map((app) => {
+    return {
+      ...app,
+      applicant: {
+        ...app.applicant,
+        reputation: reputationMap[app.applicantId],
+      },
+    };
+  });
 
   return {
     ...proposal,

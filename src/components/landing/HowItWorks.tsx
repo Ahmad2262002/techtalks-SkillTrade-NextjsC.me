@@ -35,11 +35,18 @@ export default function HowItWorks() {
     ];
 
     return (
-        <section className="py-24 relative overflow-hidden">
+        <section className={styles.section}>
             <div className={styles.container}>
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-4">How it <span className="text-primary">Works</span></h2>
-                    <p className="text-muted-foreground font-bold max-w-2xl mx-auto italic">SkillSwap simplifies knowledge exchange into four seamless steps.</p>
+                <div className={styles.sectionHeader}>
+                    <span className={styles.eyebrow}>
+                        The Protocol
+                    </span>
+                    <h2 className={styles.sectionTitle}>
+                        How it <span className="text-primary">Works</span>
+                    </h2>
+                    <p className={styles.sectionDescription}>
+                        SkillSync simplifies knowledge exchange into four seamless, high-value steps.
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">

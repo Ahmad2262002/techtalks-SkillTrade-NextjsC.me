@@ -2,6 +2,7 @@
 
 import { useTheme, Accent } from "@/context/ThemeContext";
 import { Palette, Sun, Moon, Check } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,6 +23,26 @@ const accents: { id: Accent; name: string; color: string }[] = [
 
 export function ThemeCustomizer() {
     const { theme, accent, toggleTheme, setAccent } = useTheme();
+    const { toast } = useToast();
+
+    const handleThemeToggle = () => {
+        const nextTheme = theme === 'light' ? 'dark' : 'light';
+        toggleTheme();
+        toast({
+            variant: "default",
+            title: `Switched to ${nextTheme} mode`,
+            description: "Experience the pulse shift.",
+        });
+    };
+
+    const handleAccentChange = (id: Accent, name: string) => {
+        setAccent(id);
+        toast({
+            variant: "success",
+            title: `${name} Active`,
+            description: "Your color signature has been updated.",
+        });
+    };
 
     return (
         <DropdownMenu>
@@ -40,7 +61,7 @@ export function ThemeCustomizer() {
                     <div className="px-2 flex flex-col gap-3">
                         <span className="text-[10px] font-black uppercase tracking-widest text-primary">Appearance</span>
                         <button
-                            onClick={toggleTheme}
+                            onClick={handleThemeToggle}
                             className="flex items-center justify-between w-full p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors border border-border/50"
                         >
                             <div className="flex items-center gap-2">
@@ -62,7 +83,7 @@ export function ThemeCustomizer() {
                             {accents.map((a) => (
                                 <button
                                     key={a.id}
-                                    onClick={() => setAccent(a.id)}
+                                    onClick={() => handleAccentChange(a.id, a.name)}
                                     title={a.name}
                                     className={cn(
                                         "relative h-10 w-10 rounded-xl transition-all border-2",

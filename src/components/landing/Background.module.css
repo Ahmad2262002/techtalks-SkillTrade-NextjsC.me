@@ -1,0 +1,52 @@
+.bgLayer {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    filter: blur(140px);
+    pointer-events: none;
+    overflow: hidden;
+    background: radial-gradient(circle at center, transparent 0%, hsl(var(--background)) 100%);
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform;
+    mix-blend-mode: screen;
+}
+
+.pOrb {
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%);
+    top: -10%;
+    left: -10%;
+    opacity: 0.15;
+}
+
+.bOrb {
+    width: 50vw;
+    height: 50vw;
+    background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+    bottom: -10%;
+    right: -10%;
+    opacity: 0.12;
+}
+
+.aOrb {
+    width: 40vw;
+    height: 40vw;
+    background: radial-gradient(circle, #f97316 0%, transparent 70%);
+    top: 40%;
+    right: 10%;
+    opacity: 0.08;
+}
+
+.sOrb {
+    width: 35vw;
+    height: 35vw;
+    background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+    bottom: 30%;
+    left: 15%;
+    opacity: 0.08;
+}

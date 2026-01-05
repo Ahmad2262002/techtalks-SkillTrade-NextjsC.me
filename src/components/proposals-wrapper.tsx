@@ -5,11 +5,31 @@ import { useRouter } from "next/navigation";
 import { getProposals } from "@/actions/proposal-queries";
 import { RecentProposals } from "@/components/RecentProposals";
 
+interface DBProposal {
+  id: string;
+  title: string;
+  offeredSkills: { name: string }[];
+  neededSkills: { name: string }[];
+  modality: string;
+  status: string;
+  createdAt: Date;
+}
+
+interface ProposalUI {
+  id: string;
+  title: string;
+  offeredSkill: string;
+  neededSkill: string;
+  modality: string;
+  status: string;
+  createdAt: Date;
+}
+
 // Helper to map DB response to UI format
-function mapProposalFromDB(proposal: any) {
+function mapProposalFromDB(proposal: DBProposal): ProposalUI {
   // Extract skill names from the relation arrays
-  const offeredSkill = proposal.offeredSkills?.map((s: any) => s.name).join(", ") || "";
-  const neededSkill = proposal.neededSkills?.map((s: any) => s.name).join(", ") || "";
+  const offeredSkill = proposal.offeredSkills?.map((s) => s.name).join(", ") || "";
+  const neededSkill = proposal.neededSkills?.map((s) => s.name).join(", ") || "";
 
   // Map status enum to UI labels
   const statusMap: Record<string, string> = {
@@ -40,7 +60,7 @@ function mapProposalFromDB(proposal: any) {
 }
 
 export function ProposalsWrapper() {
-  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<ProposalUI[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 

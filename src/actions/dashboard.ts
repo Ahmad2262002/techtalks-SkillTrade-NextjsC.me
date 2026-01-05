@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/actions/auth";
-import { getReputationStats } from "./reviews";
+import { getReputationStats, getBatchReputationStats } from "./reviews";
 
 export async function getDashboardOverview() {
   const userId = await getCurrentUserId();
@@ -91,77 +91,54 @@ export async function getDashboardOverview() {
         },
         teacher: true,
         student: true,
+        reviews: true,
+        messages: {
+          where: {
+            receiverId: userId,
+            isRead: false,
+          },
+          select: { id: true }
+        }
       },
       orderBy: { startedAt: "desc" },
-      take: 10,
+      take: 20,
     }),
   ]);
 
-  // 4. Attach Reputation to Applicants and Swap Partners
-  const [applicationsWithReputation, swapsWithReputation] = await Promise.all([
-    Promise.all(
-      applications.map(async (app) => {
-        const rep = await getReputationStats(app.applicantId);
-        return {
-          ...app,
-          applicant: {
-            ...app.applicant,
-            reputation: rep,
-          },
-        };
-      })
-    ),
-    Promise.all(
-      swaps.map(async (s) => {
-        const [teacherRep, studentRep] = await Promise.all([
-          getReputationStats(s.teacherId),
-          getReputationStats(s.studentId),
-        ]);
-        return {
-          ...s,
-          teacher: { ...s.teacher, reputation: teacherRep },
-          student: { ...s.student, reputation: studentRep },
-        };
-      })
-    ),
-  ]);
-
-  // 5. Reputation for current user (Batch 3 - has 2 internal queries)
+  // 4. Reputation (Batch 3 - has 2 internal queries)
   const reputation = await getReputationStats(userId);
 
   return {
     user,
     proposals,
-    applications: applicationsWithReputation,
+    applications,
     sentApplications,
-    swaps: swapsWithReputation,
+    swaps,
     reputation,
   };
 }
 
 export async function getLeaderboard() {
+  // Fetch users who have completed swaps or received reviews
+  // For a better leaderboard, we could query for users with most activities first
   const users = await prisma.user.findMany({
     take: 50,
-    include: {
-      skills: {
-        where: { isVisible: true, source: "ENDORSED" },
-        include: { skill: true }
-      }
+    select: {
+      id: true,
+      name: true,
+      avatarUrl: true,
+      industry: true,
     }
   });
 
-  const leaderboard = await Promise.all(
-    users.map(async (user) => {
-      const stats = await getReputationStats(user.id);
-      return {
-        id: user.id,
-        name: user.name,
-        avatarUrl: user.avatarUrl,
-        industry: user.industry,
-        reputation: stats,
-      };
-    })
-  );
+  const userIds = users.map(u => u.id);
+  const statsMap = await getBatchReputationStats(userIds);
 
-  return leaderboard.sort((a, b) => b.reputation.reputationPoints - a.reputation.reputationPoints);
+  const leaderboard = users.map(user => ({
+    ...user,
+    reputation: statsMap[user.id],
+  })).sort((a, b) => (b.reputation?.reputationPoints || 0) - (a.reputation?.reputationPoints || 0))
+    .slice(0, 10); // Return top 10
+
+  return leaderboard;
 }

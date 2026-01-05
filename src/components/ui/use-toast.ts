@@ -3,15 +3,15 @@
 // Inspired by shadcn/ui toast
 import * as React from "react"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 5
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = {
     id: string
     title?: React.ReactNode
     description?: React.ReactNode
     action?: React.ReactNode
-    variant?: "default" | "destructive"
+    variant?: "default" | "destructive" | "success"
     open?: boolean
     onOpenChange?: (open: boolean) => void
 }
@@ -91,8 +91,6 @@ export const reducer = (state: State, action: Action): State => {
         case "DISMISS_TOAST": {
             const { toastId } = action
 
-            // ! Side effects ! - This could be extracted into a dismissToast() action,
-            // but I'll keep it here for simplicity
             if (toastId) {
                 addToRemoveQueue(toastId)
             } else {
@@ -180,7 +178,7 @@ function useToast() {
                 listeners.splice(index, 1)
             }
         }
-    }, [state])
+    }, [])
 
     return {
         ...state,

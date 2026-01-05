@@ -4,20 +4,7 @@ import { getCurrentUserId } from "@/actions/auth";
 import DashboardClientContent from "./client";
 import { redirect } from "next/navigation";
 
-type Skill = {
-  id: string;
-  name: string;
-};
-
-type Proposal = {
-  id: string;
-  ownerId: string;
-  title: string;
-  description: string;
-  modality: "REMOTE" | "IN_PERSON";
-  offeredSkill: Skill;
-  neededSkills: Skill[];
-};
+import { Proposal, Skill } from "@/types/dashboard";
 
 type DashboardSearchParams = {
   tab?: "browse" | "my-proposals" | "active-swaps" | "leaderboard";
