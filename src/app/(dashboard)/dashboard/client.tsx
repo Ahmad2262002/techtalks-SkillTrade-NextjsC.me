@@ -319,7 +319,7 @@ export default function DashboardClientContent({
             </div>
             {/* Mobile simplified header actions */}
             <div className="flex items-center justify-between w-full sm:w-auto gap-2">
-              <div className="sm:hidden scale-90 origin-left">
+              <div className="sm:hidden">
                 <NavSearchButton />
               </div>
               <div className="flex items-center gap-2">

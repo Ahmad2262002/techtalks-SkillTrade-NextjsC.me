@@ -10,7 +10,7 @@ export default async function BrowsePage() {
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[#071a2a] text-white">
       <Navbar userId={userId} />
-      <main className="flex-grow pt-24">
+      <main className="flex-grow pt-28 sm:pt-32">
         <SearchSection />
       </main>
       <Footer />
