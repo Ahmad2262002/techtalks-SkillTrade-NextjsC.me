@@ -39,13 +39,7 @@ export default function LoginPage() {
       opacity: 0,
       duration: 1.2,
       ease: "expo.out"
-    })
-      .from(".back-btn", {
-        x: -20,
-        opacity: 0,
-        duration: 1,
-        ease: "expo.out"
-      }, "-=0.8");
+    });
   }, { scope: container });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,8 +80,8 @@ export default function LoginPage() {
       <div className="absolute bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] bg-indigo-500/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
 
       <div className="w-full max-w-md relative z-10">
-        <div className="flex justify-start w-full mb-8">
-          <Link href="/" className="back-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-background/40 hover:bg-background/60 border border-white/5 backdrop-blur-md transition-all group shadow-lg">
+        <div className="flex justify-start w-full mb-8 relative z-50">
+          <Link href="/" className="back-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-background/60 hover:bg-background/80 border border-white/10 backdrop-blur-xl transition-all group shadow-xl hover:shadow-2xl active:scale-95">
             <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Back to Orbit</span>
           </Link>
