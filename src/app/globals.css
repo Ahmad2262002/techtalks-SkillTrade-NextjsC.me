@@ -132,19 +132,16 @@
 html,
 body,
 :root {
-  height: auto !important;
-  /* Force auto height to prevent double scrollbar */
-  min-height: 100dvh;
+  height: 100%;
+  /* Revert to 100% to allow sticky children to reference viewport height */
   width: 100%;
   max-width: 100vw;
   margin: 0;
   padding: 0;
   overflow-x: clip;
-  /* Strict horizontal overflow handling */
+  /* Clip prevents horizontal scroll without breaking sticky context */
   overflow-y: auto;
-  /* Ensure standard vertical scrolling */
   -webkit-overflow-scrolling: touch;
-  /* Momentum scrolling for iOS */
 }
 
 /* Performance Optimizations */

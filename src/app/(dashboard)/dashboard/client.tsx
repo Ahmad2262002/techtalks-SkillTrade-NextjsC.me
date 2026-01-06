@@ -1012,52 +1012,65 @@ const UserMenu = ({ user }: any) => ( // eslint-disable-line @typescript-eslint/
   </DropdownMenu>
 );
 
-const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-background/50 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-background hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg">
-        <Bell className={cn("w-5 h-5", unreadCount > 0 && "animate-swing text-foreground")} />
-        {unreadCount > 0 && (
-          <span className="absolute top-2 right-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-        )}
-      </button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-[85vw] max-w-[400px] h-[500px] flex flex-col rounded-[2rem] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-2 fade-in duration-300 overflow-hidden">
-      <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-        <DropdownMenuLabel className="text-lg font-black uppercase italic tracking-tighter">Inbox</DropdownMenuLabel>
-        {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500/10 text-rose-500 border-rose-500/20">{unreadCount} New</Badge>}
-      </div>
+const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const router = useRouter();
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-        {notifications.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
-            <Bell className="w-12 h-12 mb-4 text-muted-foreground/50" />
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">All caught up</p>
-          </div>
-        ) : (
-          notifications.map((n: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-            <DropdownMenuItem
-              key={n.id}
-              onClick={() => handleMarkRead(n.id)}
-              className={cn(
-                "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent",
-                !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-white/5 opacity-70 hover:opacity-100"
-              )}
-            >
-              <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />
-              <div className="flex-1 space-y-1">
-                <p className={cn("text-xs sm:text-sm leading-relaxed", !n.isRead ? "font-bold text-foreground" : "font-medium text-muted-foreground")}>
-                  {n.message}
-                </p>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-              </div>
-            </DropdownMenuItem>
-          ))
-        )}
-      </div>
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-background/50 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-background hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg">
+          <Bell className={cn("w-5 h-5", unreadCount > 0 && "animate-swing text-foreground")} />
+          {unreadCount > 0 && (
+            <span className="absolute top-2 right-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[85vw] max-w-[400px] h-[500px] flex flex-col rounded-[2rem] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-2 fade-in duration-300 overflow-hidden">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+          <DropdownMenuLabel className="text-lg font-black uppercase italic tracking-tighter">Inbox</DropdownMenuLabel>
+          {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500/10 text-rose-500 border-rose-500/20">{unreadCount} New</Badge>}
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+          {notifications.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
+              <Bell className="w-12 h-12 mb-4 text-muted-foreground/50" />
+              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">All caught up</p>
+            </div>
+          ) : (
+            notifications.map((n: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+              <DropdownMenuItem
+                key={n.id}
+                onClick={() => {
+                  handleMarkRead(n.id);
+                  // Navigate using the backend-provided link if available
+                  if (n.link) {
+                    router.push(n.link);
+                  } else if ((n.type === 'MESSAGE' || n.type === 'MESSAGE_RECEIVED' || n.type === 'SWAP_REQUEST') && n.resourceId) {
+                    // Fallback for types (though resourceId might be missing based on actions/messages.ts)
+                    router.push(`/dashboard?tab=active-swaps&swapId=${n.resourceId}`);
+                  }
+                }}
+                className={cn(
+                  "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent",
+                  !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-white/5 opacity-70 hover:opacity-100"
+                )}
+              >
+                <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />
+                <div className="flex-1 space-y-1">
+                  <p className={cn("text-xs sm:text-sm leading-relaxed", !n.isRead ? "font-bold text-foreground" : "font-medium text-muted-foreground")}>
+                    {n.message}
+                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+              </DropdownMenuItem>
+            ))
+          )}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const EmptyState = ({ message }: { message: string }) => (
   <div className={cn(styles.emptyState, "group")}>

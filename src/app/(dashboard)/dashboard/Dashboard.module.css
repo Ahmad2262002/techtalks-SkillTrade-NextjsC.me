@@ -1,11 +1,11 @@
 .dashboardLayout {
   display: flex;
-  min-height: 100vh;
+  min-height: 100%;
+  /* Use percentage to respect parent height */
   background-color: var(--color-background);
   color: var(--color-foreground);
   position: relative;
-  overflow-x: clip;
-  /* Modern fix for sticky + overflow */
+  /* Removed overflow-x: clip to allow sticky to work relative to viewport */
   width: 100%;
 }
 
@@ -63,6 +63,9 @@
     position: sticky;
     top: 0;
     height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    /* Allow sidebar internal scroll if content is too long */
     z-index: 50;
   }
 }

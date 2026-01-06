@@ -8,6 +8,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -147,14 +148,13 @@ export function ChatModal({
         }
     }, [messages]);
 
+    const searchParams = useSearchParams();
+
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("swapId") === swapId && params.get("tab") === "active-swaps") {
+        if (searchParams.get("swapId") === swapId && searchParams.get("tab") === "active-swaps") {
             setIsOpen(true);
-            // Optional: clean up the URL to prevent re-opening on refresh if desired
-            // window.history.replaceState({}, '', window.location.pathname + '?tab=active-swaps');
         }
-    }, [swapId]);
+    }, [searchParams, swapId]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
