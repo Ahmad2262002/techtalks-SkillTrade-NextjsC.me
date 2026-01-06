@@ -15,6 +15,10 @@
     mix-blend-mode: screen;
 }
 
+:global(.light) .orb {
+    mix-blend-mode: overlay;
+}
+
 .pOrb {
     width: 60vw;
     height: 60vw;
@@ -22,6 +26,10 @@
     top: -10%;
     left: -10%;
     opacity: 0.15;
+}
+
+:global(.light) .pOrb {
+    opacity: 0.1;
 }
 
 .bOrb {

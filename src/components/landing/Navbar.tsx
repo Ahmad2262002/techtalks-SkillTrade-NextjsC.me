@@ -8,7 +8,7 @@ import { ThemeCustomizer } from '@/components/ThemeCustomizer';
 import { Menu, X, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -54,17 +54,17 @@ const Navbar = ({ userId }: NavbarProps) => {
     const tl = gsap.timeline();
     tl.fromTo(".nav-logo",
       { y: -30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.8, ease: "expo.out" }
+      { y: 0, opacity: 1, duration: 1.2, ease: "expo.out", clearProps: "all" }
     )
       .fromTo(".nav-item",
         { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, stagger: 0.2, duration: 1.5, ease: "expo.out" },
-        "-=1.4"
+        { y: 0, opacity: 1, stagger: 0.1, duration: 1.0, ease: "expo.out", clearProps: "all" },
+        "-=1.0"
       )
       .fromTo(".nav-action",
         { x: 30, opacity: 0 },
-        { x: 0, opacity: 1, duration: 1.5, ease: "expo.out" },
-        "-=1.4"
+        { x: 0, opacity: 1, duration: 1.2, ease: "expo.out", clearProps: "all" },
+        "-=1.0"
       );
 
     // Scroll-based "Walking" effect
@@ -85,36 +85,36 @@ const Navbar = ({ userId }: NavbarProps) => {
       ref={container}
       className={cn(
         styles.navbar,
-        "fixed top-0 left-0 right-0 z-[100] transition-all duration-700 px-6 py-6",
-        scrolled ? "py-4" : "py-8"
+        "fixed top-0 left-0 right-0 z-[100] transition-all duration-700 px-6",
+        scrolled ? "py-3 sm:py-4" : "py-4 sm:py-8"
       )}
     >
       <div className={cn(
         "max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-10 h-22 rounded-[3rem] transition-all duration-700 relative overflow-hidden",
         (scrolled && !mobileMenuOpen)
-          ? "bg-background/40 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] scale-[0.96] border border-white/10"
+          ? "bg-background/50 backdrop-blur-3xl shadow-xl shadow-primary/5 border border-white/20 dark:border-white/5 scale-[0.98]"
           : "bg-transparent border border-transparent"
       )}>
         {/* Scrolled Background Glow */}
         {(scrolled && !mobileMenuOpen) && (
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 pointer-events-none opacity-50" />
         )}
 
         <Link href="/" className={cn(
-          "nav-logo flex items-center gap-4 z-[60] hover:scale-110 transition-all opacity-0 group",
+          "nav-logo flex items-center gap-4 z-[60] hover:scale-110 transition-all group",
           mobileMenuOpen && "!opacity-0 pointer-events-none"
         )}>
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center backdrop-blur-3xl border border-primary/20 shadow-2xl shadow-primary/20 overflow-hidden relative">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/20 dark:bg-primary/20 flex items-center justify-center backdrop-blur-3xl border border-primary/30 dark:border-primary/10 shadow-xl shadow-primary/20 dark:shadow-2xl overflow-hidden relative group-hover:shadow-primary/40 transition-all duration-500">
             <div className="absolute inset-0 bg-primary/10 animate-pulse" />
             <Image
               src="/favicon.ico"
-              alt="SkillSync Logo"
+              alt="SkillTrade Logo"
               width={34}
               height={34}
-              className="object-contain transition-transform duration-500 group-hover:scale-125 relative z-10"
+              className="object-contain transition-transform duration-500 group-hover:scale-110 relative z-10 sm:w-[38px] sm:h-[38px] icon-premium"
             />
           </div>
-          <span className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic">Skill<span className="text-primary not-italic">Sync</span></span>
+          <span className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic">Skill<span className="text-primary not-italic">Trade</span></span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-12">
@@ -123,7 +123,7 @@ const Navbar = ({ userId }: NavbarProps) => {
               key={item}
               href={item === 'Home' ? '/' : item === 'Browse' ? '/dashboard' : '#features'}
               onClick={item === 'Features' ? (e) => handleSmoothScroll(e as any, "#features") : undefined}
-              className="nav-item text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 hover:text-primary transition-all hover:scale-110 opacity-0 relative group"
+              className="nav-item text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 hover:text-primary transition-all hover:scale-110 relative group"
             >
               {item}
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -132,7 +132,7 @@ const Navbar = ({ userId }: NavbarProps) => {
         </nav>
 
         <div className="flex items-center gap-6">
-          <div className="hidden lg:flex items-center nav-action opacity-0">
+          <div className="hidden lg:flex items-center nav-action">
             <ThemeCustomizer />
             <div className="w-px h-10 bg-gradient-to-b from-transparent via-border/50 to-transparent mx-8" />
             {userId ? (

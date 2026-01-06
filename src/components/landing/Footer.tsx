@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from 'react';
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -22,13 +22,15 @@ export default function Footer() {
     gsap.from(".footer-col", {
       scrollTrigger: {
         trigger: container.current,
-        start: "top 90%",
+        start: "top 95%",
+        toggleActions: "play none none reverse"
       },
-      y: 50,
+      y: 40,
       opacity: 0,
-      duration: 1.2,
+      duration: 1.4,
       stagger: 0.1,
-      ease: "expo.out"
+      ease: "expo.out",
+      clearProps: "all"
     });
   }, { scope: container });
 
@@ -41,13 +43,13 @@ export default function Footer() {
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mr-4 shadow-xl shadow-primary/10 overflow-hidden border border-primary/20 transition-all group-hover:rotate-12">
                 <Image
                   src="/favicon.ico"
-                  alt="SkillSync Logo"
+                  alt="SkillTrade Logo"
                   width={24}
                   height={24}
                   className="object-contain"
                 />
               </div>
-              <span className="text-2xl font-black tracking-tighter uppercase italic">Skill<span className="text-primary not-italic">Sync</span></span>
+              <span className="text-2xl font-black tracking-tighter uppercase italic">Skill<span className="text-primary not-italic">Trade</span></span>
             </Link>
             <p className="text-sm text-muted-foreground font-medium leading-relaxed max-w-xs">
               The world's first decentralized talent exchange. Join thousands of experts trading knowledge across 50+ countries. <span className="text-primary font-bold">Your skill is your wealth.</span>
@@ -85,7 +87,7 @@ export default function Footer() {
             <div className="relative group">
               <input
                 type="email"
-                placeholder="agent@skillsync.io"
+                placeholder="agent@skilltrade.solutions"
                 className="w-full bg-background/50 border-2 border-border/50 rounded-2xl px-6 py-4 text-xs font-bold focus:outline-none focus:border-primary/50 transition-all shadow-inner"
               />
               <button className="absolute right-2 top-2 bottom-2 bg-primary text-white px-6 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">Join</button>
@@ -95,7 +97,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-border/10 flex flex-col md:flex-row justify-between items-center gap-4 footer-col">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
-            © {new Date().getFullYear()} SkillSync Premium Registry. All Rights Reserved.
+            © {new Date().getFullYear()} SkillTrade Premium Registry. All Rights Reserved.
           </p>
           <div className="flex gap-8">
             <Link href="#" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">Privacy</Link>

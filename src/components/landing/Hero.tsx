@@ -5,11 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Zap, Globe, Sparkles, Trophy } from "lucide-react";
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import AnimatedBackground from "./AnimatedBackground";
 import { PostProposalModal } from "@/components/PostProposalModal";
 
 if (typeof window !== "undefined") {
@@ -55,81 +54,88 @@ export default function Hero({ userId }: { userId?: string | null }) {
     const chars = gsap.utils.toArray(".char");
     const introTl = gsap.timeline();
 
-    introTl.set([`.${styles.heroTitle}`, `.${styles.heroActions}`, ".stat-card", ".hero-badge", ".anim-load"], {
-      autoAlpha: 1
-    });
+    // No need for set autoAlpha: 1 since we removed opacity-0
+    // The introTl will now animate FROM hidden state to visible state.
 
     introTl
       .from(".hero-badge", {
         opacity: 0,
-        scale: 0.8,
-        y: -30,
-        filter: "blur(10px)",
-        duration: 2,
-        ease: "expo.out"
+        scale: 0.9,
+        y: -40,
+        filter: "blur(20px)",
+        duration: 1.4,
+        ease: "expo.out",
+        clearProps: "all"
       })
       .fromTo(`.${styles.eyebrow}`, {
         opacity: 0,
-        y: 30,
+        y: 20,
         filter: "blur(10px)"
       }, {
         opacity: 1,
         y: 0,
         filter: "blur(0px)",
-        duration: 1.5,
-        ease: "expo.out"
-      }, "-=1.5")
-      .from(chars, {
-        opacity: 0,
-        y: 100,
-        filter: "blur(30px)",
-        rotateX: -15,
-        stagger: 0.01,
-        duration: 2.5,
+        duration: 1.2,
         ease: "expo.out",
         clearProps: "all"
-      }, "-=1.5")
+      }, "-=1.1")
+      .from(chars, {
+        opacity: 0,
+        y: 60,
+        filter: "blur(20px)",
+        rotateX: -10,
+        stagger: 0.012,
+        duration: 1.8,
+        ease: "expo.out",
+        clearProps: "all"
+      }, "-=0.9")
       .fromTo(`.${styles.heroDescription}`, {
         opacity: 0,
-        y: 30,
+        y: 20,
         filter: "blur(10px)"
       }, {
         opacity: 0.9,
         y: 0,
         filter: "blur(0px)",
-        duration: 1.5,
-        ease: "power2.out"
-      }, "-=0.8")
+        duration: 1.2,
+        ease: "power3.out",
+        clearProps: "all"
+      }, "-=1.0")
       .fromTo(`.${styles.heroActions} .proto-btn`, {
         opacity: 0,
-        x: -30,
+        y: 20,
+        scale: 0.95
       }, {
         opacity: 1,
-        x: 0,
-        stagger: 0.1,
+        y: 0,
+        scale: 1,
+        stagger: 0.15,
         duration: 1.2,
-        ease: "expo.out"
+        ease: "expo.out",
+        clearProps: "all"
       }, "-=1.0")
       .fromTo(".stat-card", {
         opacity: 0,
-        y: 40,
-        scale: 0.9,
+        y: 30,
+        scale: 0.95,
       }, {
         opacity: 1,
         y: 0,
         scale: 1,
         stagger: 0.1,
         duration: 1.4,
-        ease: "expo.out"
-      }, "-=1.2")
+        ease: "expo.out",
+        clearProps: "all"
+      }, "-=1.1")
       .fromTo(".anim-load", {
         opacity: 0,
-        y: 50,
+        y: 30,
       }, {
         opacity: 1,
         y: 0,
-        duration: 1.6,
-        ease: "expo.out"
+        duration: 1.2,
+        ease: "expo.out",
+        clearProps: "all"
       }, "-=1.2");
 
     // Scroll-based parallax
@@ -154,7 +160,6 @@ export default function Hero({ userId }: { userId?: string | null }) {
 
   return (
     <section ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center w-full max-w-full overflow-x-hidden")}>
-      <AnimatedBackground />
 
       {/* Mesh Gradient Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.1),transparent)] pointer-events-none" />
@@ -162,7 +167,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
       <div className={`${styles.container} relative z-10 text-center parallax-content`}>
 
         {/* Elite Badge - Made responsive */}
-        <div className="hero-badge opacity-0 inline-flex flex-col sm:flex-row items-center gap-2 px-6 py-2 rounded-[2rem] border border-primary/20 bg-primary/5 backdrop-blur-xl mb-12 shadow-[0_10px_30px_rgba(var(--primary),0.1)]">
+        <div className="hero-badge inline-flex flex-col sm:flex-row items-center gap-2 px-6 py-2 rounded-[2rem] border border-primary/20 bg-primary/5 backdrop-blur-xl mb-12 shadow-[0_10px_30px_hsl(var(--primary)/0.1)]">
           <div className="flex -space-x-3 mb-2 sm:mb-0">
             {[15, 22, 33, 44].map(id => (
               <div key={id} className="w-8 h-8 rounded-full border-2 border-background overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-500">
@@ -176,31 +181,31 @@ export default function Hero({ userId }: { userId?: string | null }) {
           </span>
         </div>
 
-        <span className={cn(styles.eyebrow, "hero-badge opacity-0")}>
+        <span className={cn(styles.eyebrow, "hero-badge")}>
           The Peer-to-Peer Protocol
         </span>
 
         {/* Hero Title - Made responsive with word breaking */}
-        <h1 ref={titleRef} className={cn(styles.heroTitle, "opacity-0 mb-8 sm:mb-12 font-[Outfit] px-4 break-words text-4xl sm:text-6xl md:text-7xl leading-[1.1] sm:leading-[0.9]")}>
+        <h1 ref={titleRef} className={cn(styles.heroTitle, "mb-8 sm:mb-12 font-[Outfit] px-4 break-words text-4xl sm:text-6xl md:text-7xl leading-[1.1] sm:leading-[0.9]")}>
           Exchange Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block will-change-transform">Intelligence.</span>
           <br className="hidden sm:block" />
           No Money <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block will-change-transform">Required.</span>
         </h1>
 
-        <p className={cn(styles.heroDescription, "opacity-0 text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90 px-4")}>
-          SkillSync is a high-octane peer-to-peer marketplace. We bypass traditional education by connecting your expertise directly with the skills you crave. <span className="text-primary font-bold">Your talent is the only currency here.</span>
+        <p className={cn(styles.heroDescription, "text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90 px-4")}>
+          SkillTrade is a high-octane peer-to-peer marketplace. We bypass traditional education by connecting your expertise directly with the skills you crave. <span className="text-primary font-bold">Your talent is the only currency here.</span>
         </p>
 
-        <div className={cn(styles.heroActions, "opacity-0 flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4 w-full")}>
+        <div className={cn(styles.heroActions, "flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4 w-full")}>
           <div className="absolute -inset-4 bg-primary/5 blur-3xl rounded-full -z-10 animate-pulse" />
           {userId ? (
             <PostProposalModal
               buttonText="Initialize New Sync"
-              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group w-full sm:w-auto break-words whitespace-normal text-center"
+              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_hsl(var(--primary)/0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group w-full sm:w-auto break-words whitespace-normal text-center"
             />
           ) : (
             <Link href="/dashboard" className="proto-btn w-full sm:w-auto">
-              <Button size="lg" className="h-20 w-full sm:w-auto px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden whitespace-normal break-words text-center">
+              <Button size="lg" className="h-20 w-full sm:w-auto px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_hsl(var(--primary)/0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden whitespace-normal break-words text-center">
                 <span className="relative z-10 flex items-center justify-center">
                   Access Explorer
                   <Zap className="ml-3 w-4 h-4 group-hover:fill-current transition-all shrink-0" />
@@ -219,7 +224,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
             { label: "Skill Vector", value: "154", sub: "UNIQUE", color: "from-emerald-500/20" },
             { label: "Trust Index", value: "4.95", sub: "RATING", color: "from-amber-500/20" }
           ].map((stat, i) => (
-            <div key={i} className="stat-card opacity-0 relative group p-px rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-white/10 to-transparent hover:from-primary/50 transition-all duration-500">
+            <div key={i} className="stat-card relative group p-px rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-white/10 to-transparent hover:from-primary/50 transition-all duration-500">
               <div className={cn("bg-background/40 backdrop-blur-2xl rounded-[1.9rem] sm:rounded-[2.4rem] p-6 sm:p-10 h-full flex flex-col items-center justify-center group-hover:bg-background/20 transition-all duration-700 relative overflow-hidden")}>
                 <div className={cn("absolute inset-0 bg-gradient-to-br to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700", stat.color)} />
                 <span className="relative z-10 text-[8px] sm:text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3 sm:mb-4 opacity-60 group-hover:opacity-100">{stat.label}</span>
@@ -231,7 +236,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         </div>
 
         {/* Global Marquee */}
-        <div className="mt-32 opacity-0 anim-load">
+        <div className="mt-32 anim-load">
           <div className="text-[9px] font-black uppercase tracking-[0.6em] text-muted-foreground/40 mb-12 flex items-center justify-center gap-4">
             <div className="h-px w-12 bg-white/5" />
             DECENTRALIZED FROM

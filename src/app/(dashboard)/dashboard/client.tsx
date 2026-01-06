@@ -205,31 +205,51 @@ export default function DashboardClientContent({
     gsap.registerPlugin(ScrollTrigger);
   }
 
+  // Layout Entrance Animation (Runs once)
   useGSAP(() => {
-    // Entrance Animation - Simplified to Opacity Only to prevent Sticky/Transform conflicts
     const tl = gsap.timeline();
     tl.fromTo(`.${styles.sidebar}`,
-      { opacity: 0 },
-      { opacity: 1, duration: 1.0, ease: "power2.out" }
+      { x: -30, opacity: 0, filter: "blur(10px)" },
+      { x: 0, opacity: 1, filter: "blur(0px)", duration: 1.4, ease: "expo.out", clearProps: "all" }
     )
       .fromTo(`.${styles.header}`,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.8, ease: "power2.out" },
-        "-=0.6"
+        { y: -30, opacity: 0, filter: "blur(10px)" },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 1.2, ease: "expo.out", clearProps: "all" },
+        "-=1.1"
       )
       .fromTo(`.${styles.mainContent}`,
         { opacity: 0 },
         { opacity: 1, duration: 1.0, ease: "power2.out" },
-        "-=0.6"
+        "-=0.8"
       );
+  }, { scope: container });
 
-    // Scroll-based parallax removed to prevent jitter/glitching with sticky positioning.
-    // Sticky positioning handles the layouts behavior natively and smoother.
+  // Tab Content Transition (Runs on activeTab change)
+  useGSAP(() => {
+    gsap.fromTo(".tab-content-wrapper",
+      { y: 20, opacity: 0, filter: "blur(10px)" },
+      { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.8, ease: "expo.out", clearProps: "all" }
+    );
+  }, { scope: container, dependencies: [activeTab] });
 
-  }, { scope: container, dependencies: [activeTab, scrolled] });
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setLoggingOut(true);
+    gsap.to(container.current, {
+      opacity: 0,
+      scale: 0.98,
+      filter: "blur(20px)",
+      duration: 1.2,
+      ease: "expo.inOut",
+      onComplete: () => {
+        signOut();
+      }
+    });
+  };
 
   return (
-    <div ref={container} className={styles.dashboardLayout}>
+    <div ref={container} className={cn(styles.dashboardLayout, loggingOut && "pointer-events-none")}>
       {/* Mobile Backdrop */}
       <aside className={cn(
         styles.sidebar,
@@ -240,13 +260,13 @@ export default function DashboardClientContent({
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center backdrop-blur-xl border border-primary/20 shadow-lg shadow-primary/10 overflow-hidden">
               <Image
                 src="/favicon.ico"
-                alt="SkillSync Logo"
+                alt="SkillTrade Logo"
                 width={24}
                 height={24}
                 className="object-contain transition-transform duration-500 group-hover:scale-110"
               />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase">Skill<span className="text-primary">Sync</span></span>
+            <span className="text-xl font-black tracking-tighter uppercase">Skill<span className="text-primary">Trade</span></span>
           </Link>
         </div>
 
@@ -289,8 +309,13 @@ export default function DashboardClientContent({
               <Link href="/" className={cn(styles.navLink, "hover:bg-muted pl-8")}>
                 <Home className="w-4 h-4" /><span>Landing Page</span>
               </Link>
-              <button onClick={() => signOut()} className={cn(styles.navLink, "w-full text-rose-500 hover:bg-rose-500/10 pl-8 font-black")}>
-                <LogOut className="w-4 h-4" /><span>Sign Out</span>
+              <button
+                onClick={handleSignOut}
+                disabled={loggingOut}
+                className={cn(styles.navLink, "w-full text-rose-500 hover:bg-rose-500/10 pl-8 font-black disabled:opacity-50")}
+              >
+                <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
+                <span>{loggingOut ? "Disconnecting..." : "Sign Out"}</span>
               </button>
             </div>
           )}
@@ -330,14 +355,14 @@ export default function DashboardClientContent({
                 <div className="flex items-center gap-2 border-l border-border/50 pl-2">
                   <div className="block"><ThemeCustomizer /></div>
                   <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
-                  <UserMenu user={overview.user} />
+                  <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="animate-fade-in delay-150">
+        <div className="tab-content-wrapper pb-24">
           {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} />}
           {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={myProposals} handleDelete={handleDeleteProposal} />}
           {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications} swaps={swaps} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
@@ -570,7 +595,7 @@ const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCance
               )}
               <DropdownMenuSeparator className="my-3 opacity-10" />
               <DropdownMenuItem asChild className="rounded-2xl font-black uppercase tracking-widest text-[10px] p-4 h-12 focus:bg-destructive/10 focus:text-destructive cursor-pointer text-destructive">
-                <a href={`mailto:support@skillswap.com?subject=Incident%20Report:%20${swap.proposal?.title}&body=Sync%20ID:%20${swap.id}`}>Report Incident</a>
+                <a href={`mailto:support@skilltrade.solutions?subject=Incident%20Report:%20${swap.proposal?.title}&body=Sync%20ID:%20${swap.id}`}>Report Incident</a>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -984,7 +1009,7 @@ const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
 ));
 ApplicationCard.displayName = "ApplicationCard";
 
-const UserMenu = ({ user }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+const UserMenu = ({ user, onSignOut, loggingOut }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
@@ -1005,8 +1030,15 @@ const UserMenu = ({ user }: any) => ( // eslint-disable-line @typescript-eslint/
         </Link>
       </DropdownMenuItem>
       <DropdownMenuSeparator className="bg-white/5 my-1" />
-      <DropdownMenuItem onClick={() => signOut()} className="rounded-xl focus:bg-rose-500/10 focus:text-rose-500 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide text-rose-500/80 hover:text-rose-500 transition-colors">
-        <span className="flex items-center gap-3"><LogOut className="w-4 h-4" /> Logout</span>
+      <DropdownMenuItem
+        onClick={onSignOut}
+        disabled={loggingOut}
+        className="rounded-xl focus:bg-rose-500/10 focus:text-rose-500 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide text-rose-500/80 hover:text-rose-500 transition-colors disabled:opacity-50"
+      >
+        <span className="flex items-center gap-3">
+          <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
+          {loggingOut ? "Disconnecting..." : "Logout"}
+        </span>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

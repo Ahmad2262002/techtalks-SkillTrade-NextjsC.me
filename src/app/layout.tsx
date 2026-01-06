@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "../context/ThemeContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,8 +20,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "SkillSwap - Premium Knowledge Exchange Platform",
-    template: "%s | SkillSwap"
+    default: "SkillTrade - Premium Knowledge Exchange Platform",
+    template: "%s | SkillTrade"
   },
   description: "Transform your expertise into valuable skills. Join the premium barter economy for knowledge exchange. Connect with mentors, learn new skills, and grow together in a trusted community.",
   keywords: [
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     "online learning",
     "community learning"
   ],
-  authors: [{ name: "SkillSwap Team" }],
-  creator: "SkillSwap",
-  publisher: "SkillSwap",
+  authors: [{ name: "SkillTrade Team" }],
+  creator: "SkillTrade",
+  publisher: "SkillTrade",
   formatDetection: {
     email: false,
     address: false,
@@ -52,24 +52,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'SkillSwap - Premium Knowledge Exchange Platform',
+    title: 'SkillTrade - Premium Knowledge Exchange Platform',
     description: 'Transform your expertise into valuable skills. Join the premium barter economy for knowledge exchange.',
-    siteName: 'SkillSwap',
+    siteName: 'SkillTrade',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SkillSwap - Knowledge Exchange Platform',
+        alt: 'SkillTrade - Knowledge Exchange Platform',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SkillSwap - Premium Knowledge Exchange Platform',
+    title: 'SkillTrade - Premium Knowledge Exchange Platform',
     description: 'Transform your expertise into valuable skills. Join the premium barter economy for knowledge exchange.',
     images: ['/og-image.png'],
-    creator: '@skillswap',
+    creator: '@skilltrade',
   },
   robots: {
     index: true,

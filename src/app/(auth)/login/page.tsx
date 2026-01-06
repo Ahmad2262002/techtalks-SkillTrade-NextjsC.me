@@ -21,6 +21,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,16 +32,49 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useGSAP(() => {
     const tl = gsap.timeline();
-    tl.from(".auth-card", {
-      y: 40,
-      opacity: 0,
-      duration: 1.2,
-      ease: "expo.out"
-    });
+
+    // Initial Entrance
+    tl.fromTo(".auth-card",
+      { y: 60, opacity: 0, scale: 0.95, filter: "blur(20px)" },
+      { y: 0, opacity: 1, scale: 1, filter: "blur(0px)", duration: 1.4, ease: "expo.out", clearProps: "all" }
+    )
+      .from(".auth-header-item", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 1,
+        ease: "expo.out"
+      }, "-=1.0")
+      .from(".auth-input-group", {
+        y: 30,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 1.2,
+        ease: "expo.out",
+        clearProps: "all"
+      }, "-=0.8")
+      .from(".auth-footer-item", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 1,
+        ease: "expo.out",
+        clearProps: "all"
+      }, "-=1.0");
+
   }, { scope: container });
+
+  // Mode Switch Animation
+  useGSAP(() => {
+    gsap.fromTo(".auth-form-content",
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.8, ease: "power4.out" }
+    );
+  }, { scope: container, dependencies: [mode] });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,31 +84,62 @@ export default function LoginPage() {
     const supabase = getSupabaseBrowserClient();
 
     try {
+      const { id: toastId, update } = toast({
+        title: "Syncing Master Node",
+        description: "Establishing secure uplink to the global grid...",
+        variant: "loading",
+        duration: 8000,
+      });
+
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+
+        update({
+          id: toastId,
+          title: "Access Granted",
+          description: "Welcome back to the Orbit, Agent.",
+          variant: "success",
+          duration: 3000,
+        });
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
+
+        update({
+          id: toastId,
+          title: "Node Created",
+          description: "Your master identity has been synchronized.",
+          variant: "success",
+          duration: 3000,
+        });
       }
-      router.refresh();
-      router.push("/dashboard");
+      setTimeout(() => {
+        router.refresh();
+        router.push("/dashboard");
+      }, 800);
 
     } catch (err: any) {
-      setError(err.message ?? "Authentication failed. Please check your credentials.");
+      const errorMessage = err.message ?? "Authentication failed. Please check your credentials.";
+      setError(errorMessage);
+      toast({
+        title: "Link Terminated",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main ref={container} className="min-h-screen flex flex-col items-center justify-center bg-background p-6 relative overflow-hidden">
+    <main ref={container} className="min-h-screen flex flex-col items-center justify-center bg-background p-6 relative overflow-y-auto py-20 sm:py-6">
       {/* Decorative background orbs with more depth */}
       <div className="absolute top-[-20%] left-[-20%] w-[60vw] h-[60vw] bg-primary/10 rounded-full blur-[150px] animate-pulse" />
       <div className="absolute bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] bg-indigo-500/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
@@ -87,22 +152,23 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <Card className="auth-card border-none bg-card/30 backdrop-blur-3xl shadow-[0_50px_120px_-30px_rgba(0,0,0,0.7)] rounded-[3.5rem] overflow-hidden border border-white/10 relative">
+        <Card className="auth-card border-none bg-card/30 backdrop-blur-3xl shadow-[0_50px_120px_-30px_rgba(0,0,0,0.5)] rounded-[3.5rem] border border-white/10 relative">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-indigo-500 to-primary animate-gradient-x" />
 
           <CardHeader className="pt-14 px-12 pb-8">
             <div className="flex justify-between items-start mb-10">
-              <div className="w-18 h-18 rounded-[2rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-2xl shadow-primary/20 border border-primary/20 overflow-hidden group">
+              <div className="auth-header-item w-20 h-20 rounded-[2.5rem] bg-primary/20 dark:bg-primary/20 flex items-center justify-center shadow-xl shadow-primary/20 dark:shadow-2xl border border-primary/30 dark:border-primary/10 overflow-hidden group">
                 <Image
                   src="/favicon.ico"
-                  alt="SkillSync Logo"
-                  width={40}
-                  height={40}
-                  className="object-contain transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12"
+                  alt="SkillTrade Logo"
+                  width={44}
+                  height={44}
+                  className="object-contain transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 icon-premium"
                 />
               </div>
-              <div className="flex bg-muted/30 p-2 rounded-2xl border border-white/5 backdrop-blur-md">
+              <div className="auth-header-item flex bg-muted/30 p-2 rounded-2xl border border-white/5 backdrop-blur-md">
                 <button
+                  type="button"
                   onClick={() => setMode("signin")}
                   className={cn(
                     "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all",
@@ -112,6 +178,7 @@ export default function LoginPage() {
                   Login
                 </button>
                 <button
+                  type="button"
                   onClick={() => setMode("signup")}
                   className={cn(
                     "px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all",
@@ -123,21 +190,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <CardTitle className="text-6xl font-black tracking-tight uppercase italic leading-[0.9] mb-4">
+            <CardTitle className="auth-header-item text-6xl font-black tracking-tight uppercase italic leading-[0.9] mb-4">
               {mode === "signin" ? (
                 <>Welcome <span className="text-primary not-italic">Back.</span></>
               ) : (
                 <>Join the <span className="text-primary not-italic">Pulse.</span></>
               )}
             </CardTitle>
-            <CardDescription className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-40">
+            <CardDescription className="auth-header-item text-[10px] font-bold uppercase tracking-[0.3em] opacity-40">
               {mode === "signin" ? "IDENTIFICATION REQUIRED // SECTOR 7" : "IDENTITY INITIALIZATION // GLOBAL GRID"}
             </CardDescription>
           </CardHeader>
 
           <form onSubmit={handleSubmit} className="relative z-10">
-            <CardContent className="space-y-10 px-12 pt-6">
-              <div className="space-y-4 group">
+            <CardContent className="auth-form-content space-y-10 px-12 pt-6">
+              <div className="auth-input-group space-y-4 group">
                 <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 group-focus-within:text-primary transition-colors ml-1">
                   Node Identifier
                 </Label>
@@ -148,14 +215,14 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="agent@skillsync.io"
+                    placeholder="agent@skilltrade.solutions"
                     className="h-18 rounded-2xl bg-background/20 border-2 border-white/5 focus:border-primary/40 focus:bg-background/40 transition-all px-8 font-bold text-lg placeholder:text-muted-foreground/20"
                   />
                   <div className="absolute inset-0 border border-white/5 rounded-2xl pointer-events-none" />
                 </div>
               </div>
 
-              <div className="space-y-4 group">
+              <div className="auth-input-group space-y-4 group">
                 <div className="flex justify-between items-end px-1">
                   <Label htmlFor="password" dir="ltr" className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 group-focus-within:text-primary transition-colors">
                     Access Crypt
@@ -199,7 +266,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-20 rounded-[2rem] bg-primary text-white shadow-[0_25px_60px_-15px_rgba(var(--primary),0.5)] hover:shadow-[0_30px_70px_-10px_rgba(var(--primary),0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all font-black text-xs uppercase tracking-[0.4em] relative overflow-hidden group border-none"
+                className="auth-footer-item w-full h-20 rounded-[2rem] bg-primary text-white hover:scale-[1.02] active:scale-[0.98] transition-all font-black text-xs uppercase tracking-[0.4em] relative overflow-hidden group border-none shadow-premium-vibrant"
               >
                 <span className="relative z-10 flex items-center gap-3">
                   {loading ? (

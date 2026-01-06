@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Quote } from "lucide-react";
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -33,19 +33,21 @@ export default function RecentReviews({ reviews }: RecentReviewsProps) {
         });
 
         tl.from(`.${styles.sectionTitle}, .${styles.eyebrow}, .${styles.sectionDescription}`, {
-            y: 40,
+            y: 50,
             opacity: 0,
-            duration: 1,
-            stagger: 0.2,
-            ease: "expo.out"
+            duration: 1.2,
+            stagger: 0.15,
+            ease: "expo.out",
+            clearProps: "all"
         })
             .from(".review-card", {
                 y: 60,
                 opacity: 0,
-                duration: 1.2,
-                stagger: 0.15,
-                ease: "expo.out"
-            }, "-=0.8");
+                duration: 1.4,
+                stagger: 0.1,
+                ease: "expo.out",
+                clearProps: "all"
+            }, "-=1.0");
 
     }, { scope: container });
 

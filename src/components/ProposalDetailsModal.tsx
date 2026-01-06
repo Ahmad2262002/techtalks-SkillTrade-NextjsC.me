@@ -209,7 +209,7 @@ export function ProposalDetailsModal({
                         <div className="w-full md:w-auto">
                             {!isOwner && (
                                 <Button variant="ghost" size="sm" className="font-bold text-muted-foreground uppercase tracking-widest text-[9px] hover:text-destructive transition-colors" asChild>
-                                    <a href={`mailto:support@skillswap.com?subject=Report%20Proposal:%20${proposal.title}&body=Proposal%20ID:%20${proposal.id}%0A%0AReason%20for%20reporting:`}>
+                                    <a href={`mailto:support@skilltrade.solutions?subject=Report%20Proposal:%20${proposal.title}&body=Proposal%20ID:%20${proposal.id}%0A%0AReason%20for%20reporting:`}>
                                         Flag Content
                                     </a>
                                 </Button>

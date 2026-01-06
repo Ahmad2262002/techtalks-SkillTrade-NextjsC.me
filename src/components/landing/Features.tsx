@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import { Search, Zap, Award, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import gsap from "gsap";
@@ -58,9 +58,8 @@ export default function Features() {
         y: 0,
         scrollTrigger: {
           trigger: container.current,
-          start: "top 95%",
-          end: "top 75%",
-          scrub: 3, // Even slower scrub
+          start: "top 90%",
+          toggleActions: "play none none reverse",
         },
       }
     );
@@ -82,9 +81,7 @@ export default function Features() {
           ease: "expo.out",
           scrollTrigger: {
             trigger: card,
-            start: () => `top+=${i * 100} 100%`,
-            end: () => `top+=${i * 100} 70%`,
-            scrub: 3.5, // Much smoother scrub
+            start: "top 95%",
             toggleActions: "play none none reverse",
           }
         }
@@ -100,7 +97,7 @@ export default function Features() {
             Platform Capabilities
           </span>
           <h2 className={styles.sectionTitle}>
-            The SkillSync <span className="text-primary">Ecosystem</span>
+            The SkillTrade <span className="text-primary">Ecosystem</span>
           </h2>
           <p className={styles.sectionDescription}>
             Unlocking human potential through collaborative knowledge exchange. No money, just mastery.

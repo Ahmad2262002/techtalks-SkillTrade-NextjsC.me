@@ -21,7 +21,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
     try {
         console.log(`🚀 Attempting to send REAL email to ${to}...`);
         const data = await resend.emails.send({
-            from: 'SkillSync <notifications@resend.dev>', // Update this with your verified domain
+            from: 'SkillTrade <notifications@skilltrade.solutions>',
             to,
             subject,
             html: wrapEmailTemplate(html),
@@ -51,7 +51,7 @@ function wrapEmailTemplate(content: string): string {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>SkillSync Notification</title>
+            <title>SkillTrade Notification</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
@@ -61,7 +61,7 @@ function wrapEmailTemplate(content: string): string {
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">SkillSync</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">SkillTrade</h1>
                                     <p style="color: #e0e7ff; margin: 5px 0 0 0; font-size: 14px;">Exchange Skills, Build Connections</p>
                                 </td>
                             </tr>
@@ -75,10 +75,10 @@ function wrapEmailTemplate(content: string): string {
                             <tr>
                                 <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
                                     <p style="color: #6b7280; font-size: 12px; margin: 0 0 10px 0;">
-                                        You're receiving this email because you're a member of SkillSync.
+                                        You're receiving this email because you're a member of SkillTrade.
                                     </p>
                                     <p style="color: #9ca3af; font-size: 11px; margin: 0;">
-                                        © ${new Date().getFullYear()} SkillSync. All rights reserved.
+                                        © ${new Date().getFullYear()} SkillTrade. All rights reserved.
                                     </p>
                                 </td>
                             </tr>

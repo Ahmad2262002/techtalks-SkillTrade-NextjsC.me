@@ -86,11 +86,11 @@ export async function sendMessage(params: {
             to: receiver.email,
             subject: `New message from ${swap.teacherId === userId ? swap.teacher.name : swap.student.name}`,
             html: `
-                <p>You have a new message on SkillSync:</p>
+                <p>You have a new message on SkillTrade:</p>
                 <blockquote style="border-left: 4px solid #6366f1; padding-left: 15px; margin: 15px 0;">
                     ${params.content}
                 </blockquote>
-                <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=active-swaps&swapId=${params.swapId}" style="color: #6366f1; font-weight: bold;">Reply on SkillSync</a></p>
+                <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=active-swaps&swapId=${params.swapId}" style="color: #6366f1; font-weight: bold;">Reply on SkillTrade</a></p>
             `,
             text: `New message from ${swap.teacherId === userId ? swap.teacher.name : swap.student.name}: ${params.content}`
         });

@@ -1,8 +1,8 @@
-# 🚀 SkillSwap - Premium Knowledge Exchange Platform
+# 🚀 SkillTrade - Premium Knowledge Exchange Platform
 
 <div align="center">
 
-![SkillSwap Logo](public/icon-192.png)
+![SkillTrade Logo](public/icon-192.png)
 
 **Transform your expertise into valuable skills**
 
@@ -11,7 +11,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Latest-3ecf8e?style=for-the-badge&logo=supabase)](https://supabase.com/)
 
-[Live Demo](https://skillswap.com) • [Documentation](#documentation) • [Report Bug](https://github.com/skillswap/issues) • [Request Feature](https://github.com/skillswap/issues)
+[Live Demo](https://skilltrade.solutions) • [Documentation](#documentation) • [Report Bug](https://github.com/Ahmad2262002/techtalks-SkillTrade-NextjsC/issues) • [Request Feature](https://github.com/Ahmad2262002/techtalks-SkillTrade-NextjsC/issues)
 
 </div>
 
@@ -88,8 +88,8 @@
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/skillswap.git
-cd skillswap/skill-sync
+git clone https://github.com/Ahmad2262002/techtalks-SkillTrade-NextjsC.git
+cd techtalks-SkillTrade-NextjsC/skill-sync
 ```
 
 2. **Install dependencies**
@@ -263,16 +263,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**SkillSwap Team**
-- Website: [skillswap.com](https://skillswap.com)
-- Email: support@skillswap.com
-- Twitter: [@skillswap](https://twitter.com/skillswap)
+**SkillTrade Team**
+- Website: [skilltrade.solutions](https://skilltrade.solutions)
+- Email: support@skilltrade.solutions
+- Twitter: [@skilltrade](https://twitter.com/skilltrade)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by the SkillSwap Team**
+**Made with ❤️ by the SkillTrade Team**
 
 ⭐ Star us on GitHub — it motivates us a lot!
 

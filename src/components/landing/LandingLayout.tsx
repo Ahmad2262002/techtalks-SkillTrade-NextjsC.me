@@ -7,7 +7,7 @@ import Footer from "@/components/landing/Footer";
 import Spotlight from "@/components/landing/Spotlight";
 import RecentReviews from "@/components/landing/RecentReviews";
 import SmoothScrollProvider from "@/app/(public)/SmoothScrollProvider";
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 
 export default function LandingLayout({ userId, proposals, reviews }: any) {
   // Render all content immediately

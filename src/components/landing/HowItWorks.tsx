@@ -1,5 +1,5 @@
 import { Zap, Search, MessageSquare, Award } from "lucide-react";
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import { cn } from "@/lib/utils";
 
 export default function HowItWorks() {
@@ -45,7 +45,7 @@ export default function HowItWorks() {
                         How it <span className="text-primary">Works</span>
                     </h2>
                     <p className={styles.sectionDescription}>
-                        SkillSync simplifies knowledge exchange into four seamless, high-value steps.
+                        SkillTrade simplifies knowledge exchange into four seamless, high-value steps.
                     </p>
                 </div>
 

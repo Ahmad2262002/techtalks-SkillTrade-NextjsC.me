@@ -52,12 +52,12 @@ export async function GET(request: NextRequest) {
 
             try {
                 // Determine email content based on notification type
-                let subject = "New Notification on SkillSync";
-                let title = "SkillSync Notification";
+                let subject = "New Notification on SkillTrade";
+                let title = "SkillTrade Notification";
                 let actionText = "View Notification";
 
                 if (notification.type === "MESSAGE_RECEIVED") {
-                    subject = "You have unread messages on SkillSync";
+                    subject = "You have unread messages on SkillTrade";
                     title = "💬 Unread Message";
                     actionText = "View Message";
                 } else if (notification.type === "APPLICATION_RECEIVED") {
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
               </p>
               <p style="color: #6b7280; font-size: 12px; margin-top: 20px;">
                 You're receiving this email because you have unread notifications. 
-                Log in to SkillSync to manage your notification preferences.
+                Log in to SkillTrade to manage your notification preferences.
               </p>
             </div>
           `,

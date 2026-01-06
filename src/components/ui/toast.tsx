@@ -23,15 +23,17 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-    "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-[1.5rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.05)] transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-bottom-full data-[state=open]:slide-in-from-bottom-full border backdrop-blur-3xl",
+    "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.2),0_10px_20px_-10px_rgba(0,0,0,0.1)] transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-bottom-full data-[state=open]:slide-in-from-bottom-full border backdrop-blur-3xl",
     {
         variants: {
             variant: {
-                default: "bg-background/80 text-foreground border-white/10",
+                default: "bg-background/90 text-foreground border-white/10",
                 destructive:
-                    "destructive group border-destructive/20 bg-destructive/10 text-destructive-foreground backdrop-blur-3xl",
+                    "destructive group border-rose-500/20 bg-rose-500/10 text-rose-500",
                 success:
-                    "border-emerald-500/20 bg-emerald-500/10 text-emerald-500 backdrop-blur-3xl",
+                    "border-emerald-500/20 bg-emerald-500/10 text-emerald-500",
+                loading:
+                    "border-primary/20 bg-primary/10 text-primary",
             },
         },
         defaultVariants: {
@@ -52,7 +54,11 @@ const Toast = React.forwardRef<
             onOpenChange={onOpenChange}
             className={cn(toastVariants({ variant }), className)}
             {...props}
-        />
+        >
+            {props.children}
+            {variant !== "loading" && <div className="toast-progress-bar" style={{ animationDuration: '3000ms' }} />}
+            {variant === "loading" && <div className="absolute bottom-0 left-0 h-1 bg-primary/30 w-full overflow-hidden truncate"><div className="h-full bg-primary animate-pulse w-1/2 rounded-full" /></div>}
+        </ToastPrimitives.Root>
     )
 })
 Toast.displayName = ToastPrimitives.Root.displayName

@@ -32,7 +32,7 @@ export default function Contact() {
                                 </div>
                                 <div>
                                     <h4 className="font-black uppercase tracking-widest text-xs mb-1">Direct Support</h4>
-                                    <p className="text-lg font-bold">support@skillswap.com</p>
+                                    <p className="text-lg font-bold">support@skilltrade.solutions</p>
                                 </div>
                             </div>
 

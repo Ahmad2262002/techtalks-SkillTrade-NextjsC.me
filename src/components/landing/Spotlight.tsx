@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Zap, MapPin, Star, ShieldCheck } from "lucide-react";
-import styles from "@/app/(public)/Landing.module.css";
+import styles from "../../app/(public)/Landing.module.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -38,20 +38,21 @@ export default function Spotlight({ proposals }: SpotlightProps) {
         });
 
         tl.from(".animate-header-item", {
-            y: 30,
+            y: 40,
             opacity: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power2.out"
+            duration: 1.2,
+            stagger: 0.15,
+            ease: "expo.out",
+            clearProps: "all"
         })
             .from(".spotlight-card", {
-                y: 40,
+                y: 60,
                 opacity: 0,
-                duration: 0.8,
+                duration: 1.4,
                 stagger: 0.1,
-                ease: "power2.out",
-                clearProps: "all" // Removes GSAP styles after animation to prevent layout bugs
-            }, "-=0.4");
+                ease: "expo.out",
+                clearProps: "all"
+            }, "-=1.0");
 
     }, { scope: container });
 
