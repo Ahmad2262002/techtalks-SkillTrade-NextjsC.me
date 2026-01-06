@@ -127,6 +127,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .hero {
+    padding: 8rem 0 4rem 0;
+  }
+}
+
 .heroBackground {
   display: none;
 }
@@ -170,6 +176,15 @@
   }
 }
 
+@media (max-width: 480px) {
+  .heroTitle {
+    font-size: 1.75rem;
+    word-break: break-word;
+    /* Prevent very long words from overflowing */
+    overflow-wrap: break-word;
+  }
+}
+
 .heroDescription {
   font-size: 1.125rem;
   max-width: 600px;
@@ -200,6 +215,14 @@
   padding: 6rem 0;
   background-color: transparent;
   position: relative;
+}
+
+@media (max-width: 768px) {
+
+  .features,
+  .section {
+    padding: 4rem 0;
+  }
 }
 
 .sectionHeader {
@@ -318,6 +341,12 @@
 .footer {
   padding: 4rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 3rem 0;
+  }
 }
 
 .footerContent {

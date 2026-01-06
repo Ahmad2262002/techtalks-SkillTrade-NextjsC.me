@@ -297,10 +297,10 @@ export default function DashboardClientContent({
         </div>
       </aside>
 
-      <main className={cn(styles.mainContent, "pb-24 lg:pb-10")}>
+      <main className={cn(styles.mainContent, "pb-32 lg:pb-10")}>
         <header className={cn(
           styles.header,
-          "sticky top-0 z-[40] transition-all duration-700 px-8 rounded-[2.5rem] flex items-center justify-between",
+          "sticky top-0 z-[40] transition-all duration-700 px-4 sm:px-8 rounded-[2.5rem] flex items-center justify-between",
           scrolled
             ? "py-4 bg-background/60 backdrop-blur-2xl shadow-2xl border border-white/5 scale-[0.98] mt-4"
             : "py-6 sm:py-10 bg-transparent"
@@ -308,8 +308,8 @@ export default function DashboardClientContent({
           <div className="flex items-center gap-4">
             <div>
               <h1 className={styles.headerTitle}>{tabTitle}</h1>
-              <p className="text-muted-foreground mt-1 flex items-center gap-2 text-xs sm:text-base">
-                Welcome back, <span className="font-extrabold text-primary uppercase tracking-tight">{overview.user?.name || "User"}</span>!
+              <p className="text-muted-foreground mt-1.5 flex items-center gap-2 text-[10px] sm:text-base mb-1 sm:mb-0">
+                Welcome back, <span className="font-extrabold text-primary uppercase tracking-tight truncate max-w-[150px] sm:max-w-none inline-block align-bottom">{overview.user?.name || "User"}</span>!
               </p>
             </div>
           </div>
@@ -318,14 +318,21 @@ export default function DashboardClientContent({
               <NavSearchButton />
             </div>
             {/* Mobile simplified header actions */}
-            <div className="sm:hidden">
-              <NavSearchButton />
-            </div>
-            <PostProposalModal userSkills={overview.user?.skills} />
-            <div className="flex items-center gap-2 ml-2 pl-4 border-l border-border/50">
-              <div className="hidden sm:block"><ThemeCustomizer /></div>
-              <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
-              <UserMenu user={overview.user} />
+            <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+              <div className="sm:hidden scale-90 origin-left">
+                <NavSearchButton />
+              </div>
+              <div className="flex items-center gap-2">
+                <PostProposalModal
+                  userSkills={overview.user?.skills}
+                  buttonText="Post"
+                />
+                <div className="flex items-center gap-2 border-l border-border/50 pl-2">
+                  <div className="block"><ThemeCustomizer /></div>
+                  <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
+                  <UserMenu user={overview.user} />
+                </div>
+              </div>
             </div>
           </div>
         </header>
@@ -338,43 +345,53 @@ export default function DashboardClientContent({
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation - Enhanced */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-background/60 backdrop-blur-2xl border-t border-white/10 lg:hidden pb-safe safe-area-inset-bottom shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
-        <div className="flex justify-around items-center h-20 px-4">
-          <Link href="/dashboard?tab=browse" className={cn("flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all duration-300 w-16 active:scale-90", activeTab === "browse" ? "text-primary" : "text-muted-foreground opacity-60 hover:opacity-100")}>
-            <div className={cn("p-1.5 rounded-xl transition-all", activeTab === "browse" ? "bg-primary/10" : "")}>
-              <Layers className={cn("w-6 h-6", activeTab === "browse" && "fill-current")} />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest scale-90">Browse</span>
-          </Link>
-          <Link href="/dashboard?tab=my-proposals" className={cn("flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all duration-300 w-16 active:scale-90", activeTab === "my-proposals" ? "text-primary" : "text-muted-foreground opacity-60 hover:opacity-100")}>
-            <div className={cn("p-1.5 rounded-xl transition-all", activeTab === "my-proposals" ? "bg-primary/10" : "")}>
-              <Zap className={cn("w-6 h-6", activeTab === "my-proposals" && "fill-current")} />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest scale-90">Me</span>
-          </Link>
-          <Link href="/dashboard?tab=active-swaps" className={cn("relative flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all duration-300 w-16 active:scale-90", activeTab === "active-swaps" ? "text-primary" : "text-muted-foreground opacity-60 hover:opacity-100")}>
-            <div className={cn("relative p-1.5 rounded-xl transition-all", activeTab === "active-swaps" ? "bg-primary/10" : "")}>
-              <MessageSquare className={cn("w-6 h-6", activeTab === "active-swaps" && "fill-current")} />
-              {swaps.reduce((acc, s) => acc + ((s as any).messages?.length || 0), 0) > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-rose-500 rounded-full border-2 border-background animate-pulse" />
+      {/* Mobile Bottom Navigation - Premium Dock Style */}
+      <div className="fixed bottom-6 left-6 right-6 z-[60] lg:hidden">
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-3xl rounded-[2rem] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]" />
+        <div className="relative flex justify-between items-center h-20 px-6 sm:px-12">
+          {[
+            { id: "browse", icon: Layers, label: "Browse" },
+            { id: "my-proposals", icon: Zap, label: "Me" },
+            { id: "active-swaps", icon: MessageSquare, label: "Syncs", count: swaps.reduce((acc: number, s: any) => acc + ((s.messages?.length || 0) as number), 0) },
+            { id: "leaderboard", icon: Trophy, label: "Top" }
+          ].map((item) => (
+            <Link
+              key={item.id}
+              href={`/dashboard?tab=${item.id}`}
+              className={cn(
+                "relative flex flex-col items-center gap-1.5 transition-all duration-500 active:scale-95 group",
+                activeTab === item.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest scale-90">Syncs</span>
-          </Link>
-          <Link href="/dashboard?tab=leaderboard" className={cn("flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all duration-300 w-16 active:scale-90", activeTab === "leaderboard" ? "text-primary" : "text-muted-foreground opacity-60 hover:opacity-100")}>
-            <div className={cn("p-1.5 rounded-xl transition-all", activeTab === "leaderboard" ? "bg-primary/10" : "")}>
-              <Trophy className={cn("w-6 h-6", activeTab === "leaderboard" && "fill-current")} />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest scale-90">Top</span>
-          </Link>
+            >
+              <div className={cn(
+                "p-2.5 rounded-2xl transition-all duration-500 relative",
+                activeTab === item.id ? "bg-primary/10 shadow-[0_0_20px_rgba(var(--primary),0.2)] scale-110" : "bg-transparent group-hover:bg-white/5"
+              )}>
+                <item.icon className={cn("w-6 h-6 transition-all duration-500", activeTab === item.id && "fill-current")} />
+                {item.count ? (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-background animate-pulse">
+                    {item.count}
+                  </span>
+                ) : null}
+              </div>
+              <span className={cn(
+                "text-[10px] font-black uppercase tracking-widest transition-all duration-500",
+                activeTab === item.id ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 h-0 overflow-hidden"
+              )}>
+                {item.label}
+              </span>
+              {activeTab === item.id && (
+                <div className="absolute -bottom-2 w-1 h-1 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.8)]" />
+              )}
+            </Link>
+          ))}
         </div>
       </div>
       <Dialog open={isReviewModalOpen} onOpenChange={setReviewModalOpen}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-background">
           <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12">
             <DialogHeader className="mb-8">
-              <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">Review {reviewingSwap?.proposal?.title}</DialogTitle>
+              <DialogTitle className="text-2xl sm:text-4xl font-black text-foreground tracking-tighter uppercase italic break-words">Review {reviewingSwap?.proposal?.title}</DialogTitle>
               <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2 opacity-70">
                 How was your experience with {reviewingSwap?.teacherId === overview.user?.id ? reviewingSwap?.student.name : reviewingSwap?.teacher.name}?
               </DialogDescription>
@@ -475,7 +492,7 @@ const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCance
               )}
             </div>
 
-            <h3 className="font-black text-3xl md:text-4xl tracking-tighter text-foreground group-hover:text-primary transition-colors duration-500 uppercase italic leading-none mb-2 truncate">
+            <h3 className="font-black text-2xl md:text-4xl tracking-tighter text-foreground group-hover:text-primary transition-colors duration-500 uppercase italic leading-none mb-2 break-all sm:break-normal line-clamp-2 sm:line-clamp-none">
               {partner.name}
             </h3>
 
@@ -572,14 +589,14 @@ const ActiveSwapsTabContent = ({ applications, swaps, user, handleAccept, handle
       {pendingApps.length > 0 && (
         <section className="animate-in fade-in slide-in-from-bottom-10 duration-700">
           <div className={cn(
-            "flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
-            scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-6 shadow-lg border border-white/5 scale-95" : "top-0"
+            "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
+            scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-white/5 scale-95" : "top-0"
           )}>
             <div>
-              <h2 className="text-5xl font-black tracking-tighter uppercase italic leading-none flex items-center gap-4 transition-all">
-                Requests <span className="text-primary opacity-20 text-3xl">/ {pendingApps.length}</span>
+              <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase italic leading-none flex items-center gap-4 transition-all flex-wrap">
+                Requests <span className="text-primary opacity-20 text-2xl sm:text-3xl">/ {pendingApps.length}</span>
               </h2>
-              <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[10px] opacity-60">Success potential: High</p>
+              <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[8px] sm:text-[10px] opacity-60">Success potential: High</p>
             </div>
             <div className="h-px flex-1 bg-border/50 hidden md:block mx-10 mb-2" />
           </div>
@@ -593,14 +610,14 @@ const ActiveSwapsTabContent = ({ applications, swaps, user, handleAccept, handle
 
       <section className="animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
         <div className={cn(
-          "flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
-          scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-6 shadow-lg border border-white/5 scale-95" : "top-0"
+          "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
+          scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-white/5 scale-95" : "top-0"
         )}>
           <div>
-            <h2 className="text-5xl font-black tracking-tighter uppercase leading-none flex items-center gap-4 transition-all">
-              Syncs <span className="text-emerald-500 opacity-20 text-3xl">/ {swaps.length}</span>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none flex items-center gap-4 transition-all flex-wrap">
+              Syncs <span className="text-emerald-500 opacity-20 text-2xl sm:text-3xl">/ {swaps.length}</span>
             </h2>
-            <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[10px] opacity-60">Ongoing collaborations</p>
+            <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[8px] sm:text-[10px] opacity-60">Ongoing collaborations</p>
           </div>
           <div className="h-px flex-1 bg-border/50 hidden md:block mx-10 mb-2" />
         </div>
@@ -614,8 +631,8 @@ const ActiveSwapsTabContent = ({ applications, swaps, user, handleAccept, handle
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-primary/10 to-transparent border-t border-l border-white/10 mb-10 rotate-6 group-hover:rotate-12 transition-all duration-1000 shadow-2xl scale-110">
                 <Zap className="w-24 h-24 text-primary opacity-60 animate-pulse" />
               </div>
-              <h3 className="font-black text-6xl uppercase tracking-tighter italic leading-none mb-6">Sync Pending</h3>
-              <p className="text-muted-foreground font-bold uppercase tracking-[0.2em] text-xs opacity-60 max-w-sm text-center leading-loose">
+              <h3 className="font-black text-3xl sm:text-6xl uppercase tracking-tighter italic leading-none mb-6 text-center">Sync Pending</h3>
+              <p className="text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs opacity-60 max-w-sm text-center leading-loose px-4">
                 Your exchange floor is currently empty. Ignite a connection by requesting a swap from the explorer.
               </p>
               <Button
@@ -701,13 +718,13 @@ const BrowseTabContent = ({ publicOnlyProposals, scrolled }: { publicOnlyProposa
     <div className="flex flex-col lg:flex-row gap-10 animate-in fade-in slide-in-from-bottom-12 duration-[1500ms] ease-out">
       <div className="flex-1 space-y-10">
         {/* Skill Explorer Header */}
-        <section className="p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-2xl shadow-primary/5 relative overflow-hidden group">
+        <section className="p-5 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-2xl shadow-primary/5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-[1200ms]">
-            <Layers className="w-32 h-32 sm:w-48 sm:h-48" />
+            <Layers className="w-24 h-24 sm:w-48 sm:h-48" />
           </div>
           <div className="relative z-10">
-            <h2 className="text-3xl sm:text-4xl font-black text-foreground mb-4 tracking-tighter">Skill Explorer</h2>
-            <p className="text-muted-foreground font-medium max-w-md mb-8 text-sm sm:text-lg opacity-80">Discover over 150 unique skills being traded right now by experts around the globe.</p>
+            <h2 className="text-2xl sm:text-4xl font-black text-foreground mb-3 tracking-tighter">Skill Explorer</h2>
+            <p className="text-muted-foreground font-medium max-w-md mb-6 text-xs sm:text-lg opacity-80">Discover unique skills traded globally.</p>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {["React", "UI Design", "Python", "Marketing", "Piano", "Cooking"].map((skill, i) => (
                 <Badge
@@ -905,9 +922,9 @@ const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
 }) => (
   <div className={cn(
     styles.applicationCard,
-    "group relative overflow-hidden transition-all duration-1000 rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-2xl"
+    "group relative overflow-hidden transition-all duration-1000 rounded-[2.5rem] sm:rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-2xl"
   )}>
-    <div className="bg-card/90 backdrop-blur-3xl rounded-[3.4rem] p-12 h-full flex flex-col relative overflow-hidden">
+    <div className="bg-card/90 backdrop-blur-3xl rounded-[2.4rem] sm:rounded-[3.4rem] p-6 sm:p-12 h-full flex flex-col relative overflow-hidden">
       {/* Decorative Background Element */}
       <div className="absolute -top-32 -right-32 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px] group-hover:bg-orange-500/20 transition-all duration-[2000ms]" />
 
@@ -929,7 +946,7 @@ const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
                 <Badge className="bg-orange-500/10 text-orange-500 border-none px-4 py-2 text-[9px] font-black uppercase tracking-[0.3em] rounded-full shadow-lg shadow-orange-500/10 shrink-0">Incoming Signal</Badge>
                 {app.applicant.reputation && <ReputationBadge reputation={app.applicant.reputation} size="sm" />}
               </div>
-              <Link href={`/profile/${app.applicant.id}`} className="font-black text-5xl text-foreground hover:text-primary transition-all duration-500 block leading-[0.85] tracking-tighter uppercase italic drop-shadow-sm">{app.applicant.name}</Link>
+              <Link href={`/profile/${app.applicant.id}`} className="font-black text-3xl sm:text-5xl text-foreground hover:text-primary transition-all duration-500 block leading-[0.85] tracking-tighter uppercase italic drop-shadow-sm break-all sm:break-normal">{app.applicant.name}</Link>
               <div className="flex items-center justify-center md:justify-start gap-4 mt-6">
                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-40 italic">Syncing with</span>
                 <div className="flex-1 h-px bg-border/20 max-w-[40px]" />
@@ -941,7 +958,7 @@ const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
 
         <div className="relative mb-12 p-10 bg-background/40 rounded-[2.5rem] border-2 border-dashed border-orange-500/20 group-hover:border-orange-500/40 transition-all duration-700 group-hover:bg-background/60 shadow-inner flex-1 flex items-center justify-center min-h-[160px]">
           <div className="absolute top-0 left-12 -translate-y-1/2 bg-orange-500 text-white px-6 py-1.5 text-[9px] font-black uppercase tracking-[0.4em] rounded-full shadow-xl shadow-orange-500/30 italic">Transmission</div>
-          <p className="text-2xl text-foreground leading-tight font-black italic tracking-tighter uppercase text-center max-w-md">
+          <p className="text-xl sm:text-2xl text-foreground leading-tight font-black italic tracking-tighter uppercase text-center max-w-md">
             &quot;{app.pitchMessage}&quot;
           </p>
         </div>
@@ -970,15 +987,26 @@ ApplicationCard.displayName = "ApplicationCard";
 const UserMenu = ({ user }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <button className="h-10 w-10 rounded-full border-2 border-border overflow-hidden hover:border-primary transition-colors">
-        <Avatar><AvatarImage src={user?.avatarUrl || ""} /><AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback></Avatar>
+      <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
+        <Avatar className="h-full w-full">
+          <AvatarImage src={user?.avatarUrl || ""} className="object-cover" />
+          <AvatarFallback className="bg-primary text-primary-foreground font-black">{user?.name?.charAt(0)}</AvatarFallback>
+        </Avatar>
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="bg-popover border-border text-popover-foreground">
-      <DropdownMenuItem asChild><Link href={`/profile/${user?.id}`} className="cursor-pointer">My Profile</Link></DropdownMenuItem>
-      <DropdownMenuSeparator className="bg-border" />
-      <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
-        <LogOut className="mr-2 h-4 w-4" /> Logout
+    <DropdownMenuContent align="end" className="w-64 rounded-3xl border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] p-2 text-foreground animate-in slide-in-from-top-2 fade-in duration-300">
+      <div className="px-4 py-3 mb-2 border-b border-white/5">
+        <p className="font-bold text-sm truncate">{user?.name}</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-60">Connected</p>
+      </div>
+      <DropdownMenuItem asChild className="rounded-xl focus:bg-white/10 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide">
+        <Link href={`/profile/${user?.id}`} className="flex items-center gap-3">
+          <UserCircle className="w-4 h-4 text-primary" /> My Profile
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuSeparator className="bg-white/5 my-1" />
+      <DropdownMenuItem onClick={() => signOut()} className="rounded-xl focus:bg-rose-500/10 focus:text-rose-500 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide text-rose-500/80 hover:text-rose-500 transition-colors">
+        <span className="flex items-center gap-3"><LogOut className="w-4 h-4" /> Logout</span>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
@@ -987,23 +1015,41 @@ const UserMenu = ({ user }: any) => ( // eslint-disable-line @typescript-eslint/
 const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <button className="relative h-10 w-10 flex items-center justify-center rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-colors">
-        <Bell size={20} />
-        {unreadCount > 0 && <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-rose-500" />}
+      <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-background/50 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-background hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg">
+        <Bell className={cn("w-5 h-5", unreadCount > 0 && "animate-swing text-foreground")} />
+        {unreadCount > 0 && (
+          <span className="absolute top-2 right-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+        )}
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-80 bg-popover border-border text-popover-foreground">
-      <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-      <DropdownMenuSeparator className="bg-border" />
-      <div className="max-h-80 overflow-y-auto">
+    <DropdownMenuContent align="end" className="w-[85vw] max-w-[400px] h-[500px] flex flex-col rounded-[2rem] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-2 fade-in duration-300 overflow-hidden">
+      <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+        <DropdownMenuLabel className="text-lg font-black uppercase italic tracking-tighter">Inbox</DropdownMenuLabel>
+        {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500/10 text-rose-500 border-rose-500/20">{unreadCount} New</Badge>}
+      </div>
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
         {notifications.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground p-4">No new notifications.</p>
+          <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
+            <Bell className="w-12 h-12 mb-4 text-muted-foreground/50" />
+            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">All caught up</p>
+          </div>
         ) : (
           notifications.map((n: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-            <DropdownMenuItem key={n.id} onClick={() => handleMarkRead(n.id)} className={`cursor-pointer ${!n.isRead ? 'bg-primary/10' : ''}`}>
-              <div>
-                <p className="text-sm text-foreground">{n.message}</p>
-                <p className="text-xs text-muted-foreground mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+            <DropdownMenuItem
+              key={n.id}
+              onClick={() => handleMarkRead(n.id)}
+              className={cn(
+                "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent",
+                !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-white/5 opacity-70 hover:opacity-100"
+              )}
+            >
+              <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />
+              <div className="flex-1 space-y-1">
+                <p className={cn("text-xs sm:text-sm leading-relaxed", !n.isRead ? "font-bold text-foreground" : "font-medium text-muted-foreground")}>
+                  {n.message}
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
               </div>
             </DropdownMenuItem>
           ))
@@ -1014,10 +1060,11 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => (
 );
 
 const EmptyState = ({ message }: { message: string }) => (
-  <div className={styles.emptyState}>
-    <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-background border-border mb-4">
-      <Layers className="h-8 w-8 text-muted-foreground" />
+  <div className={cn(styles.emptyState, "group")}>
+    <div className="relative inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-primary/10 to-transparent border border-white/5 mb-6 group-hover:scale-110 transition-transform duration-700">
+      <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      <Layers className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors duration-500" />
     </div>
-    <p>{message}</p>
+    <p className="max-w-[200px] leading-relaxed opacity-60 font-medium text-sm sm:text-base">{message}</p>
   </div>
 );

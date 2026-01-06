@@ -130,7 +130,7 @@ export default function ProfileClientContent({ profileData, isOwnProfile, useMoc
                 <AnimatedBackground />
             </div>
 
-            <div className={cn(styles.profileLayout, "max-w-7xl mx-auto px-6 py-8 relative z-10")}>
+            <div className={cn(styles.profileLayout, "max-w-7xl mx-auto px-2 sm:px-6 py-4 sm:py-8 relative z-10")}>
                 <div className="profile-nav">
                     <ProfileNavbar
                         isOwnProfile={isOwnProfile}
@@ -199,7 +199,7 @@ function ProfileSidebar({ profileData, formData, setFormData, editMode, isOwnPro
     const progressPercent = Math.min(100, (profileData.reputation.reputationPoints / nextLevelExp) * 100);
 
     return (
-        <aside className={cn("rounded-[2rem] p-8 flex flex-col items-center text-center relative overflow-hidden transition-all duration-500 group", "bg-background/60 backdrop-blur-2xl border border-white/[0.08]", "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_48px_rgba(0,0,0,0.16)]", styles.sidebar)}>
+        <aside className={cn("rounded-[2rem] p-4 sm:p-8 flex flex-col items-center text-center relative overflow-hidden transition-all duration-500 group", "bg-background/60 backdrop-blur-2xl border border-white/[0.08]", "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_48px_rgba(0,0,0,0.16)]", styles.sidebar)}>
 
             {/* Subtle iOS-style gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
@@ -379,10 +379,11 @@ function ProfileNavbar({ isOwnProfile, editMode, onEditToggle }: { isOwnProfile:
                 {isOwnProfile && !editMode && (
                     <Button
                         onClick={onEditToggle}
-                        className="h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wide bg-foreground text-background hover:bg-foreground/90 hover:scale-105 shadow-md transition-all duration-300"
+                        className="h-10 px-4 sm:px-6 rounded-xl font-bold text-xs uppercase tracking-wide bg-foreground text-background hover:bg-foreground/90 hover:scale-105 shadow-md transition-all duration-300"
                     >
                         <Settings className="w-3.5 h-3.5 mr-2 animate-spin-slow" />
-                        Edit Profile
+                        <span className="hidden sm:inline">Edit Profile</span>
+                        <span className="sm:hidden">Edit</span>
                     </Button>
                 )}
             </div>
@@ -440,12 +441,12 @@ function Milestone({ icon, label, active, color, bgColor }: { icon: React.ReactN
 
 function ProfileMainContent({ profileData, formData, setFormData, editMode, activeTab, setActiveTab }: any) {
     return (
-        <div className="glass-panel rounded-3xl p-8 min-h-[600px] flex flex-col relative overflow-hidden bg-background/30 border border-white/10 hover:border-white/15 transition-all duration-700 hover:shadow-intense">
+        <div className="glass-panel rounded-3xl p-4 sm:p-8 min-h-[600px] flex flex-col relative overflow-hidden bg-background/30 border border-white/10 hover:border-white/15 transition-all duration-700 hover:shadow-intense">
             {/* Background Decor */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none opacity-50 animate-pulse" />
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 blur-[100px] rounded-full pointer-events-none opacity-30" />
 
-            <nav className="flex items-center gap-1 p-1 rounded-xl bg-muted/30 border border-white/5 w-fit mb-8 relative z-10 shadow-lg">
+            <nav className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-1 p-1 rounded-xl bg-muted/30 border border-white/5 w-full sm:w-fit mb-8 relative z-10 shadow-lg">
                 <button
                     onClick={() => setActiveTab('about')}
                     className={cn(

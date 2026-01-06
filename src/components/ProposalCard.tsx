@@ -99,7 +99,7 @@ export function ProposalCard({
         <div className="absolute top-0 left-0 w-1 h-1/2 bg-primary rounded-full opacity-30 group-hover:h-full transition-all duration-700" />
 
         <div className="mb-6">
-          <h3 className="text-2xl font-black text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-500 uppercase italic">
+          <h3 className="text-xl sm:text-2xl font-black text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-500 uppercase italic break-words">
             {proposal.title}
           </h3>
 

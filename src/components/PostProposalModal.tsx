@@ -379,10 +379,10 @@ export function PostProposalModal({
       <DialogTrigger asChild>
         {(!externalIsOpen && !externalOnOpenChange) && (
           <Button className={cn(
-            "flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold py-6 px-8 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95",
+            "flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold py-3 sm:py-6 px-3 sm:px-8 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 text-xs sm:text-sm",
             triggerClassName
           )}>
-            <Plus className="w-6 h-6" /> {buttonText}
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6" /> <span className="hidden sm:inline">{buttonText}</span>
           </Button>
         )}
       </DialogTrigger>

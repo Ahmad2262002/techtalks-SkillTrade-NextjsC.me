@@ -31,7 +31,7 @@ export default function Spotlight({ proposals }: SpotlightProps) {
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: container.current,
-                start: "top 85%", 
+                start: "top 85%",
                 toggleActions: "play none none reverse",
                 // fastScrollEnd: true, // Prevents animation overlap on fast scrolls
             }
@@ -44,14 +44,14 @@ export default function Spotlight({ proposals }: SpotlightProps) {
             stagger: 0.1,
             ease: "power2.out"
         })
-        .from(".spotlight-card", {
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power2.out",
-            clearProps: "all" // Removes GSAP styles after animation to prevent layout bugs
-        }, "-=0.4");
+            .from(".spotlight-card", {
+                y: 40,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.1,
+                ease: "power2.out",
+                clearProps: "all" // Removes GSAP styles after animation to prevent layout bugs
+            }, "-=0.4");
 
     }, { scope: container });
 
@@ -70,7 +70,7 @@ export default function Spotlight({ proposals }: SpotlightProps) {
 
     return (
         <section ref={container} className={cn(styles.section, "will-change-transform")}>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[50vh] bg-primary/5 blur-[120px] rounded-full rotate-12 pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[100vw] h-[50vh] bg-primary/5 blur-[120px] rounded-full rotate-12 pointer-events-none" />
 
             <div className={styles.container}>
                 <div className={styles.sectionHeader}>
@@ -92,12 +92,12 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                                 setIsModalOpen(true);
                             }}
                             className={cn(
-                                styles.glassCard, 
+                                styles.glassCard,
                                 "group relative p-3 overflow-hidden spotlight-card cursor-pointer flex flex-col transition-all duration-300 hover:border-primary/30 will-change-transform"
                             )}
                         >
                             <div className={styles.viscousGlow} />
-                            
+
                             {/* IMAGE: Fixed aspect ratio prevents "jumping" */}
                             <div className="relative aspect-[16/11] w-full overflow-hidden rounded-[1.2rem] border border-white/5 bg-neutral-900">
                                 {p.imageUrl ? (
@@ -113,9 +113,9 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                                         <Zap className="w-10 h-10 text-primary/10" />
                                     </div>
                                 )}
-                                
+
                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
-                                
+
                                 <div className="absolute top-3 right-3 z-10">
                                     <div className="bg-black/20 backdrop-blur-xl px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-2">
                                         <div className="w-1 h-1 rounded-full bg-primary" />

@@ -153,7 +153,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
   }, { scope: container });
 
   return (
-    <section ref={container} className={cn(styles.hero, "relative pt-32 pb-48 overflow-hidden min-h-screen flex items-center justify-center")}>
+    <section ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center")}>
       <AnimatedBackground />
 
       {/* Mesh Gradient Overlay */}
@@ -161,16 +161,16 @@ export default function Hero({ userId }: { userId?: string | null }) {
 
       <div className={`${styles.container} relative z-10 text-center parallax-content`}>
 
-        {/* Elite Badge */}
-        <div className="hero-badge opacity-0 inline-flex items-center gap-2 px-6 py-2 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-xl mb-12 shadow-[0_10px_30px_rgba(var(--primary),0.1)]">
-          <div className="flex -space-x-3">
+        {/* Elite Badge - Made responsive */}
+        <div className="hero-badge opacity-0 inline-flex flex-col sm:flex-row items-center gap-2 px-6 py-2 rounded-[2rem] border border-primary/20 bg-primary/5 backdrop-blur-xl mb-12 shadow-[0_10px_30px_rgba(var(--primary),0.1)]">
+          <div className="flex -space-x-3 mb-2 sm:mb-0">
             {[15, 22, 33, 44].map(id => (
               <div key={id} className="w-8 h-8 rounded-full border-2 border-background overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-500">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`} alt="Avatar" className="object-cover" />
               </div>
             ))}
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/80 pl-2 border-l border-white/10 ml-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/80 pl-0 sm:pl-2 border-l-0 sm:border-l border-white/10 ml-0 sm:ml-2">
             <Trophy className="w-3 h-3 inline-block -mt-1 mr-1 text-primary" />
             2.4k Elite Learners
           </span>
@@ -180,26 +180,28 @@ export default function Hero({ userId }: { userId?: string | null }) {
           The Peer-to-Peer Protocol
         </span>
 
-        <h1 ref={titleRef} className={cn(styles.heroTitle, "opacity-0 mb-12 font-[Outfit]")}>
-          Exchange Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm">Intelligence.</span><br />
-          No Money <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8">Required.</span>
+        {/* Hero Title - Made responsive with word breaking */}
+        <h1 ref={titleRef} className={cn(styles.heroTitle, "opacity-0 mb-12 font-[Outfit] px-4 break-words")}>
+          Exchange Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block">Intelligence.</span>
+          <br className="hidden sm:block" />
+          No Money <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block">Required.</span>
         </h1>
 
-        <p className={cn(styles.heroDescription, "opacity-0 text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90")}>
+        <p className={cn(styles.heroDescription, "opacity-0 text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90 px-4")}>
           SkillSync is a high-octane peer-to-peer marketplace. We bypass traditional education by connecting your expertise directly with the skills you crave. <span className="text-primary font-bold">Your talent is the only currency here.</span>
         </p>
 
-        <div className={cn(styles.heroActions, "opacity-0 flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative")}>
+        <div className={cn(styles.heroActions, "opacity-0 flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4")}>
           <div className="absolute -inset-4 bg-primary/5 blur-3xl rounded-full -z-10 animate-pulse" />
           {userId ? (
             <PostProposalModal
               buttonText="Initialize New Sync"
-              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group"
+              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group w-full sm:w-auto"
             />
           ) : (
-            <Link href="/dashboard" className="proto-btn">
-              <Button size="lg" className="h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden">
-                <span className="relative z-10 flex items-center">
+            <Link href="/dashboard" className="proto-btn w-full sm:w-auto">
+              <Button size="lg" className="h-20 w-full sm:w-auto px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden">
+                <span className="relative z-10 flex items-center justify-center">
                   Access Explorer
                   <Zap className="ml-3 w-4 h-4 group-hover:fill-current transition-all" />
                 </span>
@@ -209,19 +211,19 @@ export default function Hero({ userId }: { userId?: string | null }) {
           )}
         </div>
 
-        {/* Dynamic Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto border-t border-white/5 pt-20">
+        {/* Dynamic Stats Grid - Optimized for Mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto border-t border-white/5 pt-20 px-4">
           {[
             { label: "Network Volume", value: "12,402", sub: "SYNCED", color: "from-blue-500/20" },
             { label: "Active Nodes", value: "840+", sub: "VETTED", color: "from-purple-500/20" },
             { label: "Skill Vector", value: "154", sub: "UNIQUE", color: "from-emerald-500/20" },
             { label: "Trust Index", value: "4.95", sub: "RATING", color: "from-amber-500/20" }
           ].map((stat, i) => (
-            <div key={i} className="stat-card opacity-0 relative group p-px rounded-[2.5rem] bg-gradient-to-br from-white/10 to-transparent hover:from-primary/50 transition-all duration-500">
-              <div className={cn("bg-background/40 backdrop-blur-2xl rounded-[2.4rem] p-10 h-full flex flex-col items-center justify-center group-hover:bg-background/20 transition-all duration-700 relative overflow-hidden")}>
+            <div key={i} className="stat-card opacity-0 relative group p-px rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-white/10 to-transparent hover:from-primary/50 transition-all duration-500">
+              <div className={cn("bg-background/40 backdrop-blur-2xl rounded-[1.9rem] sm:rounded-[2.4rem] p-6 sm:p-10 h-full flex flex-col items-center justify-center group-hover:bg-background/20 transition-all duration-700 relative overflow-hidden")}>
                 <div className={cn("absolute inset-0 bg-gradient-to-br to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700", stat.color)} />
-                <span className="relative z-10 text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-4 opacity-60 group-hover:opacity-100">{stat.label}</span>
-                <span className="relative z-10 text-4xl font-black text-foreground tracking-tighter mb-2 italic">{stat.value}</span>
+                <span className="relative z-10 text-[8px] sm:text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3 sm:mb-4 opacity-60 group-hover:opacity-100">{stat.label}</span>
+                <span className="relative z-10 text-3xl sm:text-4xl font-black text-foreground tracking-tighter mb-2 italic">{stat.value}</span>
                 <div className="relative z-10 px-3 py-1 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest border border-primary/20">{stat.sub}</div>
               </div>
             </div>
