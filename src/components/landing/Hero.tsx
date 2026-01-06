@@ -153,7 +153,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
   }, { scope: container });
 
   return (
-    <section ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center")}>
+    <section ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center w-full max-w-full overflow-x-hidden")}>
       <AnimatedBackground />
 
       {/* Mesh Gradient Overlay */}
@@ -181,29 +181,29 @@ export default function Hero({ userId }: { userId?: string | null }) {
         </span>
 
         {/* Hero Title - Made responsive with word breaking */}
-        <h1 ref={titleRef} className={cn(styles.heroTitle, "opacity-0 mb-12 font-[Outfit] px-4 break-words")}>
-          Exchange Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block">Intelligence.</span>
+        <h1 ref={titleRef} className={cn(styles.heroTitle, "opacity-0 mb-8 sm:mb-12 font-[Outfit] px-4 break-words text-4xl sm:text-6xl md:text-7xl leading-[1.1] sm:leading-[0.9]")}>
+          Exchange Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block will-change-transform">Intelligence.</span>
           <br className="hidden sm:block" />
-          No Money <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block">Required.</span>
+          No Money <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block will-change-transform">Required.</span>
         </h1>
 
         <p className={cn(styles.heroDescription, "opacity-0 text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90 px-4")}>
           SkillSync is a high-octane peer-to-peer marketplace. We bypass traditional education by connecting your expertise directly with the skills you crave. <span className="text-primary font-bold">Your talent is the only currency here.</span>
         </p>
 
-        <div className={cn(styles.heroActions, "opacity-0 flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4")}>
+        <div className={cn(styles.heroActions, "opacity-0 flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4 w-full")}>
           <div className="absolute -inset-4 bg-primary/5 blur-3xl rounded-full -z-10 animate-pulse" />
           {userId ? (
             <PostProposalModal
               buttonText="Initialize New Sync"
-              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group w-full sm:w-auto"
+              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group w-full sm:w-auto break-words whitespace-normal text-center"
             />
           ) : (
             <Link href="/dashboard" className="proto-btn w-full sm:w-auto">
-              <Button size="lg" className="h-20 w-full sm:w-auto px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden">
+              <Button size="lg" className="h-20 w-full sm:w-auto px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_rgba(var(--primary),0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden whitespace-normal break-words text-center">
                 <span className="relative z-10 flex items-center justify-center">
                   Access Explorer
-                  <Zap className="ml-3 w-4 h-4 group-hover:fill-current transition-all" />
+                  <Zap className="ml-3 w-4 h-4 group-hover:fill-current transition-all shrink-0" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </Button>

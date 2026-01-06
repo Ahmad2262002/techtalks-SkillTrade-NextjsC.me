@@ -300,7 +300,7 @@ export default function DashboardClientContent({
       <main className={cn(styles.mainContent, "pb-32 lg:pb-10")}>
         <header className={cn(
           styles.header,
-          "sticky top-0 z-[40] transition-all duration-700 px-4 sm:px-8 rounded-[2.5rem] flex items-center justify-between",
+          "sticky top-0 z-[40] transition-all duration-300 px-4 sm:px-8 rounded-[2.5rem] flex items-center justify-between",
           scrolled
             ? "py-4 bg-background/60 backdrop-blur-2xl shadow-2xl border border-white/5 scale-[0.98] mt-4"
             : "py-6 sm:py-10 bg-transparent"
@@ -715,7 +715,7 @@ const BrowseTabContent = ({ publicOnlyProposals, scrolled }: { publicOnlyProposa
   ).slice(0, 5);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-10 animate-in fade-in slide-in-from-bottom-12 duration-[1500ms] ease-out">
+    <div className="flex flex-col lg:flex-row gap-10 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
       <div className="flex-1 space-y-10">
         {/* Skill Explorer Header */}
         <section className="p-5 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-2xl shadow-primary/5 relative overflow-hidden group">
@@ -746,7 +746,7 @@ const BrowseTabContent = ({ publicOnlyProposals, scrolled }: { publicOnlyProposa
             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Top Mentors</h3>
             <Link href="/dashboard?tab=leaderboard" className="text-xs font-bold text-primary hover:underline">View All</Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x">
+          <div className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
             {sortedByRep.map((p) => (
               <Link href={`/profile/${p.ownerId}`} key={p.id} className="snap-start min-w-[240px] p-4 rounded-3xl bg-card border border-border flex items-center gap-4 shadow-sm">
                 <Avatar className="h-12 w-12 border border-border">
@@ -768,7 +768,7 @@ const BrowseTabContent = ({ publicOnlyProposals, scrolled }: { publicOnlyProposa
             <EmptyState message="No public proposals found. Be the first to post!" />
           ) : (
             publicOnlyProposals.map((p, i) => (
-              <div key={p.id} className="animate-in fade-in slide-in-from-bottom-6 duration-1000 ease-out" style={{ animationDelay: `${i * 150}ms` }}>
+              <div key={p.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out" style={{ animationDelay: `${Math.min(i * 100, 500)}ms` }}>
                 <ProposalCard proposal={p} />
               </div>
             ))
@@ -846,7 +846,7 @@ const BrowseTabContent = ({ publicOnlyProposals, scrolled }: { publicOnlyProposa
 };
 
 const LeaderboardTabContent = ({ leaderboard }: { leaderboard?: LeaderboardEntry[] }) => (
-  <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-12 duration-[1500ms] pb-20">
+  <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 pb-20">
     <div className="flex items-center justify-between mb-8">
       <div>
         <h2 className="text-4xl font-black tracking-tighter uppercase italic">Global Board</h2>
@@ -904,7 +904,7 @@ const LeaderboardTabContent = ({ leaderboard }: { leaderboard?: LeaderboardEntry
 );
 
 const MyProposalsTabContent = ({ myProposals, handleDelete }: { myProposals: Proposal[], handleDelete: (id: string) => void }) => (
-  <div className={cn(styles.cardGrid, "animate-in fade-in slide-in-from-bottom-10 duration-[1200ms]")}>
+  <div className={cn(styles.cardGrid, "animate-in fade-in slide-in-from-bottom-8 duration-700")}>
     {myProposals.length === 0 ? (
       <EmptyState message="You haven't posted any proposals yet." />
     ) : (
@@ -922,9 +922,9 @@ const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
 }) => (
   <div className={cn(
     styles.applicationCard,
-    "group relative overflow-hidden transition-all duration-1000 rounded-[2.5rem] sm:rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-2xl"
+    "group relative overflow-hidden transition-all duration-500 rounded-[2.5rem] sm:rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-xl"
   )}>
-    <div className="bg-card/90 backdrop-blur-3xl rounded-[2.4rem] sm:rounded-[3.4rem] p-6 sm:p-12 h-full flex flex-col relative overflow-hidden">
+    <div className="bg-card/95 backdrop-blur-xl rounded-[2.4rem] sm:rounded-[3.4rem] p-6 sm:p-12 h-full flex flex-col relative overflow-hidden">
       {/* Decorative Background Element */}
       <div className="absolute -top-32 -right-32 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px] group-hover:bg-orange-500/20 transition-all duration-[2000ms]" />
 

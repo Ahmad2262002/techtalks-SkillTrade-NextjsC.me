@@ -114,7 +114,7 @@ const Navbar = ({ userId }: NavbarProps) => {
               className="object-contain transition-transform duration-500 group-hover:scale-125 relative z-10"
             />
           </div>
-          <span className="text-2xl font-black tracking-tighter uppercase italic">Skill<span className="text-primary not-italic">Sync</span></span>
+          <span className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic">Skill<span className="text-primary not-italic">Sync</span></span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-12">
@@ -147,9 +147,9 @@ const Navbar = ({ userId }: NavbarProps) => {
             ) : (
               <div className="flex items-center gap-5">
                 <Link href="/login">
-                  <Button className="font-black uppercase tracking-widest text-[10px] rounded-2xl h-14 px-10 bg-primary text-white shadow-2xl shadow-primary/30 hover:scale-110 active:scale-95 transition-all group overflow-hidden relative border-none">
-                    <span className="relative z-10 flex items-center">
-                      <Globe className="mr-3 w-4 h-4 text-white group-hover:rotate-180 transition-transform duration-1000" />
+                  <Button className="font-black uppercase tracking-widest text-[9px] sm:text-[10px] rounded-2xl h-12 sm:h-14 px-6 sm:px-10 bg-primary text-white shadow-2xl shadow-primary/30 hover:scale-110 active:scale-95 transition-all group overflow-hidden relative border-none w-full sm:w-auto">
+                    <span className="relative z-10 flex items-center justify-center whitespace-nowrap">
+                      <Globe className="mr-3 w-4 h-4 text-white group-hover:rotate-180 transition-transform duration-1000 shrink-0" />
                       Authorize Access
                     </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -160,7 +160,7 @@ const Navbar = ({ userId }: NavbarProps) => {
           </div>
 
           <button
-            className="lg:hidden z-[60] w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center text-foreground hover:bg-primary hover:text-white transition-all transform hover:scale-105 active:scale-95"
+            className="lg:hidden z-[60] w-12 h-12 rounded-2xl bg-muted/20 backdrop-blur-md border border-white/5 flex items-center justify-center text-foreground hover:bg-primary hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-lg"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >

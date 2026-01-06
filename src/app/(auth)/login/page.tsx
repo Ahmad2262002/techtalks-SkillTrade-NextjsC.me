@@ -86,12 +86,12 @@ export default function LoginPage() {
       <div className="absolute bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] bg-indigo-500/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
 
       <div className="w-full max-w-md relative z-10">
-        <Link href="/" className="back-btn flex items-center gap-4 text-foreground/80 hover:text-primary transition-all mb-12 group w-fit">
-          <div className="p-3 rounded-2xl bg-primary text-white shadow-[0_10px_20px_rgba(var(--primary),0.3)] group-hover:scale-110 transition-all border-none">
-            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-          </div>
-          <span className="font-black uppercase tracking-[0.4em] text-[9px]">Interface Exit</span>
-        </Link>
+        <div className="flex justify-start w-full mb-8">
+          <Link href="/" className="back-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-background/40 hover:bg-background/60 border border-white/5 backdrop-blur-md transition-all group shadow-lg">
+            <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Back to Orbit</span>
+          </Link>
+        </div>
 
         <Card className="auth-card border-none bg-card/30 backdrop-blur-3xl shadow-[0_50px_120px_-30px_rgba(0,0,0,0.7)] rounded-[3.5rem] overflow-hidden border border-white/10 relative">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-indigo-500 to-primary animate-gradient-x" />
