@@ -118,8 +118,8 @@ export default function LoginPage() {
         if (data.user && !data.session) {
           update({
             id: toastId,
-            title: "Identity Pending",
-            description: "An activation link has been sent to your inbox. Please verify it before syncing.",
+            title: "Check Your Email",
+            description: "We've sent a magic link to your inbox. Verify to access the grid.",
             variant: "default",
             duration: 10000,
           });
@@ -136,10 +136,11 @@ export default function LoginPage() {
         });
       }
 
+      // Fast transition - speed up the process
       setTimeout(() => {
         router.refresh();
         router.push("/dashboard");
-      }, 800);
+      }, 100);
 
     } catch (err: any) {
       let errorMessage = err.message ?? "Authentication failed. Please check your credentials.";
