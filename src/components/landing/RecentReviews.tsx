@@ -54,7 +54,7 @@ export default function RecentReviews({ reviews }: RecentReviewsProps) {
     if (!reviews || reviews.length === 0) return null;
 
     return (
-        <section ref={container} className={styles.section}>
+        <section id="reviews" ref={container} className={styles.section}>
             <div className={styles.container}>
                 <div className={styles.sectionHeader}>
                     <span className={styles.eyebrow}>
