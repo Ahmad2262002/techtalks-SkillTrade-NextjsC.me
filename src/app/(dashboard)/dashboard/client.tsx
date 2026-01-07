@@ -7,20 +7,17 @@ import { useGSAP } from "@gsap/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { signOut } from "@/actions/auth";
 import { getNotifications, markNotificationAsRead } from "@/actions/notifications";
 import { deleteProposal } from "@/actions/proposal-actions";
-import { ProposalCard } from "@/components/ProposalCard";
 import { Proposal, Swap, Application, LeaderboardEntry } from "@/types/dashboard";
-import { createSwapFromApplication, updateSwapStatus, updateSwapProgress, cancelSwap } from "@/actions/swaps";
+import { createSwapFromApplication, updateSwapProgress, cancelSwap } from "@/actions/swaps";
 import { updateApplicationStatus } from "@/actions/applications";
 import { createReview } from "@/actions/reviews";
 import styles from './Dashboard.module.css';
 
 // UI Components
-import { PostProposalModal } from "@/components/PostProposalModal";
-import { ChatModal } from "@/components/ChatModal"; // Chat functionality is imported here
-import { ProposalDetailsModal } from "@/components/ProposalDetailsModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -29,14 +26,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
-import { ThemeCustomizer } from "@/components/ThemeCustomizer";
 import {
-  Bell, LogOut, Zap, MapPin, Search, Layers, Trash2, CheckCircle, XCircle, UserCircle, Plus, Home, MessageSquare, Trophy, ArrowRight, Menu, X, MoreVertical, Star, AlertCircle
+  Bell, LogOut, Zap, Layers, UserCircle, Plus, Home, MessageSquare, Trophy, Star, AlertCircle
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import NavSearchButton from "../../../components/features/search/NavSearchButton";
@@ -46,14 +38,23 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ReputationBadge } from "@/components/ReputationBadge";
+
+// Fragmented Tab Components
+import { BrowseTabContent } from "@/components/features/dashboard/BrowseTabContent";
+import { MyProposalsTabContent } from "@/components/features/dashboard/MyProposalsTabContent";
+import { ActiveSwapsTabContent } from "@/components/features/dashboard/ActiveSwapsTabContent";
+import { LeaderboardTabContent } from "@/components/features/dashboard/LeaderboardTabContent";
+
+// Heavy components dynamic imports
+const PostProposalModal = dynamic(() => import("@/components/PostProposalModal").then(mod => mod.PostProposalModal), { ssr: false });
+const ThemeCustomizer = dynamic(() => import("@/components/ThemeCustomizer").then(mod => mod.ThemeCustomizer), { ssr: false });
 
 // --- Types ---
 interface DashboardProps {
@@ -74,15 +75,21 @@ interface DashboardProps {
 export default function DashboardClientContent({
   overview, myProposals, publicOnlyProposals, activeTab, swaps, applications,
 }: DashboardProps) {
-  const [notifications, setNotifications] = useState<Array<{ id: string; isRead: boolean; message: string; createdAt: Date }>>([]);
+  const [notifications, setNotifications] = useState<Array<{ id: string; isRead: boolean; message: string; createdAt: Date; link?: string; type?: string; resourceId?: string }>>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showPersonal, setShowPersonal] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [scrolled, setScrolled] = useState(false);
   const container = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
   const { toast } = useToast();
+
+  const [localMyProposals, setLocalMyProposals] = useState<Proposal[]>(myProposals);
+
+  useEffect(() => {
+    setLocalMyProposals(myProposals);
+  }, [myProposals]);
 
   // Review states
   const [isReviewModalOpen, setReviewModalOpen] = useState(false);
@@ -118,11 +125,18 @@ export default function DashboardClientContent({
 
   const handleDeleteProposal = async (id: string) => {
     if (!confirm("Are you sure?")) return;
+
+    // Optimistic Update
+    const originalProposals = [...localMyProposals];
+    setLocalMyProposals(prev => prev.filter(p => p.id !== id));
+
     const res = await deleteProposal(id);
     if (res.success) {
       toast({ variant: "success", title: "Deleted", description: "Proposal removed." });
       router.refresh();
     } else {
+      // Revert if failed
+      setLocalMyProposals(originalProposals);
       toast({ variant: "destructive", title: "Error", description: res.message });
     }
   };
@@ -193,12 +207,11 @@ export default function DashboardClientContent({
     setReviewError("");
   };
 
-
-
   const tabTitle = {
     "browse": "Explore Skills",
     "my-proposals": "My Proposals",
     "active-swaps": "Active Swaps",
+    "leaderboard": "Leaderboard"
   }[activeTab] || "Dashboard";
 
   if (typeof window !== "undefined") {
@@ -250,7 +263,7 @@ export default function DashboardClientContent({
 
   return (
     <div ref={container} className={cn(styles.dashboardLayout, loggingOut && "pointer-events-none")}>
-      {/* Mobile Backdrop */}
+      {/* Sidebar */}
       <aside className={cn(
         styles.sidebar,
         "lg:translate-x-0"
@@ -266,24 +279,23 @@ export default function DashboardClientContent({
                 className="object-contain transition-transform duration-500 group-hover:scale-110"
               />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase">Skill<span className="text-primary">Trade</span></span>
+            <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap">Skill<span className="text-primary">Trade</span></span>
           </Link>
         </div>
 
         <nav className="flex flex-col gap-1">
           <p className={cn(styles.navGroupTitle, styles.animateSlideInRight)} style={{ animationDelay: '100ms' }}>Platform</p>
-          <NavLink href="/dashboard?tab=browse" active={activeTab === "browse"} icon={<Layers className="w-5 h-5" />} label="Browse" activeTab={activeTab} setIsSidebarOpen={setIsSidebarOpen} />
-          <NavLink href="/dashboard?tab=my-proposals" active={activeTab === "my-proposals"} icon={<Zap className="w-5 h-5" />} label="My Proposals" activeTab={activeTab} setIsSidebarOpen={setIsSidebarOpen} />
+          <NavLink href="/dashboard?tab=browse" active={activeTab === "browse"} icon={<Layers className="w-5 h-5" />} label="Browse" activeTab={activeTab} />
+          <NavLink href="/dashboard?tab=my-proposals" active={activeTab === "my-proposals"} icon={<Zap className="w-5 h-5" />} label="My Proposals" activeTab={activeTab} />
           <NavLink
             href="/dashboard?tab=active-swaps"
             active={activeTab === "active-swaps"}
             icon={<MessageSquare className="w-5 h-5" />}
             label="Active Swaps"
             activeTab={activeTab}
-            setIsSidebarOpen={setIsSidebarOpen}
             count={swaps.reduce((acc, s) => acc + ((s as any).messages?.length || 0), 0)}
           />
-          <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} setIsSidebarOpen={setIsSidebarOpen} />
+          <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} />
         </nav>
 
         <div className={styles.sidebarFooter}>
@@ -342,7 +354,6 @@ export default function DashboardClientContent({
             <div className="flex bg-muted/50 p-1 rounded-xl border border-border hidden sm:flex">
               <NavSearchButton />
             </div>
-            {/* Mobile simplified header actions */}
             <div className="flex items-center justify-between w-full sm:w-auto gap-2">
               <div className="sm:hidden">
                 <NavSearchButton />
@@ -353,7 +364,7 @@ export default function DashboardClientContent({
                   buttonText="Post"
                 />
                 <div className="flex items-center gap-2 border-l border-border/50 pl-2">
-                  <div className="block"><ThemeCustomizer /></div>
+                  <ThemeCustomizer />
                   <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
                   <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
                 </div>
@@ -363,14 +374,14 @@ export default function DashboardClientContent({
         </header>
 
         <div className="tab-content-wrapper pb-24">
-          {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} />}
-          {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={myProposals} handleDelete={handleDeleteProposal} />}
+          {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} topMentors={overview.leaderboard} />}
+          {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={localMyProposals} handleDelete={handleDeleteProposal} />}
           {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications} swaps={swaps} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
           {activeTab === "leaderboard" && <LeaderboardTabContent leaderboard={overview.leaderboard} />}
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation - Premium Dock Style */}
+      {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-6 left-6 right-6 z-[60] lg:hidden">
         <div className="absolute inset-0 bg-background/80 backdrop-blur-3xl rounded-[2rem] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]" />
         <div className="relative flex justify-between items-center h-20 px-6 sm:px-12">
@@ -390,7 +401,7 @@ export default function DashboardClientContent({
             >
               <div className={cn(
                 "p-2.5 rounded-2xl transition-all duration-500 relative",
-                activeTab === item.id ? "bg-primary/10 shadow-[0_0_20px_rgba(var(--primary),0.2)] scale-110" : "bg-transparent group-hover:bg-white/5"
+                activeTab === item.id ? "bg-primary/10 shadow-[0_0_20_rgba(var(--primary),0.2)] scale-110" : "bg-transparent group-hover:bg-white/5"
               )}>
                 <item.icon className={cn("w-6 h-6 transition-all duration-500", activeTab === item.id && "fill-current")} />
                 {item.count ? (
@@ -412,6 +423,8 @@ export default function DashboardClientContent({
           ))}
         </div>
       </div>
+
+      {/* Review Modal */}
       <Dialog open={isReviewModalOpen} onOpenChange={setReviewModalOpen}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-background">
           <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12">
@@ -457,243 +470,15 @@ export default function DashboardClientContent({
   );
 }
 
-// --- Sub-Components ---
+// --- Helper Components ---
 
-const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCancel, onReview, hasReviewed }: {
-  swap: Swap,
-  partner: any,
-  currentUserId: string,
-  onComplete: (id: string) => void,
-  onCancel: (id: string) => void,
-  onReview: (s: Swap) => void,
-  hasReviewed: boolean
-}) => {
-  const prematureClosureReasons = [
-    "Mutual agreement", "Partner unresponsive", "Skill mismatch", "Other"
-  ];
-
-  const isTeacher = swap.teacherId === currentUserId;
-  const userHasCompleted = isTeacher ? swap.teacherHasCompleted : swap.studentHasCompleted;
-  const partnerHasCompleted = isTeacher ? swap.studentHasCompleted : swap.teacherHasCompleted;
-
-  return (
-    <div className={cn(
-      styles.swapCard,
-      "group relative overflow-hidden transition-all duration-700 rounded-[3rem] p-1 bg-gradient-to-br from-primary/20 via-border/50 to-secondary/20 hover:from-primary/40 hover:to-secondary/40 shadow-xl",
-      (swap.status === 'CLOSED' || swap.status === 'CANCELLED') && "opacity-60 grayscale scale-[0.98]"
-    )}>
-      <div className="bg-card/80 backdrop-blur-3xl rounded-[2.9rem] p-6 md:p-8 h-full flex flex-col gap-6 relative overflow-hidden">
-        {/* Animated Background Mesh */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-1000" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary/10 rounded-full blur-[80px] group-hover:bg-secondary/20 transition-all duration-1000" />
-
-        {/* Partner Info Section */}
-        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 w-full">
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-150" />
-            <Avatar className="h-24 w-24 md:h-28 md:w-28 border-4 border-background shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10 transition-transform duration-700 group-hover:scale-110">
-              <AvatarImage src={partner.avatarUrl ?? undefined} className="object-cover" />
-              <AvatarFallback className="bg-primary/10 text-primary font-black text-2xl md:text-3xl uppercase italic">{partner.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className={cn(
-              "absolute -bottom-2 -right-2 w-10 h-10 border-4 border-background rounded-full z-20 shadow-xl flex items-center justify-center transition-all duration-500",
-              swap.status === 'ACTIVE' ? "bg-emerald-500 animate-pulse" : swap.status === 'COMPLETED' ? "bg-primary" : "bg-destructive"
-            )}>
-              {swap.status === 'ACTIVE' ? <Zap className="w-5 h-5 text-white fill-current" /> : swap.status === 'COMPLETED' ? <CheckCircle className="w-5 h-5 text-white" /> : <XCircle className="w-5 h-5 text-white" />}
-            </div>
-          </div>
-
-          <div className="flex-1 text-center md:text-left relative z-10 min-w-0">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-              <Badge variant="outline" className={cn(
-                "font-black text-[10px] uppercase tracking-[0.3em] px-4 py-2 rounded-full border-none shadow-lg",
-                swap.status === 'ACTIVE' ? "bg-primary/10 text-primary shadow-primary/10" : swap.status === 'COMPLETED' ? "bg-emerald-500/10 text-emerald-500 shadow-emerald-500/10" : "bg-destructive/10 text-destructive shadow-destructive/10"
-              )}>
-                {swap.status} Exchange
-              </Badge>
-              <ReputationBadge reputation={partner.reputation} size="sm" />
-              {partnerHasCompleted && swap.status === 'ACTIVE' && (
-                <Badge className="bg-emerald-500 text-white animate-bounce-slow">Partner marked as complete</Badge>
-              )}
-            </div>
-
-            <h3 className="font-black text-2xl md:text-4xl tracking-tighter text-foreground group-hover:text-primary transition-colors duration-500 uppercase italic leading-none mb-2 break-all sm:break-normal line-clamp-2 sm:line-clamp-none">
-              {partner.name}
-            </h3>
-
-            <div className="text-sm text-muted-foreground font-bold uppercase tracking-widest mt-4 opacity-80 flex items-center justify-center md:justify-start gap-3">
-              <div className="w-8 h-px bg-primary/30" />
-              <span className="truncate">Active Sync: <strong className="text-foreground">{swap.proposal?.title}</strong></span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons Section */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 relative z-10">
-          <div className="relative flex-1 sm:flex-none">
-            <ChatModal
-              swapId={swap.id}
-              currentUserId={currentUserId}
-              otherUserName={partner.name}
-              triggerClassName="h-14 md:h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 shadow-[0_15px_30px_rgba(var(--primary),0.3)] border-none px-6 md:px-8 font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.05] active:scale-95"
-            />
-            {(swap as any).messages?.length > 0 && (
-              <div className="absolute -top-2 -right-2 bg-rose-500 text-white min-w-[24px] h-[24px] rounded-full flex items-center justify-center text-[10px] font-black border-2 border-background animate-bounce-slow shadow-lg shadow-rose-500/30 z-20">
-                {(swap as any).messages.length}
-              </div>
-            )}
-          </div>
-          {swap.status === 'ACTIVE' && (
-            <Button
-              onClick={() => onComplete(swap.id)}
-              className={cn(
-                "h-14 md:h-16 rounded-2xl font-black uppercase tracking-widest text-xs px-6 md:px-8 shadow-xl border-none transition-all hover:scale-[1.05] active:scale-95",
-                userHasCompleted
-                  ? "bg-muted/30 text-muted-foreground border-2 border-dashed border-border/50"
-                  : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30"
-              )}
-            >
-              {userHasCompleted ? "Awaiting Partner..." : partnerHasCompleted ? "Confirm Completion" : "Mark as Complete"}
-            </Button>
-          )}
-          {swap.status === 'COMPLETED' && !hasReviewed && (
-            <Button
-              onClick={() => onReview(swap)}
-              className="h-14 md:h-16 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest text-xs px-6 md:px-8 shadow-[0_15px_30px_rgba(245,158,11,0.3)] border-none transition-all hover:scale-[1.05] active:scale-95"
-            >
-              Review
-            </Button>
-          )}
-          {swap.status === 'COMPLETED' && hasReviewed && (
-            <div className="h-14 md:h-16 flex items-center gap-3 px-6 md:px-8 rounded-2xl bg-muted/30 text-muted-foreground font-black uppercase tracking-widest text-[10px] border-2 border-dashed border-border/50">
-              <CheckCircle className="w-4 h-4 text-emerald-500" /> Done
-            </div>
-          )}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-14 w-14 md:h-16 md:w-16 rounded-2xl bg-muted/20 border-2 border-border/50 text-muted-foreground hover:text-primary hover:border-primary transition-all">
-                <MoreVertical className="h-6 w-6" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-3xl border-2 border-border shadow-2xl p-3 min-w-[220px] bg-popover backdrop-blur-3xl">
-              {swap.status === 'ACTIVE' && (
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="rounded-2xl font-black uppercase tracking-widest text-[10px] p-4 h-12">Cancel Exchange</DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent className="rounded-3xl border-2 border-border shadow-2xl p-3 min-w-[220px] bg-popover backdrop-blur-3xl">
-                      <DropdownMenuLabel className="px-4 py-2 text-[9px] uppercase font-black text-muted-foreground tracking-[0.3em] opacity-50">Protocol Termination</DropdownMenuLabel>
-                      <DropdownMenuSeparator className="my-3 opacity-10" />
-                      {prematureClosureReasons.map(reason => (
-                        <DropdownMenuItem key={reason} onClick={() => onCancel(swap.id)} className="rounded-2xl font-black uppercase tracking-widest text-[10px] p-4 h-12 focus:bg-destructive/10 focus:text-destructive cursor-pointer">
-                          {reason}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-              )}
-              <DropdownMenuSeparator className="my-3 opacity-10" />
-              <DropdownMenuItem asChild className="rounded-2xl font-black uppercase tracking-widest text-[10px] p-4 h-12 focus:bg-destructive/10 focus:text-destructive cursor-pointer text-destructive">
-                <a href={`mailto:support@skilltrade.solutions?subject=Incident%20Report:%20${swap.proposal?.title}&body=Sync%20ID:%20${swap.id}`}>Report Incident</a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </div >
-  );
-});
-SwapCard.displayName = "SwapCard";
-
-const ActiveSwapsTabContent = ({ applications, swaps, user, handleAccept, handleReject, handleComplete, handleCancel, handleReview, scrolled }: any) => {
-  const router = useRouter();
-  const pendingApps = applications.filter((a: any) => a.status === "PENDING");
-  return (
-    <div className="space-y-24 pb-20">
-      {pendingApps.length > 0 && (
-        <section className="animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <div className={cn(
-            "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
-            scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-white/5 scale-95" : "top-0"
-          )}>
-            <div>
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase italic leading-none flex items-center gap-4 transition-all flex-wrap">
-                Requests <span className="text-primary opacity-20 text-2xl sm:text-3xl">/ {pendingApps.length}</span>
-              </h2>
-              <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[8px] sm:text-[10px] opacity-60">Success potential: High</p>
-            </div>
-            <div className="h-px flex-1 bg-border/50 hidden md:block mx-10 mb-2" />
-          </div>
-          <div className="grid gap-10 grid-cols-1 lg:grid-cols-2">
-            {pendingApps.map((app: any) => (
-              <ApplicationCard key={app.id} app={app} onAccept={handleAccept} onReject={handleReject} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
-        <div className={cn(
-          "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
-          scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-white/5 scale-95" : "top-0"
-        )}>
-          <div>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none flex items-center gap-4 transition-all flex-wrap">
-              Syncs <span className="text-emerald-500 opacity-20 text-2xl sm:text-3xl">/ {swaps.length}</span>
-            </h2>
-            <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[8px] sm:text-[10px] opacity-60">Ongoing collaborations</p>
-          </div>
-          <div className="h-px flex-1 bg-border/50 hidden md:block mx-10 mb-2" />
-        </div>
-
-        {swaps.length === 0 ? (
-          <div className={cn(styles.emptyState, "py-32 relative group overflow-hidden bg-background/5 border-none shadow-none")}>
-            {/* Background Decoration */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] group-hover:bg-primary/10 transition-all duration-[2000ms]" />
-
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="p-12 rounded-[4rem] bg-gradient-to-br from-primary/10 to-transparent border-t border-l border-white/10 mb-10 rotate-6 group-hover:rotate-12 transition-all duration-1000 shadow-2xl scale-110">
-                <Zap className="w-24 h-24 text-primary opacity-60 animate-pulse" />
-              </div>
-              <h3 className="font-black text-3xl sm:text-6xl uppercase tracking-tighter italic leading-none mb-6 text-center">Sync Pending</h3>
-              <p className="text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs opacity-60 max-w-sm text-center leading-loose px-4">
-                Your exchange floor is currently empty. Ignite a connection by requesting a swap from the explorer.
-              </p>
-              <Button
-                onClick={() => router.push('/dashboard?tab=browse')}
-                className="mt-12 h-16 px-12 rounded-2xl bg-foreground text-background font-black uppercase tracking-widest text-xs hover:scale-110 active:scale-95 transition-all shadow-2xl shadow-black/20"
-              >
-                Scan Explorer
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-8 grid-cols-1">
-            {swaps.map((swap: any) => {
-              const partner = swap.teacherId === user.id ? swap.student : swap.teacher;
-              const hasReviewed = swap.reviews?.some((r: any) => r.authorId === user.id);
-              return <SwapCard key={swap.id} swap={swap} partner={partner} currentUserId={user.id} onComplete={handleComplete} onCancel={handleCancel} onReview={handleReview} hasReviewed={hasReviewed} />;
-            })}
-          </div>
-        )}
-      </section>
-    </div>
-  );
-};
-
-
-// --- Other Helper Components (Unchanged) ---
-
-// --- Moved NavLink outside to fix render issues ---
-const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, setIsSidebarOpen, count }: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, count }: any) => {
   const isActive = active !== undefined ? active : activeTab === id;
   const finalHref = href || `?tab=${id}`;
 
   return (
     <Link
       href={finalHref}
-      onClick={() => setIsSidebarOpen(false)}
       style={{ animationDelay: `${delay}ms` }}
       className={cn(
         styles.navLink,
@@ -733,283 +518,7 @@ const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, se
 };
 NavLink.displayName = "NavLink";
 
-const BrowseTabContent = ({ publicOnlyProposals, scrolled }: { publicOnlyProposals: Proposal[], scrolled: boolean }) => {
-  // Sort proposals by reputation for spotlight
-  const sortedByRep = [...publicOnlyProposals].sort((a, b) =>
-    (b.owner?.reputation?.reputationPoints || 0) - (a.owner?.reputation?.reputationPoints || 0)
-  ).slice(0, 5);
-
-  return (
-    <div className="flex flex-col lg:flex-row gap-10 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
-      <div className="flex-1 space-y-10">
-        {/* Skill Explorer Header */}
-        <section className="p-5 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-2xl shadow-primary/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-[1200ms]">
-            <Layers className="w-24 h-24 sm:w-48 sm:h-48" />
-          </div>
-          <div className="relative z-10">
-            <h2 className="text-2xl sm:text-4xl font-black text-foreground mb-3 tracking-tighter">Skill Explorer</h2>
-            <p className="text-muted-foreground font-medium max-w-md mb-6 text-xs sm:text-lg opacity-80">Discover unique skills traded globally.</p>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {["React", "UI Design", "Python", "Marketing", "Piano", "Cooking"].map((skill, i) => (
-                <Badge
-                  key={skill}
-                  variant="secondary"
-                  className="px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-background border-border hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer font-black text-xs sm:text-sm shadow-xl shadow-black/5 hover:-translate-y-1"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Mobile-Only Top Mentors Preview */}
-        <div className="lg:hidden space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Top Mentors</h3>
-            <Link href="/dashboard?tab=leaderboard" className="text-xs font-bold text-primary hover:underline">View All</Link>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-            {sortedByRep.map((p) => (
-              <Link href={`/profile/${p.ownerId}`} key={p.id} className="snap-start min-w-[240px] p-4 rounded-3xl bg-card border border-border flex items-center gap-4 shadow-sm">
-                <Avatar className="h-12 w-12 border border-border">
-                  <AvatarImage src={p.owner?.avatarUrl || ""} />
-                  <AvatarFallback className="font-bold text-sm">{(p.owner?.name?.[0] || "U")}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col overflow-hidden">
-                  <span className="font-bold truncate text-sm">{p.owner?.name}</span>
-                  <span className="text-[10px] uppercase font-black text-primary">{p.owner?.reputation?.title || "Member"}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Feed */}
-        <div className={styles.cardGrid}>
-          {publicOnlyProposals.length === 0 ? (
-            <EmptyState message="No public proposals found. Be the first to post!" />
-          ) : (
-            publicOnlyProposals.map((p, i) => (
-              <div key={p.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out" style={{ animationDelay: `${Math.min(i * 100, 500)}ms` }}>
-                <ProposalCard proposal={p} />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Sidebar Spotlight - Sticky Container */}
-      <aside
-        className={cn(
-          styles.spotlight,
-          "lg:w-80 shrink-0 space-y-8 animate-in fade-in zoom-in-95 duration-700 hidden lg:block",
-          "sticky transition-all duration-700",
-          scrolled ? "top-[6rem]" : "top-[8rem]"
-        )}
-        style={{ maxHeight: scrolled ? 'calc(100vh - 7rem)' : 'calc(100vh - 9rem)' }}
-      >
-        {/* Top Mentors Section - Sticky */}
-        <section className="p-8 rounded-[3rem] bg-card border border-border shadow-2xl shadow-black/5 relative overflow-hidden hover:shadow-intense transition-all duration-700">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
-              <Trophy className="w-5 h-5" />
-            </div>
-            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">Top Mentors</h3>
-          </div>
-          <div className="space-y-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent pr-2">
-            {sortedByRep.map((p, i) => (
-              <Link href={`/profile/${p.ownerId}`} key={p.id} className="flex items-center gap-4 group transition-all hover:translate-x-1 duration-500">
-                <div className="relative flex-shrink-0">
-                  <Avatar className="h-14 w-14 border-2 border-border group-hover:border-primary transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg">
-                    <AvatarImage src={p.owner?.avatarUrl || ""} />
-                    <AvatarFallback className="font-black text-lg">{(p.owner?.name?.[0] || "U")}</AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-background rounded-full border border-border flex items-center justify-center text-[10px] font-black shadow-lg">
-                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
-                  </div>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-base font-black text-foreground group-hover:text-primary transition-colors truncate">{p.owner?.name}</span>
-                  {p.owner?.reputation && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-black text-primary/70 uppercase">{p.owner.reputation.title}</span>
-                      <div className="w-1 h-1 rounded-full bg-border" />
-                      <span className="text-[10px] font-bold text-muted-foreground">LVL {p.owner.reputation.level}</span>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-          <Link href="/dashboard?tab=leaderboard">
-            <Button variant="outline" className="w-full mt-6 rounded-2xl h-12 font-black text-xs uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary transition-all hover:scale-105">
-              Full Leaderboard
-            </Button>
-          </Link>
-        </section>
-
-        {/* Need Help Section - Sticky */}
-        <Link href="/#contact" className="block">
-          <section className="p-8 rounded-[3rem] bg-muted/50 border border-border/50 relative group cursor-pointer hover:bg-muted transition-all duration-700 hover:shadow-lg hover:border-primary/30 hover:-translate-y-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[3rem]" />
-            <div className="relative z-10">
-              <h3 className="text-sm font-black uppercase tracking-widest mb-2 group-hover:text-primary transition-colors">Need Help?</h3>
-              <p className="text-xs font-medium text-muted-foreground mb-4 leading-relaxed">Check out our community guidelines and learn how to swap like a pro.</p>
-              <div className="flex items-center gap-2 text-xs font-black text-primary group-hover:gap-3 transition-all">
-                Contact Support <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </section>
-        </Link>
-      </aside>
-    </div>
-  );
-};
-
-const LeaderboardTabContent = ({ leaderboard }: { leaderboard?: LeaderboardEntry[] }) => (
-  <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 pb-20">
-    <div className="flex items-center justify-between mb-8">
-      <div>
-        <h2 className="text-4xl font-black tracking-tighter uppercase italic">Global Board</h2>
-        <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px] opacity-60">Rankings based on reputation & successful swaps</p>
-      </div>
-      <div className="hidden md:flex p-5 rounded-3xl bg-primary/5 border border-primary/10 shadow-inner">
-        <Trophy className="w-10 h-10 text-primary animate-pulse" />
-      </div>
-    </div>
-
-    <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/5">
-      <div className="grid grid-cols-12 gap-4 px-8 py-6 bg-muted/30 border-b border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-        <div className="col-span-1">Rank</div>
-        <div className="col-span-5">Mentor</div>
-        <div className="col-span-3 text-center">Title</div>
-        <div className="col-span-3 text-right">Reputation</div>
-      </div>
-      <div className="divide-y divide-border/50">
-        {leaderboard?.map((entry, i) => (
-          <Link href={`/profile/${entry.id}`} key={entry.id}
-            className="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-muted/50 transition-colors group">
-            <div className="col-span-1 font-black text-lg opacity-40 group-hover:opacity-100 transition-opacity">
-              {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
-            </div>
-            <div className="col-span-11 md:col-span-5 flex items-center gap-4">
-              <Avatar className="h-12 w-12 border-2 border-border group-hover:border-primary transition-all">
-                <AvatarImage src={entry.avatarUrl || ""} />
-                <AvatarFallback className="font-bold">{entry.name[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="font-black text-foreground group-hover:text-primary transition-colors truncate">{entry.name}</span>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{entry.industry || "Generalist"}</span>
-              </div>
-            </div>
-            <div className="hidden md:block col-span-3 text-center">
-              <span className={cn(
-                "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                entry.reputation.color,
-                entry.reputation.color.replace('text-', 'bg-') + "/10"
-              )}>
-                {entry.reputation.title}
-              </span>
-            </div>
-            <div className="col-span-11 md:col-span-3 text-right">
-              <div className="flex flex-col items-end">
-                <span className="font-black text-lg text-primary">{entry.reputation.reputationPoints.toLocaleString()}</span>
-                <span className="text-[10px] font-bold opacity-50 uppercase">Points</span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const MyProposalsTabContent = ({ myProposals, handleDelete }: { myProposals: Proposal[], handleDelete: (id: string) => void }) => (
-  <div className={cn(styles.cardGrid, "animate-in fade-in slide-in-from-bottom-8 duration-700")}>
-    {myProposals.length === 0 ? (
-      <EmptyState message="You haven't posted any proposals yet." />
-    ) : (
-      myProposals.map((p) => <ProposalCard key={p.id} proposal={p} isOwner onDelete={handleDelete} />)
-    )}
-  </div>
-);
-
-// ProposalCard is now imported from its own file.
-
-const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
-  app: Application,
-  onAccept: (id: string) => void,
-  onReject: (id: string) => void
-}) => (
-  <div className={cn(
-    styles.applicationCard,
-    "group relative overflow-hidden transition-all duration-500 rounded-[2.5rem] sm:rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-xl"
-  )}>
-    <div className="bg-card/95 backdrop-blur-xl rounded-[2.4rem] sm:rounded-[3.4rem] p-6 sm:p-12 h-full flex flex-col relative overflow-hidden">
-      {/* Decorative Background Element */}
-      <div className="absolute -top-32 -right-32 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px] group-hover:bg-orange-500/20 transition-all duration-[2000ms]" />
-
-      <div className="p-0 relative z-10 flex-1 flex flex-col">
-        <div className="flex justify-between items-start mb-12">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
-            <div className="relative">
-              <div className="absolute inset-0 bg-orange-500/30 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-150" />
-              <Avatar className="h-24 w-24 border-4 border-background shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10 transition-transform duration-700 group-hover:scale-110">
-                <AvatarImage src={app.applicant.avatarUrl || ""} className="object-cover" />
-                <AvatarFallback className="bg-orange-500/10 text-orange-500 font-black text-3xl uppercase italic">{app.applicant.name?.[0] || "U"}</AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-2 -right-2 w-9 h-9 bg-orange-500 rounded-full border-4 border-background flex items-center justify-center z-20 shadow-xl shadow-orange-500/20 scale-110">
-                <Zap className="w-4 h-4 text-white fill-current" />
-              </div>
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-                <Badge className="bg-orange-500/10 text-orange-500 border-none px-4 py-2 text-[9px] font-black uppercase tracking-[0.3em] rounded-full shadow-lg shadow-orange-500/10 shrink-0">Incoming Signal</Badge>
-                {app.applicant.reputation && <ReputationBadge reputation={app.applicant.reputation} size="sm" />}
-              </div>
-              <Link href={`/profile/${app.applicant.id}`} className="font-black text-3xl sm:text-5xl text-foreground hover:text-primary transition-all duration-500 block leading-[0.85] tracking-tighter uppercase italic drop-shadow-sm break-all sm:break-normal">{app.applicant.name}</Link>
-              <div className="flex items-center justify-center md:justify-start gap-4 mt-6">
-                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-40 italic">Syncing with</span>
-                <div className="flex-1 h-px bg-border/20 max-w-[40px]" />
-                <span className="text-xs font-black text-primary uppercase tracking-widest">{app.proposal?.title}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative mb-12 p-10 bg-background/40 rounded-[2.5rem] border-2 border-dashed border-orange-500/20 group-hover:border-orange-500/40 transition-all duration-700 group-hover:bg-background/60 shadow-inner flex-1 flex items-center justify-center min-h-[160px]">
-          <div className="absolute top-0 left-12 -translate-y-1/2 bg-orange-500 text-white px-6 py-1.5 text-[9px] font-black uppercase tracking-[0.4em] rounded-full shadow-xl shadow-orange-500/30 italic">Transmission</div>
-          <p className="text-xl sm:text-2xl text-foreground leading-tight font-black italic tracking-tighter uppercase text-center max-w-md">
-            &quot;{app.pitchMessage}&quot;
-          </p>
-        </div>
-
-        <div className="flex gap-4 mt-auto">
-          <Button
-            onClick={() => onAccept(app.id)}
-            className="flex-1 h-20 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white shadow-[0_20px_40px_rgba(249,115,22,0.3)] transition-all duration-500 font-black text-xs uppercase tracking-[0.2em] gap-4 hover:scale-[1.02] active:scale-[0.98] border-none"
-          >
-            <CheckCircle className="w-6 h-6" /> Authenticate Exchange
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onReject(app.id)}
-            className="w-20 h-20 p-0 rounded-2xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive transition-all duration-500 border-2 border-border/50 bg-transparent shadow-xl flex items-center justify-center"
-          >
-            <XCircle className="w-10 h-10" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  </div>
-));
-ApplicationCard.displayName = "ApplicationCard";
-
-const UserMenu = ({ user, onSignOut, loggingOut }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+const UserMenu = ({ user, onSignOut, loggingOut }: any) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
@@ -1044,7 +553,7 @@ const UserMenu = ({ user, onSignOut, loggingOut }: any) => ( // eslint-disable-l
   </DropdownMenu>
 );
 
-const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
   const router = useRouter();
 
   return (
@@ -1070,16 +579,14 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
               <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">All caught up</p>
             </div>
           ) : (
-            notifications.map((n: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+            notifications.map((n: any) => (
               <DropdownMenuItem
                 key={n.id}
                 onClick={() => {
                   handleMarkRead(n.id);
-                  // Navigate using the backend-provided link if available
                   if (n.link) {
                     router.push(n.link);
                   } else if ((n.type === 'MESSAGE' || n.type === 'MESSAGE_RECEIVED' || n.type === 'SWAP_REQUEST') && n.resourceId) {
-                    // Fallback for types (though resourceId might be missing based on actions/messages.ts)
                     router.push(`/dashboard?tab=active-swaps&swapId=${n.resourceId}`);
                   }
                 }}
@@ -1103,13 +610,3 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
     </DropdownMenu>
   );
 };
-
-const EmptyState = ({ message }: { message: string }) => (
-  <div className={cn(styles.emptyState, "group")}>
-    <div className="relative inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-primary/10 to-transparent border border-white/5 mb-6 group-hover:scale-110 transition-transform duration-700">
-      <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-      <Layers className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors duration-500" />
-    </div>
-    <p className="max-w-[200px] leading-relaxed opacity-60 font-medium text-sm sm:text-base">{message}</p>
-  </div>
-);

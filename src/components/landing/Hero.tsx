@@ -30,7 +30,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         if (node.nodeType === Node.TEXT_NODE) {
           const text = node.textContent || "";
           return text.split("").map((c: string) =>
-            `<span class="char" style="display:inline-block; will-change:transform, filter;">${c === " " ? "&nbsp;" : c}</span>`
+            `<span class="char" style="display:inline-block; transform: translateZ(0); -webkit-backface-visibility: hidden; backface-visibility: hidden;">${c === " " ? "&nbsp;" : c}</span>`
           ).join("");
         } else if (node.nodeType === Node.ELEMENT_NODE) {
           const element = node as HTMLElement;
@@ -58,49 +58,49 @@ export default function Hero({ userId }: { userId?: string | null }) {
     // The introTl will now animate FROM hidden state to visible state.
 
     introTl
-      .from(".hero-badge", {
+      .fromTo(".hero-badge", {
         opacity: 0,
-        scale: 0.9,
-        y: -40,
-        filter: "blur(20px)",
-        duration: 1.4,
+        scale: 0.95,
+        y: -20,
+      }, {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 1.2,
         ease: "expo.out",
         clearProps: "all"
       })
       .fromTo(`.${styles.eyebrow}`, {
         opacity: 0,
         y: 20,
-        filter: "blur(10px)"
       }, {
         opacity: 1,
         y: 0,
-        filter: "blur(0px)",
         duration: 1.2,
         ease: "expo.out",
         clearProps: "all"
       }, "-=1.1")
-      .from(chars, {
+      .fromTo(chars, {
         opacity: 0,
-        y: 60,
-        filter: "blur(20px)",
-        rotateX: -10,
+        y: 40,
+      }, {
+        opacity: 1,
+        y: 0,
         stagger: 0.012,
-        duration: 1.8,
+        duration: 1.4,
         ease: "expo.out",
         clearProps: "all"
-      }, "-=0.9")
+      }, "-=1.0")
       .fromTo(`.${styles.heroDescription}`, {
         opacity: 0,
         y: 20,
-        filter: "blur(10px)"
       }, {
         opacity: 0.9,
         y: 0,
-        filter: "blur(0px)",
         duration: 1.2,
         ease: "power3.out",
         clearProps: "all"
-      }, "-=1.0")
+      }, "-=1.1")
       .fromTo(`.${styles.heroActions} .proto-btn`, {
         opacity: 0,
         y: 20,

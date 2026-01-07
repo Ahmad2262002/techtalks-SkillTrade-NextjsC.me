@@ -68,16 +68,18 @@ const Navbar = ({ userId }: NavbarProps) => {
       );
 
     // Scroll-based "Walking" effect
-    gsap.to(container.current, {
-      scrollTrigger: {
-        trigger: "body",
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 1.5,
-      },
-      y: 10,
-      ease: "none"
-    });
+    if (typeof document !== 'undefined' && document.body) {
+      gsap.to(container.current, {
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1.5,
+        },
+        y: 10,
+        ease: "none"
+      });
+    }
   }, { scope: container });
 
   return (

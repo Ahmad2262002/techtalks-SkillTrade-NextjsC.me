@@ -106,27 +106,50 @@ export default function LoginPage() {
           duration: 3000,
         });
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+          },
         });
         if (error) throw error;
+
+        if (data.user && !data.session) {
+          update({
+            id: toastId,
+            title: "Identity Pending",
+            description: "An activation link has been sent to your inbox. Please verify it before syncing.",
+            variant: "default",
+            duration: 10000,
+          });
+          setLoading(false);
+          return; // Stop here, user needs to verify email
+        }
 
         update({
           id: toastId,
           title: "Node Created",
-          description: "Your master identity has been synchronized.",
+          description: "Your master identity has been synchronized. Entering orbit...",
           variant: "success",
           duration: 3000,
         });
       }
+
       setTimeout(() => {
         router.refresh();
         router.push("/dashboard");
       }, 800);
 
     } catch (err: any) {
-      const errorMessage = err.message ?? "Authentication failed. Please check your credentials.";
+      let errorMessage = err.message ?? "Authentication failed. Please check your credentials.";
+
+      if (errorMessage.toLowerCase().includes("email not confirmed") || errorMessage.toLowerCase().includes("email not verified")) {
+        errorMessage = "Identity not verified. Check your inbox for the activation link.";
+      } else if (errorMessage.toLowerCase().includes("invalid login credentials")) {
+        errorMessage = "Verification failed. Check your access crypt (password).";
+      }
+
       setError(errorMessage);
       toast({
         title: "Link Terminated",

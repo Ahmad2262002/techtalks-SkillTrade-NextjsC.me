@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { listPublicProposals } from "@/actions/proposals";
 import { createApplication } from "@/actions/applications";
-import { Search, Filter, Grid, List, User, ArrowRightLeft, Star, CheckCircle, Zap } from "lucide-react";
+import { Search, Filter, Grid, List, User, ArrowRightLeft, Star, CheckCircle, Zap, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,90 +31,149 @@ const ProposalCard = React.memo(({ item, isApplied, applyingId, handleApply }: {
 }) => {
   const reputation = (item.owner as any).reputation;
 
+  // Generate premium meshes based on item ID
+  const meshColors = [
+    { from: "#ec4899", via: "#f43f5e", shadow: "shadow-pink-500/20" }, // Pink/Rose
+    { from: "#3b82f6", via: "#06b6d4", shadow: "shadow-blue-500/20" }, // Blue/Cyan
+    { from: "#10b981", via: "#84cc16", shadow: "shadow-emerald-500/20" }, // Emerald/Lime
+    { from: "#f59e0b", via: "#fbbf24", shadow: "shadow-amber-500/20" }, // Amber/Yellow
+    { from: "#8b5cf6", via: "#6366f1", shadow: "shadow-violet-500/20" }, // Violet/Indigo
+  ];
+  const colorIndex = item.id.charCodeAt(0) % meshColors.length;
+  const mesh = meshColors[colorIndex];
+
   return (
-    <div className="group relative flex flex-col p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] bg-card border-2 border-border hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-        <Zap className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rotate-12" />
-      </div>
+    <div className="group relative flex flex-col rounded-[2rem] sm:rounded-[2.5rem] bg-card border border-border/50 hover:border-primary/50 transition-all duration-700 hover:shadow-[0_20px_80px_-20px_rgba(var(--primary-rgb),0.15)] overflow-hidden isolate">
+      {/* Visual Header "Image" */}
+      <div className="h-40 sm:h-48 w-full relative overflow-hidden shrink-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
+        {item.imageUrl ? (
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          />
+        ) : (
+          <>
+            {/* Animated Background Mesh - Ported from Browse Hero */}
+            <div
+              className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-32 h-32 bg-primary/30 rounded-full blur-[40px] opacity-60 group-hover:scale-150 transition-transform duration-[2000ms] animate-pulse"
+              style={{ backgroundColor: mesh.from }}
+            ></div>
+            <div
+              className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-24 h-24 bg-violet-500/20 rounded-full blur-[30px] opacity-60 animate-pulse-slow"
+              style={{ backgroundColor: mesh.via }}
+            ></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-30 group-hover:opacity-100 transition-opacity duration-1000"></div>
+          </>
+        )}
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
 
-      <div className="flex justify-between items-start mb-4 sm:mb-6 relative z-10">
-        <Link href={`/profile/${item.owner.id}`} className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
-          <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-border group-hover:border-primary/50 transition-colors">
-            <AvatarImage src={item.owner.avatarUrl || ""} />
-            <AvatarFallback className="font-bold text-xs sm:text-sm">{(item.owner.name || "U")[0]}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors leading-none">{item.owner.name || "Anonymous User"}</span>
-            {reputation && <ReputationBadge reputation={reputation} size="sm" className="mt-1" />}
+        {/* Reputation/Level Overlay */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10 font-sans">
+          {reputation && (
+            <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-left-4 duration-500">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/60 backdrop-blur-xl rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-2xl">
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <span>LEVEL {reputation.level}</span>
+              </div>
+              <div className={cn(
+                "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-white/10 backdrop-blur-md self-start border border-white/5 shadow-lg",
+                reputation.color || "text-white"
+              )}>
+                {reputation.title}
+              </div>
+            </div>
+          )}
+          <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 flex items-center justify-center">
+            <Zap className="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] fill-white/20" />
           </div>
-        </Link>
+        </div>
 
-        {reputation && (
-          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-amber-500/10 text-amber-500 rounded-lg sm:rounded-xl border border-amber-500/20">
-            <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />
-            <span className="font-black text-[10px] sm:text-xs">{reputation.averageRating?.toFixed(1)}</span>
+        {/* Rating Floating Badge */}
+        {reputation?.averageRating > 0 && (
+          <div className="absolute bottom-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 bg-white backdrop-blur-xl rounded-xl text-black text-xs font-black shadow-2xl ring-1 ring-black/5">
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-current" />
+            {reputation.averageRating.toFixed(1)}
           </div>
         )}
       </div>
 
-      <div className="mb-6 sm:mb-8 relative z-10">
-        <h3 className="font-black text-lg sm:text-xl md:text-2xl text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{item.title}</h3>
-        <p className="text-muted-foreground text-xs sm:text-sm font-medium leading-relaxed line-clamp-2 h-[2.4rem] sm:h-[2.8rem] opacity-80">{item.description}</p>
-      </div>
-
-      <div className="mt-auto flex flex-col min-[480px]:grid min-[480px]:grid-cols-[1fr,auto,1fr] items-start min-[480px]:items-center gap-2 min-[480px]:gap-2 sm:gap-4 py-4 sm:py-6 border-t border-border/50 relative z-10">
-        <div className="space-y-1 sm:space-y-2 w-full">
-          <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-emerald-500 flex items-center gap-1 sm:gap-1.5 font-sans">
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500" />
-            Offers
-          </div>
-          <div className="flex flex-wrap gap-1 sm:gap-1.5">
-            {item.offeredSkills.map(s => <Badge key={s.id} variant="secondary" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-xs">{s.name}</Badge>)}
-          </div>
+      <div className="p-6 sm:p-8 flex flex-col flex-1 relative">
+        <div className="flex justify-between items-start mb-6 relative z-10">
+          <Link href={`/profile/${item.owner.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity group/owner">
+            <Avatar className="h-14 w-14 border-[6px] border-card shadow-2xl -mt-16 sm:-mt-20 transition-all duration-500 group-hover:scale-110 group-hover:border-primary/20">
+              <AvatarImage src={item.owner.avatarUrl || ""} />
+              <AvatarFallback className="font-black text-lg bg-gradient-to-br from-primary/10 to-primary/30 text-primary">{(item.owner.name || "U")[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col pt-1">
+              <span className="font-black text-base text-foreground group-hover/owner:text-primary transition-colors leading-none tracking-tight">{item.owner.name || "Anonymous"}</span>
+              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.1em] mt-1.5 opacity-60">Verified {reputation?.title || "Mentor"}</span>
+            </div>
+          </Link>
         </div>
 
-        <div className="hidden min-[480px]:block bg-muted px-1.5 py-3 sm:px-2 sm:py-4 rounded-full">
-          <ArrowRightLeft className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+        <div className="mb-6 relative z-10 flex-1">
+          <h3 className="font-black text-2xl text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-[1.1] tracking-tight">{item.title}</h3>
+          <p className="text-muted-foreground text-sm font-medium leading-relaxed line-clamp-3 opacity-70 group-hover:opacity-100 transition-opacity">{item.description}</p>
         </div>
 
-        <div className="space-y-1 sm:space-y-2 w-full min-[480px]:text-right">
-          <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-orange-500 flex min-[480px]:justify-end items-center gap-1 sm:gap-1.5 font-sans">
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-orange-500 min-[480px]:order-2" />
-            <span className="min-[480px]:order-1">Requests</span>
+        <div className="mt-auto space-y-5">
+          {/* Skills Grid - Premium Layout */}
+          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-[1.5rem] border border-border/50 backdrop-blur-sm group-hover:bg-muted/50 transition-colors">
+            <div className="space-y-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.15em] text-emerald-500/80 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                Offers
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {item.offeredSkills.slice(0, 2).map(s => (
+                  <Badge key={s.id} variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/10 text-[10px] font-bold px-2 py-0.5 h-6 hover:bg-emerald-500 hover:text-white transition-all cursor-default">{s.name}</Badge>
+                ))}
+                {item.offeredSkills.length > 2 && <span className="text-[10px] font-black text-muted-foreground/50 self-center">+{item.offeredSkills.length - 2}</span>}
+              </div>
+            </div>
+            <div className="space-y-2 border-l border-border/50 pl-4">
+              <span className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-500/80 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                Needs
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {item.neededSkills.slice(0, 2).map(s => (
+                  <Badge key={s.id} variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/10 text-[10px] font-bold px-2 py-0.5 h-6 hover:bg-amber-500 hover:text-white transition-all cursor-default">{s.name}</Badge>
+                ))}
+                {item.neededSkills.length > 2 && <span className="text-[10px] font-black text-muted-foreground/50 self-center">+{item.neededSkills.length - 2}</span>}
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1 sm:gap-1.5 min-[480px]:justify-end">
-            {item.neededSkills.map(s => <Badge key={s.id} variant="secondary" className="bg-orange-500/5 text-orange-600 border-orange-500/20 font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-xs">{s.name}</Badge>)}
-          </div>
-        </div>
-      </div>
 
-      <div className="mt-3 sm:mt-4 relative z-10">
-        <Button
-          className={cn(
-            "w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-black text-base sm:text-lg transition-all gap-2",
-            isApplied ? "bg-emerald-500 text-white border-none cursor-default" : "bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
-          )}
-          size="lg"
-          disabled={applyingId === item.id || isApplied}
-          onClick={() => handleApply(item.id)}
-        >
-          {applyingId === item.id ? (
-            <>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              <span>Processing...</span>
-            </>
-          ) : isApplied ? (
-            <>
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Applied</span>
-            </>
-          ) : (
-            <>
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Request Swap</span>
-            </>
-          )}
-        </Button>
+          <Button
+            className={cn(
+              "w-full h-14 rounded-2xl font-black text-sm transition-all duration-500 gap-3 shadow-2xl",
+              isApplied
+                ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20 shadow-none cursor-default"
+                : "bg-primary text-primary-foreground shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] active:scale-95 group/btn"
+            )}
+            disabled={applyingId === item.id || isApplied}
+            onClick={() => handleApply(item.id)}
+          >
+            {applyingId === item.id ? (
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border-[3px] border-current border-t-transparent rounded-full animate-spin" />
+                <span className="tracking-widest uppercase text-xs">Processing</span>
+              </div>
+            ) : isApplied ? (
+              <div className="flex items-center gap-2 uppercase tracking-widest text-xs">
+                <CheckCircle className="w-5 h-5" />
+                <span>Request Sent</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 uppercase tracking-[0.2em] text-xs">
+                <ArrowRightLeft className="w-5 h-5 transition-transform group-hover/btn:rotate-180 duration-500" />
+                <span>Initialize Swap</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -133,15 +192,28 @@ export default function SearchSection() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProposals(searchText);
+      fetchProposals(searchText, activeFilter);
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchText]);
+  }, [searchText, activeFilter]);
 
-  const fetchProposals = async (query: string) => {
+  const fetchProposals = async (query: string, filter: string) => {
     setLoading(true);
     try {
-      const data = await listPublicProposals({ search: query, take: 50 });
+      // Map UI filter names to backend expected keys
+      const dateRangeMap: Record<string, string> = {
+        "Today": "today",
+        "This Week": "week",
+        "This Month": "month",
+        "ANY": "ANY"
+      };
+
+      const data = await listPublicProposals({
+        search: query,
+        take: 1000, // Fetch all posts - no artificial limit
+        dateRange: dateRangeMap[filter] || undefined,
+        includeAllStatuses: true // Show all statuses (OPEN, IN_PROGRESS, CLOSED) to ensure users see their data
+      });
       setProposals(data);
     } catch (error) {
       console.error(error);
@@ -166,16 +238,8 @@ export default function SearchSection() {
     }
   };
 
-  const filteredProposals = proposals.filter((p) => {
-    if (activeFilter === "ANY") return true;
-    const date = new Date(p.createdAt);
-    const now = new Date();
-    const diffDays = (now.getTime() - date.getTime()) / (1000 * 3600 * 24);
-    if (activeFilter === "Today") return diffDays <= 1;
-    if (activeFilter === "This Week") return diffDays <= 7;
-    if (activeFilter === "This Month") return diffDays <= 30;
-    return true;
-  });
+  // With server-side filtering, we just use 'proposals' directly
+  const filteredProposals = proposals;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-6 sm:gap-8">
@@ -230,22 +294,45 @@ export default function SearchSection() {
         </div>
 
         {showFilters && (
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-border animate-fade-in">
-            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mr-0 sm:mr-2 w-full sm:w-auto">Quick Filters:</span>
-            {filtersData.date.map(opt => (
-              <button
-                key={opt}
-                onClick={() => setActiveFilter(opt)}
-                className={cn(
-                  "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all border-2",
-                  activeFilter === opt
-                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
-                    : "bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                )}
-              >
-                {opt === "ANY" ? "All Time" : opt}
-              </button>
-            ))}
+          <div className="flex flex-col gap-4 pt-4 border-t border-border animate-fade-in">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between">
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest">Time Posted:</span>
+                <div className="flex flex-wrap gap-2">
+                  {filtersData.date.map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => setActiveFilter(opt)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 touch-manipulation",
+                        activeFilter === opt
+                          ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-105"
+                          : "bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground active:scale-95"
+                      )}
+                    >
+                      {opt === "ANY" ? "All Time" : opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Smart Suggestion Badge */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                  <Zap className="w-3 h-3 text-purple-500 fill-current animate-pulse" />
+                  <span>AI Insight</span>
+                </span>
+                <div className="px-4 py-2 rounded-xl border border-purple-500/20 bg-purple-500/5 text-purple-400 text-xs font-bold flex items-center gap-2 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  <span className="relative">Sorting by most relevant to your skills...</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[10px] text-blue-400 font-bold flex items-start gap-2">
+              <div className="mt-0.5 min-w-[4px] h-1 w-1 rounded-full bg-blue-400" />
+              <span>Showing all proposals (Open, In Progress, Closed).</span>
+            </div>
           </div>
         )}
       </div>
@@ -281,8 +368,8 @@ export default function SearchSection() {
         </div>
       ) : (
         <div className={cn(
-          "grid gap-4 sm:gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700",
-          viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 max-w-4xl mx-auto w-full"
+          "grid gap-4 sm:gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-20",
+          viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3" : "grid-cols-1 max-w-3xl mx-auto w-full"
         )}>
           {filteredProposals.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-32 text-center bg-muted/30 rounded-[3rem] border-2 border-dashed border-border">

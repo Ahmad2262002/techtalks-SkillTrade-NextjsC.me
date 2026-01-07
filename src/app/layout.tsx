@@ -84,14 +84,18 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico' },
-      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.ico', sizes: 'any' },
     ],
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '180x180' },
     ],
   },
   manifest: '/manifest.json',
+  appleWebApp: {
+    title: 'SkillTrade',
+    statusBarStyle: 'default',
+    capable: true,
+  },
   verification: {
     // Add your verification codes when available
     // google: 'google-site-verification-code',
@@ -122,9 +126,6 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
-        {/* Scripts for Ion Icons used in SearchSection */}
-        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-        <script noModule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
       </body>
     </html>
   );

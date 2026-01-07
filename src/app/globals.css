@@ -893,3 +893,42 @@ button:active {
 .dark .shadow-premium-vibrant {
   box-shadow: 0 25px 60px -15px hsl(var(--primary) / 0.3), 0 10px 20px -15px rgba(0, 0, 0, 0.4);
 }
+
+/* --- Marquee Animation --- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+.animate-marquee-reverse {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: marquee-reverse 40s linear infinite;
+}
+
+.hover\:pause:hover {
+  animation-play-state: paused;
+}

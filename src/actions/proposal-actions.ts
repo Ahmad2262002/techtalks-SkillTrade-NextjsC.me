@@ -232,9 +232,12 @@ export async function deleteProposal(proposalId: string) {
       return { success: false, message: 'Unauthorized to delete this proposal.' };
     }
 
-    await prisma.proposal.delete({
-      where: { id: proposalId },
-    });
+    // Explicitly delete related records since cascade might be failing in the DB
+    await prisma.$transaction([
+      prisma.application.deleteMany({ where: { proposalId } }),
+      prisma.swap.deleteMany({ where: { proposalId } }),
+      prisma.proposal.delete({ where: { id: proposalId } }),
+    ]);
 
     revalidatePath('/dashboard');
     revalidatePath('/'); // Update landing page recent posts

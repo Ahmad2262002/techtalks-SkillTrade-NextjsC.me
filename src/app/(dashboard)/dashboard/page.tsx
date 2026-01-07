@@ -42,7 +42,8 @@ export default async function DashboardPage({
       listPublicProposals({
         search: search || undefined,
         modality: modalityFilter,
-        take: 20,
+        take: 30,
+        includeAllStatuses: true, // Show even if in-progress or closed
       }),
       getLeaderboard(),
     ]);
@@ -65,8 +66,10 @@ export default async function DashboardPage({
   const appliedProposalIds = new Set(overview.sentApplications?.map((app: any) => app.proposalId) || []);
 
   const publicOnlyProposals = allProposals.filter(
-    (p) => p.ownerId !== userId && !appliedProposalIds.has(p.id),
+    (p) => p.ownerId !== userId,
   );
+
+  console.log(`[Dashboard] Found ${allProposals.length} total | ${publicOnlyProposals.length} shown to user ${userId}`);
 
   const myProposals = overview.proposals;
 

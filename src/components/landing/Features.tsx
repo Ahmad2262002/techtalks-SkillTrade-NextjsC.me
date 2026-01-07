@@ -51,11 +51,12 @@ export default function Features() {
 
     // Title reveal (Smoother)
     gsap.fromTo([`.${styles.sectionTitle}`, `.${styles.sectionDescription}`],
-      { filter: "blur(20px)", opacity: 0, y: 50 },
+      { opacity: 0, y: 30 },
       {
-        filter: "blur(0px)",
         opacity: 1,
         y: 0,
+        duration: 1.2,
+        ease: "expo.out",
         scrollTrigger: {
           trigger: container.current,
           start: "top 90%",

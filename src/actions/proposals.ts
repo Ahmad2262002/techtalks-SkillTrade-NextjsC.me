@@ -40,16 +40,41 @@ export async function listPublicProposals(params: {
   take?: number;
   skip?: number;
   includeAllStatuses?: boolean;
+  dateRange?: string;
 } = {}) {
   const {
     wantSkillIds,
     haveSkillIds,
     modality,
     search,
-    take = 20,
+    take = 1000,
     skip = 0,
     includeAllStatuses = false,
+    dateRange,
   } = params;
+
+  // --- DATE FILTER LOGIC ---
+  let dateFilter = {};
+  if (dateRange) {
+    const now = new Date();
+    let startDate = new Date();
+
+    if (dateRange === 'today') {
+      startDate.setTime(now.getTime() - (24 * 60 * 60 * 1000)); // Last 24 hours
+    } else if (dateRange === 'week') {
+      startDate.setDate(now.getDate() - 7);
+    } else if (dateRange === 'month') {
+      startDate.setDate(now.getDate() - 30);
+    }
+
+    if (dateRange !== 'ANY') {
+      dateFilter = {
+        createdAt: {
+          gte: startDate,
+        },
+      };
+    }
+  }
 
   // --- SEARCH LOGIC ---
   const searchFilter = search
@@ -77,6 +102,7 @@ export async function listPublicProposals(params: {
       status: includeAllStatuses ? undefined : "OPEN",
       modality: modality ?? undefined,
       ...searchFilter,
+      ...dateFilter,
       AND: [
         wantSkillIds && wantSkillIds.length
           ? {
@@ -119,6 +145,8 @@ export async function listPublicProposals(params: {
     take,
     skip,
   });
+
+  console.log(`[API] listPublicProposals: found ${proposals.length} items. Params:`, { search, modality, includeAllStatuses });
 
   // Batch fetch reputation for all owners
   const ownerIds = proposals.map(p => p.ownerId);

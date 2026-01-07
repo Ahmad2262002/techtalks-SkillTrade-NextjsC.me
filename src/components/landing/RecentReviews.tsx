@@ -33,18 +33,18 @@ export default function RecentReviews({ reviews }: RecentReviewsProps) {
         });
 
         tl.from(`.${styles.sectionTitle}, .${styles.eyebrow}, .${styles.sectionDescription}`, {
-            y: 50,
+            y: 20,
             opacity: 0,
             duration: 1.2,
-            stagger: 0.15,
+            stagger: 0.1,
             ease: "expo.out",
             clearProps: "all"
         })
             .from(".review-card", {
-                y: 60,
+                y: 30,
                 opacity: 0,
                 duration: 1.4,
-                stagger: 0.1,
+                stagger: 0.05,
                 ease: "expo.out",
                 clearProps: "all"
             }, "-=1.0");

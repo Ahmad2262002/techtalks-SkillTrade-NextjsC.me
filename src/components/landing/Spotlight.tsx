@@ -38,18 +38,18 @@ export default function Spotlight({ proposals }: SpotlightProps) {
         });
 
         tl.from(".animate-header-item", {
-            y: 40,
+            y: 20,
             opacity: 0,
             duration: 1.2,
-            stagger: 0.15,
+            stagger: 0.1,
             ease: "expo.out",
             clearProps: "all"
         })
             .from(".spotlight-card", {
-                y: 60,
+                y: 30,
                 opacity: 0,
                 duration: 1.4,
-                stagger: 0.1,
+                stagger: 0.05,
                 ease: "expo.out",
                 clearProps: "all"
             }, "-=1.0");

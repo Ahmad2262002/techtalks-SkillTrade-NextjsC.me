@@ -138,52 +138,56 @@ export function ProposalCard({
 
         {/* Owner / Meta Footer */}
         <div className="mt-auto flex items-center justify-between pt-6 border-t border-border/50">
-          {!isOwner && proposal.owner ? (
+          {proposal.owner ? (
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border-2 border-background shadow-lg transition-transform group-hover:scale-110">
                 <AvatarImage src={proposal.owner.avatarUrl || ""} />
                 <AvatarFallback className="text-xs font-black">{proposal.owner.name?.[0] || 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter opacity-60">Posted by</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter opacity-60">
+                  {isOwner ? "My Post" : "Posted by"}
+                </span>
                 <span className="text-xs font-black text-foreground truncate max-w-[100px]">{proposal.owner.name}</span>
               </div>
             </div>
-          ) : isOwner ? (
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-primary uppercase tracking-tighter">Engagement</span>
-              <span className="text-sm font-black text-foreground">{proposal._count?.applications || 0} Requests</span>
-            </div>
           ) : (
-            <div /> // Placeholder
+            <div />
           )}
 
-          <div className="flex items-center gap-3">
-            <ProposalDetailsModal
-              proposal={proposal}
-              isOwner={isOwner}
-              isOpen={isModalOpen}
-              onOpenChange={setIsModalOpen}
-            />
-            {isOwner && onDelete && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(proposal.id);
-                }}
-                className="p-3 rounded-2xl bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all duration-300 shadow-xl shadow-destructive/5"
-              >
-                <Trash2 size={18} />
-              </button>
-            )}
-            {!isOwner && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="p-3 rounded-2xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-300 shadow-xl shadow-primary/5 group/btn"
-              >
-                <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
-              </button>
-            )}
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black text-primary uppercase tracking-tighter">Velocity</span>
+              <span className="text-sm font-black text-foreground">{proposal._count?.swaps || 0} Trades</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <ProposalDetailsModal
+                proposal={proposal}
+                isOwner={isOwner}
+                isOpen={isModalOpen}
+                onOpenChange={setIsModalOpen}
+              />
+              {!isOwner && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="p-3 rounded-2xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-300 shadow-xl shadow-primary/5 group/btn"
+                >
+                  <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
+                </button>
+              )}
+              {isOwner && onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(proposal.id);
+                  }}
+                  className="p-3 rounded-2xl bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all duration-300 shadow-xl shadow-destructive/5"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

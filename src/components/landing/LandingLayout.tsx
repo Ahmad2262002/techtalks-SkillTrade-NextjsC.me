@@ -6,6 +6,7 @@ import Features from "@/components/landing/Features";
 import Footer from "@/components/landing/Footer";
 import Spotlight from "@/components/landing/Spotlight";
 import RecentReviews from "@/components/landing/RecentReviews";
+import Contact from "@/components/landing/Contact";
 import SmoothScrollProvider from "@/app/(public)/SmoothScrollProvider";
 import styles from "../../app/(public)/Landing.module.css";
 
@@ -19,6 +20,7 @@ export default function LandingLayout({ userId, proposals, reviews }: any) {
           <Spotlight proposals={proposals} />
           <Features />
           <RecentReviews reviews={reviews} />
+          <Contact />
         </main>
         <Footer />
       </div>
