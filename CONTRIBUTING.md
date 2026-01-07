@@ -90,3 +90,4 @@ skill-sync/
 Feel free to open an issue with your question or contact the maintainers directly.
 
 Thank you for contributing! 🎉
+---------------------------------------------
