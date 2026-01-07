@@ -47,6 +47,7 @@ export default function Features() {
   ];
 
   useGSAP(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) return; // Skip on mobile
     const cards = gsap.utils.toArray<HTMLElement>(".feature-card");
 
     // Title reveal (Smoother)

@@ -23,6 +23,7 @@ export default function RecentReviews({ reviews }: RecentReviewsProps) {
     const container = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
+        if (typeof window !== "undefined" && window.innerWidth < 768) return; // Skip on mobile
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: container.current,

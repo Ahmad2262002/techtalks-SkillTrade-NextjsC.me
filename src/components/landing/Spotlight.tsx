@@ -25,6 +25,7 @@ export default function Spotlight({ proposals }: SpotlightProps) {
     // Optimized GSAP Registration
     useGSAP(() => {
         if (typeof window !== "undefined") {
+            if (window.innerWidth < 768) return; // Skip animations on mobile to ensure visibility
             gsap.registerPlugin(ScrollTrigger);
         }
 
