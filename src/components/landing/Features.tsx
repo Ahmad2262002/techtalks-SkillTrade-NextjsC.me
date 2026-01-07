@@ -59,7 +59,7 @@ export default function Features() {
         ease: "expo.out",
         scrollTrigger: {
           trigger: container.current,
-          start: "top 90%",
+          start: "top 95%",
           toggleActions: "play none none reverse",
         },
       }
@@ -82,7 +82,7 @@ export default function Features() {
           ease: "expo.out",
           scrollTrigger: {
             trigger: card,
-            start: "top 95%",
+            start: "top bottom-=50",
             toggleActions: "play none none reverse",
           }
         }

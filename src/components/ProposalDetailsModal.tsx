@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { createApplication } from "@/actions/applications";
 import { deleteProposal } from "@/actions/proposal-actions";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Send, Zap, MapPin, Code2, Palette, Music, MessageCircle, Edit } from "lucide-react";
+import { Loader2, Trash2, Send, Zap, MapPin, Code2, Palette, Music, MessageCircle, Edit, X } from "lucide-react";
 import { ReputationBadge } from "@/components/ReputationBadge";
 import { Proposal } from "@/types/dashboard";
 import Image from "next/image";
@@ -89,7 +89,14 @@ export function ProposalDetailsModal({
         <>
             <Dialog open={isOpen} onOpenChange={onOpenChange}>
 
-                <DialogContent className="max-w-xl p-0 rounded-[2.5rem] border-none shadow-2xl bg-background overflow-hidden flex flex-col h-[85vh]">
+                <DialogContent className="max-w-xl p-0 rounded-[2.5rem] border-none shadow-2xl bg-background overflow-hidden flex flex-col h-[90vh] md:h-[85vh]">
+                    <button
+                        onClick={() => onOpenChange(false)}
+                        className="absolute right-6 top-6 z-50 p-3 rounded-2xl bg-background/80 backdrop-blur-md border border-border/50 text-foreground/70 hover:text-primary hover:scale-110 active:scale-95 transition-all md:hidden"
+                        aria-label="Close modal"
+                    >
+                        <X size={20} />
+                    </button>
                     <ScrollArea className="flex-1 w-full">
                         {proposal.imageUrl && (
                             <div className="h-64 w-full relative group">

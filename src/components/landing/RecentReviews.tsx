@@ -26,7 +26,7 @@ export default function RecentReviews({ reviews }: RecentReviewsProps) {
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: container.current,
-                start: "top 75%",
+                start: "top 95%",
                 end: "bottom 25%",
                 toggleActions: "play none none reverse"
             }

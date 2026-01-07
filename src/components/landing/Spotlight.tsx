@@ -31,7 +31,7 @@ export default function Spotlight({ proposals }: SpotlightProps) {
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: container.current,
-                start: "top 85%",
+                start: "top 95%",
                 toggleActions: "play none none reverse",
                 // fastScrollEnd: true, // Prevents animation overlap on fast scrolls
             }
