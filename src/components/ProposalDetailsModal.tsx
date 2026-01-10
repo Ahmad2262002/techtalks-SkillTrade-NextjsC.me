@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { createApplication } from "@/actions/applications";
 import { deleteProposal } from "@/actions/proposal-actions";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Send, Zap, MapPin, Code2, Palette, Music, MessageCircle, Edit, X } from "lucide-react";
+import { Loader2, Trash2, Send, Zap, MapPin, Code2, Palette, Music, MessageCircle, Edit, X, Check, Star } from "lucide-react";
 import { ReputationBadge } from "@/components/ReputationBadge";
 import { Proposal } from "@/types/dashboard";
 import Image from "next/image";
@@ -178,7 +178,7 @@ export function ProposalDetailsModal({
                                                     <div className="w-12 h-12 rounded-full border-2 border-background shadow-lg overflow-hidden">
                                                         <Image
                                                             src={proposal.owner.avatarUrl || "/default-avatar.png"}
-                                                            alt={proposal.owner.name}
+                                                            alt={proposal.owner.name || "User Avatar"}
                                                             width={48}
                                                             height={48}
                                                             className="object-cover"
