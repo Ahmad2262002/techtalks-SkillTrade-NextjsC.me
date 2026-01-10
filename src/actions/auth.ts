@@ -8,7 +8,7 @@ import { getCurrentUserId as getUserId } from "@/lib/auth";
 export async function signOut() {
     const supabase = await createClient();
     await supabase.auth.signOut();
-    redirect("/");
+    return { success: true };
 }
 
 export async function getCurrentUserId() {

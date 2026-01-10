@@ -8,112 +8,90 @@ export async function getDashboardOverview() {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("Not authenticated");
 
-  // 1. User Profile (Critical - fetch first)
+  // 1. Fetch EVERYTHING in ONE single query to save connections and improve perf
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
       skills: {
         where: { isVisible: true },
+        include: { skill: true },
+      },
+      proposals: {
         include: {
-          skill: true,
+          offeredSkills: true,
+          neededSkills: true,
+          applications: {
+            include: {
+              applicant: {
+                include: {
+                  skills: {
+                    where: { isVisible: true },
+                    include: { skill: true },
+                  },
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          _count: {
+            select: { applications: true, swaps: true },
+          },
         },
+        orderBy: { createdAt: "desc" },
+      },
+      swapsAsTeacher: {
+        include: {
+          proposal: {
+            include: { offeredSkills: true, neededSkills: true },
+          },
+          teacher: true,
+          student: true,
+          reviews: true,
+        },
+        orderBy: { startedAt: "desc" },
+        take: 20,
+      },
+      swapsAsStudent: {
+        include: {
+          proposal: {
+            include: { offeredSkills: true, neededSkills: true },
+          },
+          teacher: true,
+          student: true,
+          reviews: true,
+        },
+        orderBy: { startedAt: "desc" },
+        take: 20,
+      },
+      applications: {
+        // These are applications SENT by the user
+        select: { proposalId: true },
       },
     },
   });
 
   if (!user) throw new Error("User not found");
 
-  // 2. Main Lists (Batch 1)
-  const [proposals, applications] = await Promise.all([
-    prisma.proposal.findMany({
-      where: { ownerId: userId },
-      include: {
-        offeredSkills: true,
-        neededSkills: true,
-        _count: {
-          select: {
-            applications: true,
-            swaps: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.application.findMany({
-      where: {
-        proposal: {
-          ownerId: userId,
-        },
-      },
-      include: {
-        applicant: {
-          include: {
-            skills: {
-              where: { isVisible: true },
-              include: {
-                skill: true,
-              },
-            },
-          },
-        },
-        proposal: {
-          include: {
-            owner: true,
-            offeredSkills: true,
-            neededSkills: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    }),
-  ]);
-
-  // 3. Secondary Lists (Batch 2)
-  const [sentApplications, swaps] = await Promise.all([
-    // Outgoing Applications (sent) - needed to disable "Apply" button
-    prisma.application.findMany({
-      where: { applicantId: userId },
-      select: { proposalId: true },
-    }),
-    // Swaps
-    prisma.swap.findMany({
-      where: {
-        OR: [{ teacherId: userId }, { studentId: userId }],
-      },
-      include: {
-        proposal: {
-          include: {
-            offeredSkills: true,
-            neededSkills: true,
-
-          },
-        },
-        teacher: true,
-        student: true,
-        reviews: true,
-        messages: {
-          where: {
-            receiverId: userId,
-            isRead: false,
-          },
-          select: { id: true }
-        }
-      },
-      orderBy: { startedAt: "desc" },
-      take: 20,
-    }),
-  ]);
-
-  // 4. Reputation (Batch 3 - has 2 internal queries)
+  // 2. Fetch reputation
   const reputation = await getReputationStats(userId);
+
+  // 3. Extract applications received on my proposals
+  const receivedApplications = user.proposals.flatMap(p =>
+    p.applications.map(app => ({ ...app, proposal: p }))
+  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 20);
+
+  // 4. Combine swaps
+  const combinedSwaps = [...(user.swapsAsTeacher || []), ...(user.swapsAsStudent || [])]
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    .slice(0, 20);
 
   return {
     user,
-    proposals,
-    applications,
-    sentApplications,
-    swaps,
+    proposals: user.proposals,
+    applications: receivedApplications,
+    sentApplications: user.applications,
+    swaps: combinedSwaps,
     reputation,
   };
 }

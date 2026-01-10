@@ -1,19 +1,40 @@
+"use client";
+
 import React, { useState } from 'react';
-import { Mail, MessageSquare, Globe, ArrowRight, CheckCircle } from 'lucide-react';
+import { Mail, MessageSquare, Globe, ArrowRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { submitContactForm } from '@/actions/contact-action';
 
 export default function Contact() {
     const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // Since we don't have a backend mailer, we'll demonstrate success
-        // or the user can integrate a service.
-        setSent(true);
-        setTimeout(() => setSent(false), 5000);
+        setLoading(true);
+        setError(null);
+
+        const formData = new FormData(e.currentTarget);
+        const data = {
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            message: formData.get('message') as string,
+        };
+
+        const result = await submitContactForm(data);
+
+        setLoading(false);
+
+        if (result.success) {
+            setSent(true);
+            setTimeout(() => setSent(false), 5000);
+        } else {
+            setError(result.error || 'Failed to send message');
+        }
     };
 
     return (
@@ -40,7 +61,7 @@ export default function Contact() {
                                 </div>
                                 <div>
                                     <h4 className="font-black uppercase tracking-widest text-xs mb-1">Direct Support</h4>
-                                    <a href="mailto:ahmadalkadi2002@gmail.com" className="text-lg font-bold hover:text-primary transition-colors">ahmadalkadi2002@gmail.com</a>
+                                    <a href="mailto:ahmadalkadri2002@gmail.com" className="text-lg font-bold hover:text-primary transition-colors">ahmadalkadri2002@gmail.com</a>
                                 </div>
                             </div>
 
@@ -64,29 +85,45 @@ export default function Contact() {
                                         <CheckCircle className="w-10 h-10" />
                                     </div>
                                     <h3 className="text-2xl font-black mb-2 uppercase tracking-tighter">Message Sent!</h3>
-                                    <p className="text-muted-foreground font-medium">We'll get back to you at ahmadalkadi2002@gmail.com shortly.</p>
+                                    <p className="text-muted-foreground font-medium">We'll get back to you at ahmadalkadri2002@gmail.com shortly.</p>
                                 </div>
                             ) : (
                                 <form className="space-y-8" onSubmit={handleSubmit}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Full Name</label>
-                                            <Input required placeholder="John Doe" className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary font-bold px-6" />
+                                            <Input name="name" required placeholder="John Doe" className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary font-bold px-6" disabled={loading} />
                                         </div>
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
-                                            <Input required type="email" placeholder="john@example.com" className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary font-bold px-6" />
+                                            <Input name="email" required type="email" placeholder="john@example.com" className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary font-bold px-6" disabled={loading} />
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Your Message</label>
-                                        <Textarea required placeholder="How can we help you?" className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary font-medium p-6" />
+                                        <Textarea name="message" required placeholder="How can we help you?" className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary font-medium p-6" disabled={loading} />
                                     </div>
 
-                                    <Button className="w-full h-16 rounded-2xl text-lg font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3 group">
-                                        Send Message
-                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    {error && (
+                                        <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                            <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+                                            <p className="text-sm font-bold text-destructive">{error}</p>
+                                        </div>
+                                    )}
+
+                                    <Button type="submit" disabled={loading} className="w-full h-16 rounded-2xl text-lg font-black bg-primary shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all gap-3 group disabled:opacity-50 disabled:cursor-not-allowed haptic-touch">
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Send Message
+                                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            </>
+                                        )}
                                     </Button>
 
                                     <div className="flex items-center justify-center gap-2 pt-4 opacity-50">

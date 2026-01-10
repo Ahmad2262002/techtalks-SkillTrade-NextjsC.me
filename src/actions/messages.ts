@@ -86,11 +86,12 @@ export async function sendMessage(params: {
             to: receiver.email,
             subject: `New message from ${swap.teacherId === userId ? swap.teacher.name : swap.student.name}`,
             html: `
-                <p>You have a new message on SkillTrade:</p>
-                <blockquote style="border-left: 4px solid #6366f1; padding-left: 15px; margin: 15px 0;">
-                    ${params.content}
-                </blockquote>
-                <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=active-swaps&swapId=${params.swapId}" style="color: #6366f1; font-weight: bold;">Reply on SkillTrade</a></p>
+                <h2 style="color: #111827; margin-top: 0;">New message arrived! 📩</h2>
+                <p><strong>${swap.teacherId === userId ? swap.teacher.name : swap.student.name}</strong> sent you a message on SkillTrade:</p>
+                <div style="background-color: #f3f4f6; padding: 20px; border-radius: 12px; border-left: 4px solid #6366f1; margin: 20px 0; font-style: italic; color: #374151;">
+                    "${params.content}"
+                </div>
+                <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=active-swaps&swapId=${params.swapId}" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Reply on SkillTrade</a></p>
             `,
             text: `New message from ${swap.teacherId === userId ? swap.teacher.name : swap.student.name}: ${params.content}`
         });

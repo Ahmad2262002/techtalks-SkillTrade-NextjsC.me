@@ -35,20 +35,20 @@
 
 /* Light Theme */
 .light {
-  --background: 210 40% 98.5%;
-  --foreground: 224 71% 4%;
+  --background: 210 20% 98%;
+  /* Clean neutral off-white */
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 224 71% 4%;
+  --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;
-  --popover-foreground: 224 71% 4%;
+  --popover-foreground: 222 47% 11%;
   --primary: 221 83% 53%;
-  /* More vibrant, clear professional blue */
   --primary-foreground: 210 40% 98%;
   --secondary: 210 40% 96%;
   --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 94%;
+  --muted: 210 40% 96%;
   --muted-foreground: 215 16% 47%;
-  --accent: 210 40% 94%;
+  --accent: 210 40% 96%;
   --accent-foreground: 222 47% 11%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
@@ -56,9 +56,9 @@
   --input: 214 32% 91%;
   --ring: 221 83% 53%;
 
-  --shadow-premium: 0 25px 60px -15px rgba(0, 0, 0, 0.05), 0 10px 25px -10px rgba(0, 0, 0, 0.03);
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 12px -4px rgba(0, 0, 0, 0.02);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.04);
 }
 
 /* Accent Overrides */
@@ -127,6 +127,15 @@
 
   /* Animations registered */
   --animate-swing: swing 1s infinite;
+}
+
+/* Hide mobile dock only when a LARGER modal is explicitly OPEN */
+body:has([role="dialog"][data-state="open"]) .mobile-dock-container,
+body:has(.chat-modal-content) .mobile-dock-container,
+body:has(.details-modal-content) .mobile-dock-container,
+body.details-modal-active .mobile-dock-container,
+body[data-scroll-locked] .mobile-dock-container {
+  display: none !important;
 }
 
 html,
@@ -583,7 +592,7 @@ button:active {
 @keyframes pageEnter {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
 
   to {
@@ -593,201 +602,7 @@ button:active {
 }
 
 .page-enter {
-  animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* --- Enhanced Glassmorphism --- */
-.glass-premium {
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.08),
-      rgba(255, 255, 255, 0.03));
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/* --- Pulse Animation --- */
-@keyframes pulse-soft {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-.pulse-soft {
-  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* --- Bounce Animation --- */
-@keyframes bounce-subtle {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-.bounce-subtle {
-  animation: bounce-subtle 2s ease-in-out infinite;
-}
-
-/* --- Spin Slow --- */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* --- Micro-Interactions --- */
-@keyframes buttonPress {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(0.96);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-button:active {
-  animation: buttonPress 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* --- Card Hover Lift --- */
-@keyframes cardLift {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(-8px);
-  }
-}
-
-.hover-lift {
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.hover-lift:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.5);
-}
-
-/* --- Gradient Text --- */
-.gradient-text {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 50%, hsl(var(--accent)));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
-
-@keyframes gradientShift {
-
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* --- Skeleton Loading --- */
-@keyframes skeleton-loading {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.skeleton {
-  background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0.05) 25%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: 0.5rem;
-}
-
-/* --- Ripple Effect --- */
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-.ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.ripple::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: translate(-50%, -50%) scale(0);
-  pointer-events: none;
-}
-
-.ripple:active::after {
-  animation: ripple 0.6s ease-out;
-}
-
-/* --- Smooth Page Transitions --- */
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.page-enter {
-  animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* --- Enhanced Glassmorphism --- */
@@ -931,4 +746,89 @@ button:active {
 
 .hover\:pause:hover {
   animation-play-state: paused;
+}
+
+/* --- iOS Premium Touch Overhaul --- */
+
+/* Smooth Inertia Scroll */
+@supports (-webkit-overflow-scrolling: touch) {
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Squircle Geometry Utilities (iOS Standard) */
+.squircle-lg {
+  border-radius: 1.5rem !important;
+}
+
+.squircle-xl {
+  border-radius: 2rem !important;
+}
+
+.squircle-2xl {
+  border-radius: 2.5rem !important;
+}
+
+.squircle-3xl {
+  border-radius: 3rem !important;
+}
+
+.squircle-full {
+  border-radius: 3.5rem !important;
+}
+
+/* Tactile Haptics */
+.haptic-touch {
+  transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.haptic-touch:active {
+  transform: scale(0.96) translateY(1px);
+}
+
+/* Premium Glassmorphism (iOS Style) */
+.glass-ios {
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(210%);
+  -webkit-backdrop-filter: blur(40px) saturate(210%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Dynamic Navbar Pill Effect */
+.nav-pill {
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+}
+
+/* --- Global Premium Interaction Registry --- */
+button:active,
+.button-active:active,
+[role="button"]:active {
+  transform: scale(0.95) translateY(1px) !important;
+  transition: transform 0.1s cubic-bezier(0.33, 1, 0.68, 1) !important;
+}
+
+
+/* Global Haptic Touch Utility */
+.haptic-touch {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* Glass Buttons Utility */
+.btn-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }

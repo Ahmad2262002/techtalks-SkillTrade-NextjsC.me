@@ -213,20 +213,25 @@ export function ChatModal({
                         </Button>
                     </div>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl">
-                    <div className="flex flex-col h-[600px] bg-background">
+                <DialogContent className="chat-modal-content sm:max-w-[450px] max-sm:w-screen max-sm:h-screen max-sm:max-h-screen p-0 overflow-hidden sm:rounded-[3.2rem] max-sm:rounded-none border-none shadow-2xl haptic-touch">
+                    <div className="flex flex-col h-[600px] max-sm:h-screen bg-background">
                         <DialogHeader className="p-6 pb-4 border-b border-border/50 bg-muted/20 backdrop-blur-xl">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <Avatar className="w-12 h-12 border-2 border-primary/20">
-                                        <AvatarFallback className="bg-primary/10 text-primary font-black text-lg">{otherUserName.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-background rounded-full" />
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                        <Avatar className="w-12 h-12 border-2 border-primary/20">
+                                            <AvatarFallback className="bg-primary/10 text-primary font-black text-lg">{otherUserName.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-background rounded-full" />
+                                    </div>
+                                    <div>
+                                        <DialogTitle className="text-xl font-black tracking-tight">{otherUserName}</DialogTitle>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Online now</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <DialogTitle className="text-xl font-black tracking-tight">{otherUserName}</DialogTitle>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Online now</p>
-                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full h-10 w-10 hover:bg-foreground/10 active:scale-95 transition-all text-muted-foreground hover:text-foreground">
+                                    <X className="w-5 h-5 transition-transform group-hover:rotate-90" />
+                                </Button>
                             </div>
                         </DialogHeader>
 
@@ -253,7 +258,7 @@ export function ChatModal({
                             </div>
                         </ScrollArea>
 
-                        <div className="p-6 bg-muted/20 border-t border-border/50">
+                        <div className="p-6 bg-muted/20 border-t border-border/50 max-sm:sticky max-sm:bottom-0 max-sm:bg-background/95 max-sm:backdrop-blur-xl max-sm:pb-safe">
                             {attachment && (
                                 <div className="mb-4 flex items-center justify-between p-3 bg-background rounded-2xl border border-primary/20 animate-in slide-in-from-bottom-2 duration-300">
                                     <div className="flex items-center gap-3 truncate">

@@ -54,32 +54,27 @@
 }
 
 .sidebar {
-  width: 280px;
+  width: 300px;
   background: var(--glass-bg);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border-right: 1px solid var(--glass-border);
+  backdrop-filter: blur(50px) saturate(210%);
+  -webkit-backdrop-filter: blur(50px) saturate(210%);
+  border: 1px solid var(--glass-border);
   display: none;
-  /* Hidden on mobile */
   flex-direction: column;
   padding: 2.5rem 1.5rem;
-
-  /* Transition only non-transform properties to avoid fighting with GSAP */
-  transition: background 1.2s ease, box-shadow 1.2s ease, border-color 1.2s ease;
-  /* will-change: transform; REMOVED to prevent black flash/layer issues */
-  box-shadow: 20px 0 80px -20px rgba(0, 0, 0, 0.3);
+  margin: 1.5rem;
+  margin-right: 0;
+  border-radius: 3rem;
+  box-shadow: 20px 40px 80px -20px rgba(0, 0, 0, 0.4);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (min-width: 1024px) {
   .sidebar {
     display: flex;
-    /* Visible on Desktop */
     position: sticky;
-    top: 0;
-    height: 100vh;
-    max-height: 100vh;
-    overflow-y: auto;
-    /* Allow sidebar internal scroll if content is too long */
+    top: 1.5rem;
+    height: calc(100vh - 3rem);
     z-index: 50;
   }
 }
@@ -137,29 +132,39 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-muted-foreground);
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 0.5rem;
   border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
 
 .navLink:hover {
   background: var(--color-muted);
   color: var(--color-foreground);
-  transform: translateX(12px) scale(1.02);
-  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.25);
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  /* Slower, viscous hover, but responsive */
+  transform: scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
 .active {
   background: var(--color-primary);
   color: var(--color-primary-foreground);
   box-shadow: 0 15px 35px -10px hsl(var(--primary) / 0.4);
-  transform: translateX(4px);
+}
+
+.active::after {
+  content: '';
+  position: absolute;
+  right: 0.75rem;
+  width: 4px;
+  height: 16px;
+  background: var(--color-primary-foreground);
+  border-radius: 2px;
+  opacity: 0.5;
 }
 
 @keyframes slideUp {
@@ -214,9 +219,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* Changed from flex-end for better sticky alignment */
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   gap: 1rem;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -224,16 +230,25 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem;
     margin-bottom: 0.5rem;
   }
+}
 
-  .headerActions {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
+.scrolledHeader {
+  composes: header;
+  position: sticky;
+  top: 1.5rem;
+  z-index: 45;
+  padding: 1rem 2rem !important;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  border-radius: 2.5rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.4);
+  transform: scale(0.98);
 }
 
 .headerTitle {

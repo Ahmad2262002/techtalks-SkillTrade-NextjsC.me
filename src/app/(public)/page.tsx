@@ -10,20 +10,18 @@ import { getPublicReviews } from "@/actions/reviews";
 export default async function Home() {
   const userId = await getCurrentUserId();
 
-  const [proposals, reviews] = await Promise.all([
-    listPublicProposals({ take: 6, includeAllStatuses: true }),
-    getPublicReviews(3)
-  ]);
+  const proposals = await listPublicProposals({ take: 6, includeAllStatuses: true });
+  const reviews = await getPublicReviews(3);
 
   return (
     <>
       <AnimatedBackground />
       <Navbar userId={userId} />
       {/* Move the smooth scroll and wrapper logic here */}
-      <LandingLayout 
-        userId={userId} 
-        proposals={proposals} 
-        reviews={reviews} 
+      <LandingLayout
+        userId={userId}
+        proposals={proposals}
+        reviews={reviews}
       />
     </>
   );

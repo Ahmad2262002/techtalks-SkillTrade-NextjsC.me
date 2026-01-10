@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import { ApplicationStatus } from "@prisma/client";
 import { sendEmail } from "@/lib/email";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export async function createApplication(input: {
   proposalId: string;
@@ -75,7 +76,7 @@ export async function createApplication(input: {
         <blockquote style="border-left: 4px solid #6366f1; padding-left: 15px; margin: 15px 0;">
           ${input.pitchMessage}
         </blockquote>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=applications" style="color: #6366f1; font-weight: bold;">Review application in Dashboard</a></p>
+        <p><a href="${appUrl}/dashboard?tab=applications" style="color: #6366f1; font-weight: bold;">Review application in Dashboard</a></p>
       `
     });
   }
@@ -167,12 +168,18 @@ export async function updateApplicationStatus(params: {
         to: applicant.email,
         subject: `Application ${isAccepted ? 'Accepted' : 'Rejected'}: ${application.proposal.title}`,
         html: `
+          <h2 style="color: #111827; margin-top: 0;">Update on your Application 📝</h2>
           <p>Your application for <strong>${application.proposal.title}</strong> has been <strong>${params.status.toLowerCase()}</strong>.</p>
           ${isAccepted
-            ? `<p>Congratulations! You can now start chatting and collaborate on this project.</p>
-               <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=active-swaps" style="color: #6366f1; font-weight: bold;">Go to Swaps</a></p>`
-            : `<p>Don't worry, there are many other opportunities waiting for you.</p>
-               <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard?tab=browse" style="color: #6366f1; font-weight: bold;">Browse more proposals</a></p>`
+            ? `<div style="background-color: #eef2ff; padding: 20px; border-radius: 12px; border-left: 4px solid #6366f1; margin: 20px 0;">
+                 <p style="margin: 0; color: #4338ca; font-weight: 600;">Congratulations! 🎉</p>
+                 <p style="margin: 10px 0 0 0; color: #4338ca; font-size: 14px;">You can now start chatting and collaborate on this project. Head over to your active syncs to say hello!</p>
+               </div>
+               <p><a href="${appUrl}/dashboard?tab=active-swaps" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Go to Swaps & Chat</a></p>`
+            : `<div style="background-color: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                 <p style="margin: 0; color: #6b7280;">Don't worry, there are many other opportunities waiting for you. Keep exploring and find your perfect match!</p>
+               </div>
+               <p><a href="${appUrl}/dashboard?tab=browse" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Browse more proposals</a></p>`
           }
         `
       });

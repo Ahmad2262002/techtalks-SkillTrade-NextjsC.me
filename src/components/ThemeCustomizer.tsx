@@ -47,8 +47,9 @@ export function ThemeCustomizer() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="h-12 w-12 flex items-center justify-center rounded-2xl bg-card border-2 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-xl shadow-black/5 group">
-                    <Palette className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <button className="h-12 w-12 flex items-center justify-center rounded-2xl bg-card border-2 border-border/80 hover:border-primary hover:bg-primary/5 transition-all shadow-xl shadow-black/5 group relative overflow-hidden haptic-touch">
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Palette className="h-5 w-5 text-foreground group-hover:text-primary transition-colors relative z-10" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 p-4 rounded-[2rem] bg-card/95 backdrop-blur-xl border-border shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -86,14 +87,14 @@ export function ThemeCustomizer() {
                                     onClick={() => handleAccentChange(a.id, a.name)}
                                     title={a.name}
                                     className={cn(
-                                        "relative h-10 w-10 rounded-xl transition-all border-2",
-                                        accent === a.id ? "border-primary scale-110 shadow-lg" : "border-transparent hover:scale-105"
+                                        "relative h-11 w-11 rounded-xl transition-all border-2 haptic-touch",
+                                        accent === a.id ? "border-primary scale-110 shadow-lg" : "border-border/50 hover:border-primary/30 hover:scale-105"
                                     )}
                                 >
                                     <div className={cn("w-full h-full rounded-lg", a.color)} />
                                     {accent === a.id && (
-                                        <div className="absolute inset-0 flex items-center justify-center text-white">
-                                            <Check size={14} strokeWidth={4} />
+                                        <div className="absolute inset-0 flex items-center justify-center text-white drop-shadow-md">
+                                            <Check size={16} strokeWidth={4} />
                                         </div>
                                     )}
                                 </button>

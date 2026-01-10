@@ -161,8 +161,8 @@ export default function Hero({ userId }: { userId?: string | null }) {
   return (
     <section id="hero" ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center w-full max-w-full overflow-x-hidden")}>
 
-      {/* Mesh Gradient Overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.1),transparent)] pointer-events-none" />
+      {/* Mesh Gradient Overlay - Softened for Elegance */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.07),transparent)] pointer-events-none" />
 
       <div className={`${styles.container} relative z-10 text-center parallax-content`}>
 
@@ -182,18 +182,18 @@ export default function Hero({ userId }: { userId?: string | null }) {
         </div>
 
         <span className={cn(styles.eyebrow, "hero-badge")}>
-          The Peer-to-Peer Protocol
+          The Cooperative Growth Protocol
         </span>
 
         {/* Hero Title - Made responsive with word breaking */}
         <h1 ref={titleRef} className={cn(styles.heroTitle, "mb-8 sm:mb-12 font-[Outfit] px-4 break-words text-4xl sm:text-6xl md:text-7xl leading-[1.1] sm:leading-[0.9]")}>
-          Exchange Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block will-change-transform">Intelligence.</span>
+          Share Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block will-change-transform">Expertise.</span>
           <br className="hidden sm:block" />
-          No Money <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block will-change-transform">Required.</span>
+          Master New <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block will-change-transform">Skills.</span>
         </h1>
 
         <p className={cn(styles.heroDescription, "text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90 px-4")}>
-          SkillTrade is a high-octane peer-to-peer marketplace. We bypass traditional education by connecting your expertise directly with the skills you crave. <span className="text-primary font-bold">Your talent is the only currency here.</span>
+          SkillTrade is a premium ecosystem for collaborative growth. We bridge the gap between your unique talents and the expertise you seek, fostering a <span className="text-primary font-bold">community where knowledge is the only currency.</span>
         </p>
 
         <div className={cn(styles.heroActions, "flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4 w-full")}>
@@ -219,10 +219,10 @@ export default function Hero({ userId }: { userId?: string | null }) {
         {/* Dynamic Stats Grid - Optimized for Mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto border-t border-white/5 pt-20 px-4">
           {[
-            { label: "Network Volume", value: "12,402", sub: "SYNCED", color: "from-blue-500/20" },
-            { label: "Active Nodes", value: "840+", sub: "VETTED", color: "from-purple-500/20" },
-            { label: "Skill Vector", value: "154", sub: "UNIQUE", color: "from-emerald-500/20" },
-            { label: "Trust Index", value: "4.95", sub: "RATING", color: "from-amber-500/20" }
+            { label: "Community Swaps", value: "12,402", sub: "SYNCED", color: "from-blue-500/20" },
+            { label: "Vetted Mentors", value: "840+", sub: "ACTIVE", color: "from-purple-500/20" },
+            { label: "Learning Paths", value: "154", sub: "UNIQUE", color: "from-emerald-500/20" },
+            { label: "Global Trust", value: "4.95", sub: "RATING", color: "from-amber-500/20" }
           ].map((stat, i) => (
             <div key={i} className="stat-card relative group p-px rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-white/10 to-transparent hover:from-primary/50 transition-all duration-500">
               <div className={cn("bg-background/40 backdrop-blur-2xl rounded-[1.9rem] sm:rounded-[2.4rem] p-6 sm:p-10 h-full flex flex-col items-center justify-center group-hover:bg-background/20 transition-all duration-700 relative overflow-hidden")}>
@@ -260,12 +260,12 @@ export default function Hero({ userId }: { userId?: string | null }) {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 animate-bounce opacity-50 hover:opacity-100 transition-opacity cursor-pointer" onClick={() => {
+        {/* Scroll Indicator - Softened and Refined */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 animate-pulse-slow opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer group" onClick={() => {
           window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
         }}>
-          <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Slide to Explore</span>
-          <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent" />
+          <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary group-hover:tracking-[0.6em] transition-all">Slide to Explore</span>
+          <div className="w-[1px] h-12 bg-gradient-to-b from-primary to-transparent" />
         </div>
       </div>
     </section>

@@ -60,6 +60,12 @@ export function PostProposalModal({
   const [manualOfferedSkill, setManualOfferedSkill] = useState("");
   const [neededSkills, setNeededSkills] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Constants
+  const MIN_TITLE = 15;
+  const MAX_TITLE = 50;
+  const MIN_DESC = 50;
 
   // Initialize form if editing
   React.useEffect(() => {
@@ -76,8 +82,7 @@ export function PostProposalModal({
 
       setImageUrl(proposal.imageUrl || "");
     } else if (isOpen && !proposal) {
-      // Clear if opening fresh
-      // clearForm(); // Avoid auto-clearing if user just closed by mistake, but depends on UX preference.
+      setErrors({}); // Clear errors when opening fresh
     }
   }, [isOpen, proposal]);
 
@@ -126,10 +131,20 @@ export function PostProposalModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.length < 10) {
-      toast({ variant: "destructive", title: "Error", description: "Title is too short." });
+
+    // High-Fidelity Validation
+    const newErrors: Record<string, string> = {};
+    if (title.length < MIN_TITLE) newErrors.title = `Title must be at least ${MIN_TITLE} characters.`;
+    if (description.length < MIN_DESC) newErrors.description = `Description must be at least ${MIN_DESC} characters.`;
+    if (offeredSkills.length === 0) newErrors.offered = "Add at least one skill you teach.";
+    if (!neededSkills.trim()) newErrors.needed = "Specify skills you seek.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast({ variant: "destructive", title: "Refinement Required", description: "Please check the highlighted sectors." });
       return;
     }
+
     setIsLoading(true);
 
     const dataToSend = {
@@ -259,13 +274,57 @@ export function PostProposalModal({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-xs font-black uppercase tracking-widest text-primary ml-1">Proposal Title</Label>
-          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} placeholder="e.g., Master Classical Piano" className="h-12 rounded-xl border-2 border-border focus:border-primary font-bold px-4 transition-all" required />
+          <div className="flex justify-between items-center px-1">
+            <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-primary">Proposal Title</Label>
+            <span className={cn(
+              "text-[8px] font-black uppercase tracking-tighter transition-colors",
+              title.length >= MIN_TITLE && title.length < MAX_TITLE ? "text-emerald-500" :
+                title.length >= MAX_TITLE ? "text-destructive animate-pulse" :
+                  "text-muted-foreground/40"
+            )}>
+              {title.length}/{MAX_TITLE} {title.length >= MAX_TITLE ? "MAX REACHED" : title.length >= MIN_TITLE ? "✓" : `(min ${MIN_TITLE})`}
+            </span>
+          </div>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) setErrors(prev => ({ ...prev, title: "" }));
+            }}
+            maxLength={MAX_TITLE}
+            placeholder="e.g., Master Classical Piano"
+            className={cn(
+              "h-12 rounded-xl border-2 font-bold px-4 transition-all duration-300",
+              errors.title || title.length >= MAX_TITLE ? "border-destructive/50 bg-destructive/5" : title.length >= MIN_TITLE ? "border-emerald-500/20 focus:border-emerald-500" : "border-border"
+            )}
+            required
+          />
+          {errors.title && <p className="text-[9px] font-black uppercase text-destructive ml-1 animate-in fade-in slide-in-from-left-2">{errors.title}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description" className="text-xs font-black uppercase tracking-widest text-primary ml-1">Description</Label>
-          <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe what you're offering and what you'd like in return..." className="min-h-[100px] rounded-xl border-2 border-border focus:border-primary font-medium p-4 transition-all" required />
+          <div className="flex justify-between items-center px-1">
+            <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-primary">Description</Label>
+            <span className={cn("text-[8px] font-black uppercase tracking-tighter transition-colors", description.length >= MIN_DESC ? "text-emerald-500" : "text-muted-foreground/40")}>
+              {description.length} chars {description.length >= MIN_DESC ? "✓" : `(min ${MIN_DESC})`}
+            </span>
+          </div>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              if (errors.description) setErrors(prev => ({ ...prev, description: "" }));
+            }}
+            placeholder="Describe what you're offering and what you'd like in return..."
+            className={cn(
+              "min-h-[100px] rounded-xl border-2 font-medium p-4 transition-all duration-300",
+              errors.description ? "border-destructive/50 bg-destructive/5" : description.length >= MIN_DESC ? "border-emerald-500/20 focus:border-emerald-500" : "border-border"
+            )}
+            required
+          />
+          {errors.description && <p className="text-[9px] font-black uppercase text-destructive ml-1 animate-in fade-in slide-in-from-left-2">{errors.description}</p>}
         </div>
 
         <div className="space-y-2">
@@ -307,36 +366,55 @@ export function PostProposalModal({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs font-black uppercase tracking-widest text-emerald-500 ml-1">Skills You Teach</Label>
+            <div className="flex justify-between items-center px-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Skills You Teach</Label>
+              {offeredSkills.length > 0 && <span className="text-[8px] font-black uppercase text-emerald-500 tracking-tighter">{offeredSkills.length} Added ✓</span>}
+            </div>
 
             {/* Selected Skills Badges */}
-            <div className="flex flex-wrap gap-2 mb-2">
-              {offeredSkills.map(skill => (
-                <div key={skill} className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-2">
-                  {skill}
-                  <button type="button" onClick={() => removeOfferedSkill(skill)} className="hover:text-emerald-800">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+            <div className="flex flex-wrap gap-2 mb-2 min-h-[32px] p-2 rounded-xl bg-emerald-500/5 border border-dashed border-emerald-500/20">
+              {offeredSkills.length === 0 ? (
+                <span className="text-[9px] font-bold text-emerald-500/40 uppercase tracking-widest m-auto">No skills added yet</span>
+              ) : (
+                offeredSkills.map(skill => (
+                  <div key={skill} className="bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-emerald-500/10 animate-in zoom-in duration-300">
+                    {skill}
+                    <button type="button" onClick={() => removeOfferedSkill(skill)} className="hover:text-emerald-100 transition-colors">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
 
             <div className="flex gap-2">
-              <Input
-                value={manualOfferedSkill}
-                onChange={(e) => setManualOfferedSkill(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addOfferedSkill(manualOfferedSkill);
-                  }
-                }}
-                placeholder="Type a skill and press Enter..."
-                className="h-12 rounded-xl border-2 border-emerald-500/20 focus:border-emerald-500 font-bold px-4 transition-all flex-1"
-              />
+              <div className="relative flex-1">
+                <Input
+                  value={manualOfferedSkill}
+                  onChange={(e) => {
+                    setManualOfferedSkill(e.target.value);
+                    if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addOfferedSkill(manualOfferedSkill);
+                      if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
+                    }
+                  }}
+                  placeholder="Type a skill and press Enter..."
+                  className={cn(
+                    "h-12 rounded-xl border-2 font-bold px-4 transition-all duration-300",
+                    errors.offered ? "border-destructive/50 bg-destructive/5" : offeredSkills.length > 0 ? "border-emerald-500/20 focus:border-emerald-500" : "border-border"
+                  )}
+                />
+              </div>
               {userSkills && userSkills.length > 0 && (
-                <Select onValueChange={(val) => addOfferedSkill(val)}>
-                  <SelectTrigger className="h-12 w-12 p-0 flex items-center justify-center border-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 rounded-xl hover:bg-emerald-500/10">
+                <Select onValueChange={(val) => {
+                  addOfferedSkill(val);
+                  if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
+                }}>
+                  <SelectTrigger className="h-12 w-12 p-0 flex items-center justify-center border-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 rounded-xl hover:bg-emerald-500/10 transition-all">
                     <Plus className="w-5 h-5" />
                   </SelectTrigger>
                   <SelectContent align="end" className="rounded-xl border-2 border-border">
@@ -353,19 +431,31 @@ export function PostProposalModal({
                 </Select>
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground ml-1 font-bold uppercase tracking-wider opacity-60">
-              Press Enter to add custom skills
-            </p>
+            {errors.offered && <p className="text-[9px] font-black uppercase text-destructive ml-1 animate-in fade-in slide-in-from-left-2">{errors.offered}</p>}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="needed" className="text-xs font-black uppercase tracking-widest text-orange-500 ml-1">Skills You Seek (comma separated)</Label>
-          <Input id="needed" value={neededSkills} onChange={(e) => setNeededSkills(e.target.value)} placeholder="e.g. Cooking, French" className="h-12 rounded-xl border-2 border-orange-500/20 focus:border-orange-500 font-bold px-4 transition-all" required />
+          <Label htmlFor="needed" className="text-[10px] font-black uppercase tracking-widest text-orange-500 ml-1">Skills You Seek (comma separated)</Label>
+          <Input
+            id="needed"
+            value={neededSkills}
+            onChange={(e) => {
+              setNeededSkills(e.target.value);
+              if (errors.needed) setErrors(prev => ({ ...prev, needed: "" }));
+            }}
+            placeholder="e.g. Cooking, French"
+            className={cn(
+              "h-12 rounded-xl border-2 font-bold px-4 transition-all duration-300",
+              errors.needed ? "border-destructive/50 bg-destructive/5" : neededSkills.length > 3 ? "border-orange-500/20 focus:border-orange-500" : "border-border"
+            )}
+            required
+          />
+          {errors.needed && <p className="text-[9px] font-black uppercase text-destructive ml-1 animate-in fade-in slide-in-from-left-2">{errors.needed}</p>}
         </div>
 
         <DialogFooter className="pt-4">
-          <Button type="submit" disabled={isLoading} className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-3">
+          <Button type="submit" disabled={isLoading} className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.05] active:scale-95 transition-all gap-3 haptic-touch">
             {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
             {proposal ? "Save Changes" : "Publish Proposal"}
           </Button>

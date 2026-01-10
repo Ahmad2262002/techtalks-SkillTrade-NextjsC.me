@@ -1,0 +1,135 @@
+## Error Type
+Console PrismaClientKnownRequestError
+
+## Error Message
+
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].user.findMany()` invocation in
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\.next\dev\server\chunks\ssr\[root-of-the-server]__fa67b5b6._.js:897:157
+
+  894 async function getLeaderboard() {
+  895     // Fetch users who have completed swaps or received reviews
+  896     // For a better leaderboard, we could query for users with most activities first
+→ 897     const users = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].user.findMany(
+Server has closed the connection.
+
+
+    at <unknown> (src\actions\dashboard.ts:124:35)
+    at getLeaderboard (src\actions\dashboard.ts:124:17)
+    at Function.all (<anonymous>:1:21)
+    at DashboardPage (src\app\(dashboard)\dashboard\page.tsx:40:75)
+    at DashboardPage (<anonymous>:null:null)
+
+## Code Frame
+  122 |   // Fetch users who have completed swaps or received reviews
+  123 |   // For a better leaderboard, we could query for users with most activities first
+> 124 |   const users = await prisma.user.findMany({
+      |                                   ^
+  125 |     take: 50,
+  126 |     select: {
+  127 |       id: true,
+
+Next.js version: 16.0.10 (Turbopack)
+, ## Error Type
+Console Error
+
+## Error Message
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\.next\dev\server\chunks\ssr\[root-of-the-server]__fa67b5b6._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+
+
+    at DashboardPage (src\app\(dashboard)\dashboard\page.tsx:55:13)
+    at DashboardPage (<anonymous>:null:null)
+
+## Code Frame
+  53 |     overview.leaderboard = fetchedLeaderboard;
+  54 |   } catch (error) {
+> 55 |     console.error("Error fetching dashboard data:", error);
+     |             ^
+  56 |     return <div>Error loading dashboard. Please try again.</div>;
+  57 |   }
+  58 |
+
+Next.js version: 16.0.10 (Turbopack), ## Error Type
+Console Error
+
+## Error Message
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\.next\dev\server\chunks\ssr\[root-of-the-server]__aeff3daa._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+
+
+    at DashboardPage (src\app\(dashboard)\dashboard\page.tsx:55:13)
+    at DashboardPage (<anonymous>:null:null)
+
+## Code Frame
+  53 |     overview.leaderboard = fetchedLeaderboard;
+  54 |   } catch (error) {
+> 55 |     console.error("Error fetching dashboard data:", error);
+     |             ^
+  56 |     return <div>Error loading dashboard. Please try again.</div>;
+  57 |   }
+  58 |
+
+Next.js version: 16.0.10 (Turbopack)
+, ## Error Type
+Console PrismaClientKnownRequestError
+
+## Error Message
+
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].user.findMany()` invocation in
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\.next\dev\server\chunks\ssr\[root-of-the-server]__fa67b5b6._.js:897:157
+
+  894 async function getLeaderboard() {
+  895     // Fetch users who have completed swaps or received reviews
+  896     // For a better leaderboard, we could query for users with most activities first
+→ 897     const users = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].user.findMany(
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)
+
+
+    at <unknown> (src\actions\dashboard.ts:124:35)
+    at getLeaderboard (src\actions\dashboard.ts:124:17)
+    at Function.all (<anonymous>:1:21)
+    at DashboardPage (src\app\(dashboard)\dashboard\page.tsx:40:75)
+    at DashboardPage (<anonymous>:null:null)
+
+## Code Frame
+  122 |   // Fetch users who have completed swaps or received reviews
+  123 |   // For a better leaderboard, we could query for users with most activities first
+> 124 |   const users = await prisma.user.findMany({
+      |                                   ^
+  125 |     take: 50,
+  126 |     select: {
+  127 |       id: true,
+
+Next.js version: 16.0.10 (Turbopack), ## Error Type
+Console PrismaClientKnownRequestError
+
+## Error Message
+
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].proposal.findMany()` invocation in
+C:\Users\Acer\Documents\Next\techtalks-SkillTrade-NextjsC\skill-sync\.next\dev\server\chunks\ssr\[root-of-the-server]__fa67b5b6._.js:783:145
+
+  780 if (!user) throw new Error("User not found");
+  781 // 2. Main Lists (Batch 1)
+  782 const [proposals, applications] = await Promise.all([
+→ 783     __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].proposal.findMany(
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)
+
+
+    at <unknown> (src\actions\dashboard.ts:28:21)
+    at Function.all (<anonymous>:1:21)
+    at getDashboardOverview (src\actions\dashboard.ts:27:37)
+    at Function.all (<anonymous>:1:21)
+    at DashboardPage (src\app\(dashboard)\dashboard\page.tsx:40:75)
+    at DashboardPage (<anonymous>:null:null)
+
+## Code Frame
+  26 |   // 2. Main Lists (Batch 1)
+  27 |   const [proposals, applications] = await Promise.all([
+> 28 |     prisma.proposal.findMany({
+     |                     ^
+  29 |       where: { ownerId: userId },
+  30 |       include: {
+  31 |         offeredSkills: true,
+
+Next.js version: 16.0.10 (Turbopack)
+
+, 
+, 

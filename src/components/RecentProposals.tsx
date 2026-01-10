@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "./RecentProposals.module.css";
 import { deleteProposal } from "@/actions/proposal-actions";
+import { cn } from "@/lib/utils";
 
 interface ProposalSummary {
   id: string;
@@ -66,7 +67,7 @@ function ProposalCard({
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className={styles.deleteButton}
+              className={cn(styles.deleteButton, "haptic-touch active:scale-95")}
               aria-label="Delete proposal"
             >
               {isDeleting ? "..." : "×"}

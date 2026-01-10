@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -80,6 +81,7 @@ export default function DashboardClientContent({
   const [showPersonal, setShowPersonal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const container = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -98,10 +100,33 @@ export default function DashboardClientContent({
   const [comment, setComment] = useState("");
   const [reviewError, setReviewError] = useState("");
 
+  const [isModalActive, setIsModalActive] = useState(false);
+
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    setMounted(true);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    // Monitor for modals to hide dock (State-based fallback)
+    const checkModals = () => {
+      const isLocked = document.body.hasAttribute('data-scroll-locked');
+      const hasVisibleDialog = !!document.querySelector('[role="dialog"][data-state="open"]');
+      const hasDetailsActive = document.body.classList.contains('details-modal-active');
+      setIsModalActive(isLocked || hasVisibleDialog || hasDetailsActive);
+    };
+
+    const observer = new MutationObserver(checkModals);
+    observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+
+    // Initial check
+    checkModals();
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -237,13 +262,8 @@ export default function DashboardClientContent({
       );
   }, { scope: container });
 
-  // Tab Content Transition (Runs on activeTab change)
-  useGSAP(() => {
-    gsap.fromTo(".tab-content-wrapper",
-      { y: 20, opacity: 0, filter: "blur(10px)" },
-      { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.8, ease: "expo.out", clearProps: "all" }
-    );
-  }, { scope: container, dependencies: [activeTab] });
+  // Tab Content Transition - Removed for performance
+  // Instant tab switching provides better UX than animated transitions
 
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -256,173 +276,179 @@ export default function DashboardClientContent({
       duration: 1.2,
       ease: "expo.inOut",
       onComplete: () => {
-        signOut();
+        void (async () => {
+          await signOut();
+          // Use window.location to avoid Next.js routing errors after auth state change
+          window.location.href = "/";
+        })();
       }
     });
   };
 
   return (
-    <div ref={container} className={cn(styles.dashboardLayout, loggingOut && "pointer-events-none")}>
-      {/* Sidebar */}
-      <aside className={cn(
-        styles.sidebar,
-        "lg:translate-x-0"
-      )}>
-        <div className={styles.animateSlideInRight}>
-          <Link href="/" className={cn(styles.logo, "flex items-center gap-3 hover:scale-110 transition-all group")}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center backdrop-blur-xl border border-primary/20 shadow-lg shadow-primary/10 overflow-hidden">
-              <Image
-                src="/favicon.ico"
-                alt="SkillTrade Logo"
-                width={24}
-                height={24}
-                className="object-contain transition-transform duration-500 group-hover:scale-110"
-              />
-            </div>
-            <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap">Skill<span className="text-primary">Trade</span></span>
-          </Link>
-        </div>
-
-        <nav className="flex flex-col gap-1">
-          <p className={cn(styles.navGroupTitle, styles.animateSlideInRight)} style={{ animationDelay: '100ms' }}>Platform</p>
-          <NavLink href="/dashboard?tab=browse" active={activeTab === "browse"} icon={<Layers className="w-5 h-5" />} label="Browse" activeTab={activeTab} />
-          <NavLink href="/dashboard?tab=my-proposals" active={activeTab === "my-proposals"} icon={<Zap className="w-5 h-5" />} label="My Proposals" activeTab={activeTab} />
-          <NavLink
-            href="/dashboard?tab=active-swaps"
-            active={activeTab === "active-swaps"}
-            icon={<MessageSquare className="w-5 h-5" />}
-            label="Active Swaps"
-            activeTab={activeTab}
-            count={swaps.reduce((acc, s) => acc + ((s as any).messages?.length || 0), 0)}
-          />
-          <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} />
-        </nav>
-
-        <div className={styles.sidebarFooter}>
-          <button
-            onClick={() => setShowPersonal(!showPersonal)}
-            className={cn(styles.navLink, styles.animateSlideInRight, "w-full justify-between")}
-            style={{ animationDelay: '300ms' }}
-          >
-            <div className="flex items-center gap-3">
-              <UserCircle className="w-5 h-5" />
-              <span>Account</span>
-            </div>
-            <div className={cn("transition-transform duration-300", showPersonal ? "rotate-180" : "rotate-0")}>
-              <Plus className="w-4 h-4 opacity-50" />
-            </div>
-          </button>
-
-          {showPersonal && (
-            <div className="flex flex-col gap-1 mt-1 animate-in slide-in-from-top-4 fade-in duration-300">
-              <Link href={`/profile/${overview.user?.id}`} className={cn(styles.navLink, "hover:bg-muted pl-8")}>
-                <UserCircle className="w-4 h-4" /><span>View Profile</span>
-              </Link>
-              <Link href="/" className={cn(styles.navLink, "hover:bg-muted pl-8")}>
-                <Home className="w-4 h-4" /><span>Landing Page</span>
-              </Link>
-              <button
-                onClick={handleSignOut}
-                disabled={loggingOut}
-                className={cn(styles.navLink, "w-full text-rose-500 hover:bg-rose-500/10 pl-8 font-black disabled:opacity-50")}
-              >
-                <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
-                <span>{loggingOut ? "Disconnecting..." : "Sign Out"}</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </aside>
-
-      <main className={cn(styles.mainContent, "pb-32 lg:pb-10")}>
-        <header className={cn(
-          styles.header,
-          "sticky top-0 z-[40] transition-all duration-300 px-4 sm:px-8 rounded-[2.5rem] flex items-center justify-between",
-          scrolled
-            ? "py-4 bg-background/60 backdrop-blur-2xl shadow-2xl border border-white/5 scale-[0.98] mt-4"
-            : "py-6 sm:py-10 bg-transparent"
+    <>
+      <div ref={container} className={cn(styles.dashboardLayout, loggingOut && "pointer-events-none")}>
+        {/* Sidebar */}
+        <aside className={cn(
+          styles.sidebar,
+          "lg:translate-x-0"
         )}>
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className={styles.headerTitle}>{tabTitle}</h1>
-              <p className="text-muted-foreground mt-1.5 flex items-center gap-2 text-[10px] sm:text-base mb-1 sm:mb-0">
-                Welcome back, <span className="font-extrabold text-primary uppercase tracking-tight truncate max-w-[150px] sm:max-w-none inline-block align-bottom">{overview.user?.name || "User"}</span>!
-              </p>
-            </div>
+          <div className={styles.animateSlideInRight}>
+            <Link href="/" className={cn(styles.logo, "flex items-center gap-3 hover:scale-110 transition-all group")}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center backdrop-blur-xl border border-primary/20 shadow-lg shadow-primary/10 overflow-hidden">
+                <Image
+                  src="/favicon.ico"
+                  alt="SkillTrade Logo"
+                  width={24}
+                  height={24}
+                  className="object-contain transition-transform duration-500 group-hover:scale-110"
+                />
+              </div>
+              <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap">Skill<span className="text-primary">Trade</span></span>
+            </Link>
           </div>
-          <div className={styles.headerActions}>
-            <div className="flex bg-muted/50 p-1 rounded-xl border border-border hidden sm:flex">
-              <NavSearchButton />
+
+          <nav className="flex flex-col gap-1">
+            <p className={cn(styles.navGroupTitle, styles.animateSlideInRight)} style={{ animationDelay: '100ms' }}>Platform</p>
+            <NavLink href="/dashboard?tab=browse" active={activeTab === "browse"} icon={<Layers className="w-5 h-5" />} label="Browse" activeTab={activeTab} />
+            <NavLink href="/dashboard?tab=my-proposals" active={activeTab === "my-proposals"} icon={<Zap className="w-5 h-5" />} label="My Proposals" activeTab={activeTab} />
+            <NavLink
+              href="/dashboard?tab=active-swaps"
+              active={activeTab === "active-swaps"}
+              icon={<MessageSquare className="w-5 h-5" />}
+              label="Active Swaps"
+              activeTab={activeTab}
+              count={swaps.reduce((acc, s) => acc + ((s as any).messages?.length || 0), 0)}
+            />
+            <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} />
+          </nav>
+
+          <div className={styles.sidebarFooter}>
+            <button
+              onClick={() => setShowPersonal(!showPersonal)}
+              className={cn(styles.navLink, styles.animateSlideInRight, "w-full justify-between haptic-touch active:scale-95")}
+              style={{ animationDelay: '300ms' }}
+            >
+              <div className="flex items-center gap-3">
+                <UserCircle className="w-5 h-5" />
+                <span>Account</span>
+              </div>
+              <div className={cn("transition-transform duration-300", showPersonal ? "rotate-180" : "rotate-0")}>
+                <Plus className="w-4 h-4 opacity-50" />
+              </div>
+            </button>
+
+            {showPersonal && (
+              <div className="flex flex-col gap-1 mt-1 animate-in slide-in-from-top-4 fade-in duration-300">
+                <Link href={`/profile/${overview.user?.id}`} className={cn(styles.navLink, "hover:bg-muted pl-8")}>
+                  <UserCircle className="w-4 h-4" /><span>View Profile</span>
+                </Link>
+                <Link href="/" className={cn(styles.navLink, "hover:bg-muted pl-8")}>
+                  <Home className="w-4 h-4" /><span>Landing Page</span>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  disabled={loggingOut}
+                  className={cn(styles.navLink, "w-full text-rose-500 hover:bg-rose-500/10 pl-8 font-black disabled:opacity-50 haptic-touch active:scale-95")}
+                >
+                  <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
+                  <span>{loggingOut ? "Disconnecting..." : "Sign Out"}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        <main className={cn(styles.mainContent, "pb-36 lg:pb-10")}>
+          <header className={cn(
+            scrolled ? styles.scrolledHeader : styles.header,
+            "z-[40]"
+          )}>
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className={styles.headerTitle}>{tabTitle}</h1>
+                <p className="text-muted-foreground mt-1.5 flex items-center gap-2 text-[10px] sm:text-base mb-1 sm:mb-0">
+                  Welcome back, <span className="font-extrabold text-primary uppercase tracking-tight truncate max-w-[150px] sm:max-w-none inline-block align-bottom">{overview.user?.name || "User"}</span>!
+                </p>
+              </div>
             </div>
-            <div className="flex items-center justify-between w-full sm:w-auto gap-2">
-              <div className="sm:hidden">
+            <div className={styles.headerActions}>
+              <div className="flex bg-muted/50 p-1 rounded-xl border border-border hidden sm:flex">
                 <NavSearchButton />
               </div>
-              <div className="flex items-center gap-2">
-                <PostProposalModal
-                  userSkills={overview.user?.skills}
-                  buttonText="Post"
-                />
-                <div className="flex items-center gap-2 border-l border-border/50 pl-2">
-                  <ThemeCustomizer />
-                  <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
-                  <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
+              <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                <div className="sm:hidden">
+                  <NavSearchButton />
+                </div>
+                <div className="flex items-center gap-2">
+                  <PostProposalModal
+                    userSkills={overview.user?.skills}
+                    buttonText="Post"
+                  />
+                  <div className="flex items-center gap-2 border-l border-border/50 pl-2">
+                    <ThemeCustomizer />
+                    <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
+                    <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
+                  </div>
                 </div>
               </div>
             </div>
+          </header>
+
+          <div className="tab-content-wrapper pb-24">
+            {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} topMentors={overview.leaderboard} />}
+            {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={localMyProposals} handleDelete={handleDeleteProposal} />}
+            {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications} swaps={swaps} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
+            {activeTab === "leaderboard" && <LeaderboardTabContent leaderboard={overview.leaderboard} />}
           </div>
-        </header>
-
-        <div className="tab-content-wrapper pb-24">
-          {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} topMentors={overview.leaderboard} />}
-          {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={localMyProposals} handleDelete={handleDeleteProposal} />}
-          {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications} swaps={swaps} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
-          {activeTab === "leaderboard" && <LeaderboardTabContent leaderboard={overview.leaderboard} />}
-        </div>
-      </main>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-6 left-6 right-6 z-[60] lg:hidden">
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-3xl rounded-[2rem] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]" />
-        <div className="relative flex justify-between items-center h-20 px-6 sm:px-12">
-          {[
-            { id: "browse", icon: Layers, label: "Browse" },
-            { id: "my-proposals", icon: Zap, label: "Me" },
-            { id: "active-swaps", icon: MessageSquare, label: "Syncs", count: swaps.reduce((acc: number, s: any) => acc + ((s.messages?.length || 0) as number), 0) },
-            { id: "leaderboard", icon: Trophy, label: "Top" }
-          ].map((item) => (
-            <Link
-              key={item.id}
-              href={`/dashboard?tab=${item.id}`}
-              className={cn(
-                "relative flex flex-col items-center gap-1.5 transition-all duration-500 active:scale-95 group",
-                activeTab === item.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <div className={cn(
-                "p-2.5 rounded-2xl transition-all duration-500 relative",
-                activeTab === item.id ? "bg-primary/10 shadow-[0_0_20_rgba(var(--primary),0.2)] scale-110" : "bg-transparent group-hover:bg-white/5"
-              )}>
-                <item.icon className={cn("w-6 h-6 transition-all duration-500", activeTab === item.id && "fill-current")} />
-                {item.count ? (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-background animate-pulse">
-                    {item.count}
-                  </span>
-                ) : null}
-              </div>
-              <span className={cn(
-                "text-[10px] font-black uppercase tracking-widest transition-all duration-500",
-                activeTab === item.id ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 h-0 overflow-hidden"
-              )}>
-                {item.label}
-              </span>
-              {activeTab === item.id && (
-                <div className="absolute -bottom-2 w-1 h-1 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.8)]" />
-              )}
-            </Link>
-          ))}
-        </div>
+        </main>
       </div>
+
+      {/* Mobile Bottom Navigation - Floating iOS Dock UI (Teleported to Body for Stickiness) */}
+      {mounted && createPortal(
+        <div className="mobile-dock-container fixed bottom-8 left-0 right-0 z-[100] lg:hidden flex justify-center px-6 pointer-events-none">
+          <div className="relative flex justify-between items-center h-20 px-8 w-full max-w-[420px] bg-background/40 backdrop-blur-[40px] saturate-[200%] rounded-[3.5rem] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/5 pointer-events-auto transition-all duration-700">
+            <div className="absolute inset-0 rounded-[3.5rem] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+            {[
+              { id: "browse", icon: Layers, label: "Browse" },
+              { id: "my-proposals", icon: Zap, label: "Me" },
+              { id: "active-swaps", icon: MessageSquare, label: "Syncs", count: swaps.reduce((acc: number, s: any) => acc + ((s.messages?.length || 0) as number), 0) },
+              { id: "leaderboard", icon: Trophy, label: "Top" }
+            ].map((item) => (
+              <Link
+                key={item.id}
+                href={`/dashboard?tab=${item.id}`}
+                className={cn(
+                  "relative flex flex-col items-center gap-1 transition-all duration-300 active:scale-95 haptic-touch group",
+                  activeTab === item.id ? "text-primary" : "text-muted-foreground/60 hover:text-foreground"
+                )}
+              >
+                <div className={cn(
+                  "p-3 rounded-2xl transition-all duration-500 relative",
+                  activeTab === item.id ? "bg-primary/15 scale-110 shadow-[0_0_20px_rgba(var(--primary),0.2)]" : "bg-transparent"
+                )}>
+                  <item.icon className={cn("w-6 h-6 transition-all duration-500", activeTab === item.id && "fill-current")} />
+                  {item.count ? (
+                    <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-background shadow-lg">
+                      {item.count}
+                    </span>
+                  ) : null}
+                </div>
+                <span className={cn(
+                  "text-[9px] font-black uppercase tracking-widest transition-all duration-500",
+                  activeTab === item.id ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 h-0 overflow-hidden"
+                )}>
+                  {item.label}
+                </span>
+                {activeTab === item.id && (
+                  <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),1)]" />
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Review Modal */}
       <Dialog open={isReviewModalOpen} onOpenChange={setReviewModalOpen}>
@@ -466,7 +492,7 @@ export default function DashboardClientContent({
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 
@@ -521,14 +547,14 @@ NavLink.displayName = "NavLink";
 const UserMenu = ({ user, onSignOut, loggingOut }: any) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
+      <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 active:scale-95 haptic-touch hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
         <Avatar className="h-full w-full">
           <AvatarImage src={user?.avatarUrl || ""} className="object-cover" />
           <AvatarFallback className="bg-primary text-primary-foreground font-black">{user?.name?.charAt(0)}</AvatarFallback>
         </Avatar>
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-64 rounded-3xl border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] p-2 text-foreground animate-in slide-in-from-top-2 fade-in duration-300">
+    <DropdownMenuContent align="end" className="w-64 rounded-3xl border border-border/50 bg-popover/80 backdrop-blur-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] p-2 text-foreground animate-in slide-in-from-top-2 fade-in duration-300">
       <div className="px-4 py-3 mb-2 border-b border-white/5">
         <p className="font-bold text-sm truncate">{user?.name}</p>
         <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-60">Connected</p>
@@ -559,15 +585,15 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-background/50 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-background hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg">
+        <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-background/50 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-background hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 haptic-touch shadow-lg">
           <Bell className={cn("w-5 h-5", unreadCount > 0 && "animate-swing text-foreground")} />
           {unreadCount > 0 && (
             <span className="absolute top-2 right-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[85vw] max-w-[400px] h-[500px] flex flex-col rounded-[2rem] border border-white/10 bg-black/80 backdrop-blur-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-2 fade-in duration-300 overflow-hidden">
-        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+      <DropdownMenuContent align="end" className="w-[85vw] max-w-[400px] h-[500px] flex flex-col rounded-[2rem] border border-border/50 bg-popover/80 backdrop-blur-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-2 fade-in duration-300 overflow-hidden">
+        <div className="p-6 border-b border-border/10 flex items-center justify-between bg-foreground/[0.02]">
           <DropdownMenuLabel className="text-lg font-black uppercase italic tracking-tighter">Inbox</DropdownMenuLabel>
           {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500/10 text-rose-500 border-rose-500/20">{unreadCount} New</Badge>}
         </div>
@@ -592,7 +618,7 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
                 }}
                 className={cn(
                   "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent",
-                  !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/10" : "hover:bg-white/5 opacity-70 hover:opacity-100"
+                  !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/15" : "hover:bg-foreground/5 opacity-70 hover:opacity-100"
                 )}
               >
                 <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />

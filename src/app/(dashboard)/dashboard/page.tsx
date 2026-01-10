@@ -33,23 +33,23 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  let overview: any;
+  let overview: any = { proposals: [], applications: [], sentApplications: [], swaps: [], reputation: null, leaderboard: [] };
   let publicProposals: any[] = [];
 
   try {
-    const [fetchedOverview, fetchedPublicProposals, fetchedLeaderboard] = await Promise.all([
-      getDashboardOverview(),
-      listPublicProposals({
-        search: search || undefined,
-        modality: modalityFilter,
-        take: 30,
-        includeAllStatuses: true, // Show even if in-progress or closed
-      }),
-      getLeaderboard(),
-    ]);
+    // 1. Get User overview first
+    overview = await getDashboardOverview();
 
-    overview = fetchedOverview;
-    publicProposals = fetchedPublicProposals;
+    // 2. Get public proposals sequentially
+    publicProposals = await listPublicProposals({
+      search: search || undefined,
+      modality: modalityFilter,
+      take: 20, // Reduced take to lower load
+      includeAllStatuses: true,
+    });
+
+    // 3. Get leaderboard sequentially
+    const fetchedLeaderboard = await getLeaderboard();
     overview.leaderboard = fetchedLeaderboard;
   } catch (error) {
     console.error("Error fetching dashboard data:", error);

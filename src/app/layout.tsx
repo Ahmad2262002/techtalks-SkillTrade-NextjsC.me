@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import NextTopLoader from 'nextjs-toploader';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -122,8 +123,30 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased`}
       >
+        <script dangerouslySetInnerHTML={{
+          __html: `
+          const updateViewportHeight = () => {
+            document.documentElement.style.setProperty('--visual-viewport-height', window.visualViewport ? window.visualViewport.height + 'px' : window.innerHeight + 'px');
+          };
+          window.visualViewport?.addEventListener('resize', updateViewportHeight);
+          window.visualViewport?.addEventListener('scroll', updateViewportHeight);
+          updateViewportHeight();
+        `}} />
         <ThemeProvider>
-          {children}
+          <NextTopLoader
+            color="var(--primary)"
+            initialPosition={0.08}
+            crawlSpeed={200}
+            height={3}
+            crawl={true}
+            showSpinner={false}
+            easing="ease"
+            speed={200}
+            shadow="0 0 10px var(--primary),0 0 5px var(--primary)"
+          />
+          <div className="page-enter">
+            {children}
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -70,20 +70,31 @@ export async function GET(request: NextRequest) {
                     to: userEmail,
                     subject: subject,
                     html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #6366f1;">${title}</h2>
-              <p>${notification.message}</p>
-              <p>This has been waiting for your attention for over 10 minutes.</p>
-              <p>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}${notification.link}" 
-                   style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 15px;">
-                  ${actionText}
+            <div style="font-family: 'Inter', Arial, sans-serif;">
+              <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); padding: 28px; border-radius: 12px; border-left: 4px solid #6366f1; margin-bottom: 28px;">
+                <h2 style="color: #1f2937; margin: 0 0 8px 0; font-size: 26px; font-weight: 900;">${title}</h2>
+                <p style="color: #6b7280; margin: 0; font-size: 15px; line-height: 1.6;">${notification.message}</p>
+              </div>
+              
+              <div style="background-color: #fef3c7; padding: 20px; border-radius: 10px; border: 1px solid #fbbf24; margin-bottom: 28px;">
+                <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                  <strong>⏰ Reminder:</strong> This notification has been waiting for your attention for over 10 minutes.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}${notification.link}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); transition: all 0.3s;">
+                  ${actionText} →
                 </a>
-              </p>
-              <p style="color: #6b7280; font-size: 12px; margin-top: 20px;">
-                You're receiving this email because you have unread notifications. 
-                Log in to SkillTrade to manage your notification preferences.
-              </p>
+              </div>
+              
+              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                <p style="color: #9ca3af; font-size: 13px; margin: 0; text-align: center; line-height: 1.6;">
+                  You're receiving this email because you have unread notifications.<br/>
+                  Log in to SkillTrade to manage your notification preferences.
+                </p>
+              </div>
             </div>
           `,
                 });

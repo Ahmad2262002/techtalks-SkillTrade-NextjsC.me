@@ -24,6 +24,8 @@ interface NavbarProps {
 
 const Navbar = ({ userId }: NavbarProps) => {
   const [scrolled, setScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -45,10 +47,22 @@ const Navbar = ({ userId }: NavbarProps) => {
   };
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+
+      // Mobile visibility logic: Hide on scroll down, show on scroll up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   useGSAP(() => {
     const tl = gsap.timeline();
@@ -88,7 +102,8 @@ const Navbar = ({ userId }: NavbarProps) => {
       className={cn(
         styles.navbar,
         "fixed top-0 left-0 right-0 z-[100] transition-all duration-700 px-6",
-        scrolled ? "py-3 sm:py-4" : "py-4 sm:py-8"
+        scrolled ? "py-3 sm:py-4" : "py-4 sm:py-8",
+        (!isVisible && !mobileMenuOpen) && "max-sm:-translate-y-full opacity-0"
       )}
     >
       <div className={cn(
@@ -142,7 +157,7 @@ const Navbar = ({ userId }: NavbarProps) => {
                 <Link href="/dashboard">
                   <Button variant="ghost" className="font-black uppercase tracking-widest text-[10px] rounded-2xl h-14 px-8 hover:bg-primary/5 hover:text-primary transition-all">Dashboard</Button>
                 </Link>
-                <form action={signOut}>
+                <form action={async () => { await signOut(); }}>
                   <Button type="submit" className="font-black uppercase tracking-widest text-[10px] rounded-2xl h-14 px-8 bg-foreground text-background hover:scale-105 active:scale-95 transition-all shadow-xl shadow-black/20">Logout</Button>
                 </form>
               </div>

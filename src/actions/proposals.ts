@@ -189,7 +189,11 @@ export async function getProposalById(proposalId: string) {
   const proposal = await prisma.proposal.findUnique({
     where: { id: proposalId },
     include: {
-      owner: true,
+      owner: {
+        include: {
+          skills: true
+        }
+      },
       offeredSkills: true,
       neededSkills: true,
       applications: {

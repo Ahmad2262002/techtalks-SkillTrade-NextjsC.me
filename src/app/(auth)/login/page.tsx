@@ -290,7 +290,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="auth-footer-item w-full h-20 rounded-[2rem] bg-primary text-white hover:scale-[1.02] active:scale-[0.98] transition-all font-black text-xs uppercase tracking-[0.4em] relative overflow-hidden group border-none shadow-premium-vibrant"
+                className="auth-footer-item w-full h-20 rounded-[2rem] bg-primary text-white hover:scale-110 active:scale-95 transition-all font-black text-xs uppercase tracking-[0.4em] relative overflow-hidden group border-none shadow-premium-vibrant haptic-touch"
               >
                 <span className="relative z-10 flex items-center gap-3">
                   {loading ? (

@@ -261,7 +261,7 @@ export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, ha
                 <section className="animate-in fade-in slide-in-from-bottom-10 duration-700">
                     <div className={cn(
                         "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
-                        scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-white/5 scale-95" : "top-0"
+                        scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-foreground/5 scale-95" : "top-0"
                     )}>
                         <div>
                             <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase italic leading-none flex items-center gap-4 transition-all flex-wrap">
@@ -282,7 +282,7 @@ export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, ha
             <section className="animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
                 <div className={cn(
                     "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12 sticky transition-all duration-500 z-[20] py-4 rounded-[2rem]",
-                    scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-white/5 scale-95" : "top-0"
+                    scrolled ? "top-[5.5rem] bg-background/40 backdrop-blur-md px-4 sm:px-6 shadow-lg border border-foreground/5 scale-95" : "top-0"
                 )}>
                     <div>
                         <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none flex items-center gap-4 transition-all flex-wrap">
@@ -298,7 +298,7 @@ export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, ha
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] group-hover:bg-primary/10 transition-all duration-[2000ms]" />
 
                         <div className="relative z-10 flex flex-col items-center">
-                            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-primary/10 to-transparent border-t border-l border-white/10 mb-10 rotate-6 group-hover:rotate-12 transition-all duration-1000 shadow-2xl scale-110">
+                            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-primary/10 to-transparent border-t border-l border-foreground/10 mb-10 rotate-6 group-hover:rotate-12 transition-all duration-1000 shadow-2xl scale-110">
                                 <Zap className="w-24 h-24 text-primary opacity-60 animate-pulse" />
                             </div>
                             <h3 className="font-black text-3xl sm:text-6xl uppercase tracking-tighter italic leading-none mb-6 text-center">Sync Pending</h3>

@@ -92,7 +92,7 @@ export default function NavSearchButton() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => setOpen(true)}
-          className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-primary px-3 sm:px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-2xl shadow-primary/40 transition-all hover:scale-[1.05] hover:shadow-primary/60 cursor-pointer active:scale-95"
+          className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-primary/40 bg-primary px-3 sm:px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-2xl shadow-primary/40 transition-all hover:scale-105 hover:shadow-primary/60 cursor-pointer active:scale-95 haptic-touch select-none"
           aria-haspopup="dialog"
           aria-expanded={open}
         >

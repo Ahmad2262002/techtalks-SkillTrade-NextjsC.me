@@ -176,19 +176,87 @@ function ProfileSidebar({ profileData, formData, setFormData, editMode, isOwnPro
         const file = e.target.files?.[0];
         if (!file) return;
 
-        setIsUploading(true);
-        const supabase = getSupabaseBrowserClient();
-        const filePath = `${profileData.id}/${Date.now()}_${file.name}`;
-
-        const { error } = await supabase.storage.from("avatars").upload(filePath, file);
-
-        if (error) {
-            toast({ variant: "destructive", title: "Upload Failed", description: error.message });
-        } else {
-            const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-            setFormData((prev: any) => ({ ...prev, avatarUrl: data.publicUrl }));
+        // Size limit (2MB before compression)
+        if (file.size > 2 * 1024 * 1024) {
+            toast({
+                variant: "destructive",
+                title: "File too large",
+                description: "Please select an image smaller than 2MB."
+            });
+            return;
         }
-        setIsUploading(false);
+
+        setIsUploading(true);
+        try {
+            // Create image element to load the file
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                img.src = event.target?.result as string;
+            };
+
+            img.onload = () => {
+                // Create canvas for compression
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                if (!ctx) {
+                    throw new Error("Canvas not supported");
+                }
+
+                // Calculate new dimensions (max 400x400, maintain aspect ratio)
+                const maxSize = 400;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxSize) {
+                        height = (height * maxSize) / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width = (width * maxSize) / height;
+                        height = maxSize;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw and compress
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to Base64 with quality compression (0.8 = 80% quality)
+                const base64String = canvas.toDataURL('image/jpeg', 0.8);
+
+                setFormData((prev: any) => ({ ...prev, avatarUrl: base64String }));
+                setIsUploading(false);
+                toast({
+                    title: "Success",
+                    description: "Photo ready! Click 'Confirm & Save' to update your profile."
+                });
+            };
+
+            img.onerror = () => {
+                throw new Error("Failed to load image.");
+            };
+
+            reader.onerror = () => {
+                throw new Error("Failed to read file.");
+            };
+
+            reader.readAsDataURL(file);
+        } catch (error: any) {
+            console.error("Upload error:", error);
+            toast({
+                variant: "destructive",
+                title: "Processing Failed",
+                description: error.message || "Something went wrong while processing the image."
+            });
+            setIsUploading(false);
+        }
     };
 
     const nextLevelExp = profileData.reputation.level === 5 ? profileData.reputation.reputationPoints :

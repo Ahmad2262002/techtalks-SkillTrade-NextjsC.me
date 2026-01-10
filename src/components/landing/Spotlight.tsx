@@ -130,7 +130,7 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                             <div className="px-5 py-7 flex flex-col flex-grow">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="relative shrink-0">
-                                        <Avatar className="h-9 w-9 border border-white/10 shadow-lg">
+                                        <Avatar className="h-9 w-9 border border-foreground/10 shadow-lg">
                                             <AvatarImage src={p.owner?.avatarUrl || ""} />
                                             <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{p.owner?.name?.[0]}</AvatarFallback>
                                         </Avatar>
@@ -151,12 +151,12 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                                     {p.title}
                                 </h3>
 
-                                <div className="grid grid-cols-2 gap-3 p-4 rounded-[1.2rem] bg-white/[0.02] border border-white/5 mt-auto">
+                                <div className="grid grid-cols-2 gap-3 p-4 rounded-[1.2rem] bg-foreground/[0.03] border border-foreground/5 mt-auto">
                                     <div className="min-w-0">
                                         <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-primary/60 block mb-0.5">Providing</span>
                                         <span className="text-[10px] font-bold truncate block uppercase tracking-tighter">{formatSkills(p.offeredSkills)}</span>
                                     </div>
-                                    <div className="border-l border-white/10 pl-3 min-w-0">
+                                    <div className="border-l border-foreground/10 pl-3 min-w-0">
                                         <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-orange-500/60 block mb-0.5">Seeking</span>
                                         <span className="text-[10px] font-bold truncate block uppercase tracking-tighter">{formatSkills(p.neededSkills)}</span>
                                     </div>

@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import { SwapStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.skilltrade.solutions';
 
 /**
  * Creates a formal Swap record from an application.
@@ -58,6 +61,9 @@ export async function createSwapFromApplication(applicationId: string) {
   });
 
   // 5. Notify the student (applicant) that the swap has started
+  const student = await prisma.user.findUnique({ where: { id: application.applicantId } });
+  const teacher = await prisma.user.findUnique({ where: { id: application.proposal.ownerId } });
+
   await prisma.notification.create({
     data: {
       userId: application.applicantId,
@@ -66,6 +72,27 @@ export async function createSwapFromApplication(applicationId: string) {
       link: `/dashboard?tab=active-swaps`,
     },
   });
+
+  // Send Email to Student
+  if (student?.email) {
+    await sendEmail({
+      to: student.email,
+      subject: `Sync Started: ${application.proposal.title}`,
+      html: `
+        <h2 style="color: #111827; margin-top: 0;">It's a Match! 🎭</h2>
+        <p>Congratulations! Your request to learn <strong>${application.proposal.title}</strong> has been accepted by <strong>${teacher?.name}</strong>.</p>
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 12px; margin: 20px 0;">
+          <p style="margin: 0; font-weight: 600; color: #4b5563;">Next Steps:</p>
+          <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #4b5563;">
+            <li>Navigate to your dashboard</li>
+            <li>Open the "Syncs" tab to find your new chat</li>
+            <li>Say hello and coordinate your skill exchange!</li>
+          </ul>
+        </div>
+        <p><a href="${appUrl}/dashboard?tab=active-swaps" style="color: #6366f1; font-weight: bold; text-decoration: underline;">View your active syncs</a></p>
+      `
+    });
+  }
 
   revalidatePath('/dashboard');
   return swap;
@@ -140,6 +167,8 @@ export async function updateSwapProgress(swapId: string) {
 
     // Notify partner
     const partnerId = isTeacher ? swap.studentId : swap.teacherId;
+    const partner = await prisma.user.findUnique({ where: { id: partnerId } });
+
     await prisma.notification.create({
       data: {
         userId: partnerId,
@@ -148,6 +177,19 @@ export async function updateSwapProgress(swapId: string) {
         link: `/dashboard?tab=history`,
       }
     });
+
+    if (partner?.email) {
+      await sendEmail({
+        to: partner.email,
+        subject: `Sync Completed: ${swap.proposal.title}`,
+        html: `
+          <h2 style="color: #111827; margin-top: 0;">Mission Accomplished! 🏆</h2>
+          <p>Fantastic news! Your skill exchange for <strong>${swap.proposal.title}</strong> has been marked as complete by both parties.</p>
+          <p>We hope you had a great experience learning and sharing. Don't forget to leave a review for your partner if you haven't already!</p>
+          <p><a href="${appUrl}/dashboard?tab=history" style="color: #6366f1; font-weight: bold; text-decoration: underline;">See your history & leave a review</a></p>
+        `
+      });
+    }
   }
 
   const updatedSwap = await prisma.swap.update({
@@ -188,6 +230,8 @@ export async function cancelSwap(swapId: string) {
 
   // Notify partner
   const partnerId = swap.teacherId === userId ? swap.studentId : swap.teacherId;
+  const partner = await prisma.user.findUnique({ where: { id: partnerId } });
+
   await prisma.notification.create({
     data: {
       userId: partnerId,
@@ -196,6 +240,19 @@ export async function cancelSwap(swapId: string) {
       link: `/dashboard?tab=browse`,
     }
   });
+
+  if (partner?.email) {
+    await sendEmail({
+      to: partner.email,
+      subject: `Sync Cancelled: ${swap.proposal.title}`,
+      html: `
+        <p>Hello,</p>
+        <p>The sync for <strong>${swap.proposal.title}</strong> was recently cancelled by your partner.</p>
+        <p>The proposal has been re-opened, and you can continue browsing for other exchange opportunities.</p>
+        <p><a href="${appUrl}/dashboard?tab=browse" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Browse more proposals</a></p>
+      `
+    });
+  }
 
   revalidatePath('/dashboard');
   return updatedSwap;

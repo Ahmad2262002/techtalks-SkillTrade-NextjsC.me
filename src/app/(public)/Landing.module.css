@@ -2,8 +2,13 @@
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.04);
   --glow: 0 0 0 transparent;
+}
+
+.light {
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.5);
 }
 
 .pageWrapper * {
@@ -282,7 +287,8 @@
     transform 0.45s var(--ease-smooth),
     box-shadow 0.45s var(--ease-smooth),
     border-color 0.45s var(--ease-smooth),
-    background 0.45s var(--ease-smooth);
+    background 0.45s var(--ease-smooth),
+    backdrop-filter 0.45s var(--ease-smooth);
 }
 
 .featureCard:hover,
@@ -341,7 +347,7 @@
 /* --- Footer --- */
 .footer {
   padding: 4rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--color-border);
 }
 
 @media (max-width: 768px) {

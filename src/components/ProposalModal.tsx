@@ -5,6 +5,7 @@ import styles from "./ProposalModal.module.css";
 import { createProposal } from "@/actions/proposal-actions";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface ProposalModalProps {
   isOpen: boolean;
@@ -161,14 +162,14 @@ export function ProposalModal({ isOpen, onClose, onSuccess }: ProposalModalProps
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+                className="rounded-xl px-5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all active:scale-95 haptic-touch"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full border border-sky-500/40 bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 px-6 py-2 text-xs font-bold text-slate-950 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-sky-500/40 bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 px-8 py-3 text-xs font-bold text-slate-950 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed haptic-touch"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">

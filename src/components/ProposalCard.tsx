@@ -168,21 +168,20 @@ export function ProposalCard({
                 isOpen={isModalOpen}
                 onOpenChange={setIsModalOpen}
               />
-              {!isOwner && (
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="p-3 rounded-2xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-300 shadow-xl shadow-primary/5 group/btn"
-                >
-                  <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
-                </button>
-              )}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-12 h-12 rounded-full bg-primary text-white hover:scale-110 active:scale-95 transition-all duration-300 shadow-xl shadow-primary/40 flex items-center justify-center group/btn haptic-touch select-none"
+                aria-label="View proposal details and apply"
+              >
+                <ArrowRight className="w-6 h-6 transition-transform group-hover/btn:translate-x-1" />
+              </button>
               {isOwner && onDelete && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(proposal.id);
                   }}
-                  className="p-3 rounded-2xl bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all duration-300 shadow-xl shadow-destructive/5"
+                  className="p-3 rounded-2xl bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all duration-300 shadow-xl shadow-destructive/5 haptic-touch active:scale-95"
                 >
                   <Trash2 size={18} />
                 </button>

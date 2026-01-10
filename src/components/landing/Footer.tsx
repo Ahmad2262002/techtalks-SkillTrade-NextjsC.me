@@ -13,6 +13,7 @@ import { useGSAP } from '@gsap/react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { submitContactForm } from '@/actions/contact-action';
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -20,13 +21,32 @@ if (typeof window !== "undefined") {
 
 export default function Footer() {
   const container = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
   // Consolidated Contact + Footer Logic
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 5000);
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      message: formData.get('message') as string,
+    };
+
+    try {
+      const result = await submitContactForm(data);
+      if (result.success) {
+        setSent(true);
+        setTimeout(() => setSent(false), 5000);
+      }
+    } catch (error) {
+      console.error("Submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useGSAP(() => {
@@ -71,17 +91,17 @@ export default function Footer() {
             </p>
 
             <div className="space-y-6">
-              <a href="mailto:ahmadalkadi2002@gmail.com" className="flex items-center gap-4 group p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all">
+              <a href="mailto:ahmadalkadri2002@gmail.com" className="flex items-center gap-4 group p-4 rounded-2xl bg-foreground/[0.05] border border-border/80 hover:border-primary/40 transition-all shadow-sm">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                   <Mail className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="font-black uppercase tracking-widest text-[10px] text-muted-foreground mb-0.5">Direct Support</h4>
-                  <span className="text-base font-bold group-hover:text-primary transition-colors">ahmadalkadi2002@gmail.com</span>
+                  <span className="text-base font-bold group-hover:text-primary transition-colors">We are here to listen and help</span>
                 </div>
               </a>
 
-              <div className="flex items-center gap-4 group p-4 rounded-2xl bg-white/5 border border-white/5">
+              <div className="flex items-center gap-4 group p-4 rounded-2xl bg-foreground/[0.05] border border-border/80 shadow-sm">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                   <MessageSquare className="w-6 h-6" />
                 </div>
@@ -93,7 +113,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="bg-card/50 backdrop-blur-sm border border-white/5 rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
             {sent ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12 animate-in fade-in zoom-in duration-500">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-4">
@@ -107,19 +127,19 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Name</label>
-                    <Input required placeholder="Name" className="h-12 rounded-xl bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary font-medium" />
+                    <Input name="name" required placeholder="Name" className="h-12 rounded-xl bg-foreground/[0.03] border-none focus-visible:ring-1 focus-visible:ring-primary font-medium" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</label>
-                    <Input required type="email" placeholder="Email" className="h-12 rounded-xl bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary font-medium" />
+                    <Input name="email" required type="email" placeholder="Email" className="h-12 rounded-xl bg-foreground/[0.03] border-none focus-visible:ring-1 focus-visible:ring-primary font-medium" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Message</label>
-                  <Textarea required placeholder="How can we help?" className="min-h-[100px] rounded-xl bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary font-medium resize-none" />
+                  <Textarea name="message" required placeholder="How can we help?" className="min-h-[100px] rounded-xl bg-foreground/[0.03] border-none focus-visible:ring-1 focus-visible:ring-primary font-medium resize-none" />
                 </div>
-                <Button className="w-full h-12 rounded-xl text-sm font-black bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2">
-                  Send Message <Send className="w-4 h-4" />
+                <Button disabled={isSubmitting} className="w-full h-14 rounded-2xl text-sm font-black bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all gap-2 haptic-touch">
+                  {isSubmitting ? "Sending..." : "Send Message"} <Send className="w-4 h-4" />
                 </Button>
               </form>
             )}
@@ -128,7 +148,7 @@ export default function Footer() {
 
 
         {/* --- Footer Links --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 border-t border-white/5 pt-16 footer-anim">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 border-t border-border/50 pt-16 footer-anim">
           <div className="flex flex-col gap-6">
             <Link href="/" className={cn(styles.logo, "hover:scale-105 transition-all duration-500 mb-2 flex items-center group")}>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mr-3 shadow-xl shadow-primary/10 overflow-hidden border border-primary/20 transition-all group-hover:rotate-12">
@@ -147,7 +167,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-4">
               {[Twitter, Github, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all">
+                <a key={i} href="#" className="w-10 h-10 rounded-xl bg-foreground/[0.03] border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all haptic-touch active:scale-95">
                   <Icon className="w-4 h-4" />
                 </a>
               ))}
@@ -197,9 +217,9 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="email@example.com"
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs font-bold focus:outline-none focus:border-primary/50 transition-all"
+                className="w-full bg-foreground/[0.03] border border-border/50 rounded-xl px-4 py-3 text-xs font-bold focus:outline-none focus:border-primary/50 transition-all"
               />
-              <button className="absolute right-1.5 top-1.5 bottom-1.5 bg-primary text-white px-4 rounded-lg text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">Join</button>
+              <button className="absolute right-1.5 top-1.5 bottom-1.5 bg-primary text-white px-4 rounded-lg text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all haptic-touch">Join</button>
             </div>
           </div>
         </div>

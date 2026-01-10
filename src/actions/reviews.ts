@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
+import { cache } from "react";
 
 export async function createReview(input: {
   swapId: string;
@@ -184,7 +185,7 @@ function calculateReputation(
   };
 }
 
-export async function getReputationStats(userId: string): Promise<ReputationStats> {
+export const getReputationStats = cache(async (userId: string): Promise<ReputationStats> => {
   const completedSwaps = await prisma.swap.count({
     where: {
       OR: [{ teacherId: userId }, { studentId: userId }],
@@ -205,14 +206,15 @@ export async function getReputationStats(userId: string): Promise<ReputationStat
   });
 
   return calculateReputation(completedSwaps, reviews, endorsements);
-}
+});
 
-export async function getBatchReputationStats(userIds: string[]): Promise<Record<string, ReputationStats>> {
+export const getBatchReputationStats = cache(async (userIds: string[]): Promise<Record<string, ReputationStats>> => {
   if (userIds.length === 0) return {};
 
   const uniqueUserIds = [...new Set(userIds)];
 
   // 1. Fetch data sequentially to respect small connection pool (limit 5)
+  // We explicitly await each to ensure we never have more than 1 query at a time here
   const swaps = await prisma.swap.findMany({
     where: {
       status: "COMPLETED",
@@ -249,4 +251,4 @@ export async function getBatchReputationStats(userIds: string[]): Promise<Record
   }
 
   return statsMap;
-}
+});
