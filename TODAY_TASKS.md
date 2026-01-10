@@ -49,3 +49,4 @@ Once the database push succeeds:
 1. Log in to the app (this will populate your `lastSeen`).
 2. Have a different user send you a message while you are "offline" (or manually delete your `lastSeen` in the DB to test).
 3. Check your email for the notification.
+----------------------------------------------------
