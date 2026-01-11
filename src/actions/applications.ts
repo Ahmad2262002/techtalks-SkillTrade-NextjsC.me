@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import { ApplicationStatus } from "@prisma/client";
 import { sendEmail } from "@/lib/email";
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://skilltrade.solutions';
 
 export async function createApplication(input: {
   proposalId: string;

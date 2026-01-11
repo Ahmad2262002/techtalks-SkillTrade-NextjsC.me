@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PostProposalModal } from "./PostProposalModal";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export function ProposalDetailsModal({
     proposal,
@@ -121,7 +122,7 @@ export function ProposalDetailsModal({
                                 <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
                             </div>
                         )}
-                        <div className={cn("p-10 bg-gradient-to-br from-primary/5 via-background to-background", !proposal.imageUrl && "pt-12")}>
+                        <div className={cn("p-5 md:p-10 bg-gradient-to-br from-primary/5 via-background to-background", !proposal.imageUrl && "pt-12")}>
                             <DialogHeader className="mb-8 text-left">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
@@ -142,7 +143,7 @@ export function ProposalDetailsModal({
                                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Verified Opportunity</span>
                                         </div>
 
-                                        <DialogTitle className="text-4xl sm:text-6xl font-black text-foreground tracking-tighter uppercase italic leading-[1.1] mb-2">
+                                        <DialogTitle className="text-3xl sm:text-4xl md:text-6xl font-black text-foreground tracking-tighter uppercase italic leading-[1.1] mb-2 break-words">
                                             {proposal.title}
                                         </DialogTitle>
 
@@ -204,12 +205,12 @@ export function ProposalDetailsModal({
                             <div className="space-y-8 pb-32 md:pb-8">
                                 <div className="relative">
                                     <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 rounded-full" />
-                                    <p className="pl-6 text-muted-foreground text-lg leading-relaxed font-medium">
+                                    <p className="pl-4 md:pl-6 text-muted-foreground text-lg leading-relaxed font-medium break-words">
                                         {proposal.description}
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-8 bg-muted/20 p-8 rounded-3xl border border-border/50">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 bg-muted/20 p-5 md:p-8 rounded-3xl border border-border/50">
                                     <div className="space-y-3">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 block">Teach</span>
                                         <div className="flex flex-wrap gap-2">
@@ -296,14 +297,14 @@ export function ProposalDetailsModal({
                                 </Button>
                             )}
                         </div>
-                        <div className="flex gap-4 items-center w-full md:w-auto">
+                        <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
                             {isOwner ? (
                                 <>
                                     <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full md:w-auto h-14 rounded-2xl font-black uppercase tracking-tight px-8 hover:bg-primary/5 hover:text-primary transition-all gap-2">
                                         <Edit className="w-4 h-4" /> Edit
                                     </Button>
                                     <Button variant="destructive" onClick={handleDelete} disabled={loading} className="w-full md:w-auto h-14 rounded-2xl font-black uppercase tracking-tight px-8 shadow-xl shadow-destructive/10 hover:scale-105 active:scale-95 transition-all">
-                                        {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />} Delete
+                                        {loading ? <LoadingSpinner size="icon" noText className="mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />} Delete
                                     </Button>
                                 </>
                             ) : (
@@ -322,7 +323,7 @@ export function ProposalDetailsModal({
                                         <div className="flex gap-3">
                                             <Button variant="ghost" onClick={() => setIsApplying(false)} className="h-14 flex-1 rounded-2xl font-bold uppercase tracking-widest text-xs">Cancel</Button>
                                             <Button onClick={handleApply} disabled={loading} className="h-14 flex-[2] rounded-2xl font-black text-lg gap-2 shadow-xl shadow-primary/10">
-                                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />} Send Request
+                                                {loading ? <LoadingSpinner size="icon" noText /> : <Send className="w-5 h-5" />} Send Request
                                             </Button>
                                         </div>
                                     </div>

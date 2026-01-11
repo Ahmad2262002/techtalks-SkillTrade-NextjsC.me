@@ -233,7 +233,15 @@ export async function deleteProposal(proposalId: string) {
     }
 
     // Explicitly delete related records since cascade might be failing in the DB
+    const swapsToDelete = await prisma.swap.findMany({
+      where: { proposalId },
+      select: { id: true }
+    });
+
+    const swapIds = swapsToDelete.map(s => s.id);
+
     await prisma.$transaction([
+      prisma.review.deleteMany({ where: { swapId: { in: swapIds } } }), // Delete reviews first
       prisma.application.deleteMany({ where: { proposalId } }),
       prisma.swap.deleteMany({ where: { proposalId } }),
       prisma.proposal.delete({ where: { id: proposalId } }),

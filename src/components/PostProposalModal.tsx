@@ -132,11 +132,19 @@ export function PostProposalModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Auto-add any pending manual skill on submit
+    let currentOffered = [...offeredSkills];
+    if (manualOfferedSkill.trim() && !currentOffered.includes(manualOfferedSkill.trim())) {
+        currentOffered.push(manualOfferedSkill.trim());
+        setOfferedSkills(currentOffered);
+        setManualOfferedSkill("");
+    }
+
     // High-Fidelity Validation
     const newErrors: Record<string, string> = {};
     if (title.length < MIN_TITLE) newErrors.title = `Title must be at least ${MIN_TITLE} characters.`;
     if (description.length < MIN_DESC) newErrors.description = `Description must be at least ${MIN_DESC} characters.`;
-    if (offeredSkills.length === 0) newErrors.offered = "Add at least one skill you teach.";
+    if (currentOffered.length === 0) newErrors.offered = "Add at least one skill you teach.";
     if (!neededSkills.trim()) newErrors.needed = "Specify skills you seek.";
 
     if (Object.keys(newErrors).length > 0) {
@@ -396,13 +404,20 @@ export function PostProposalModal({
                     if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === 'Enter' || e.key === ',') {
                       e.preventDefault();
-                      addOfferedSkill(manualOfferedSkill);
+                      addOfferedSkill(manualOfferedSkill.trim());
                       if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
                     }
                   }}
-                  placeholder="Type a skill and press Enter..."
+                  onBlur={() => {
+                    // Auto-add on blur if there's text
+                    if (manualOfferedSkill.trim()) {
+                      addOfferedSkill(manualOfferedSkill.trim());
+                      if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
+                    }
+                  }}
+                  placeholder="Type a skill and press Enter (or comma)..."
                   className={cn(
                     "h-12 rounded-xl border-2 font-bold px-4 transition-all duration-300",
                     errors.offered ? "border-destructive/50 bg-destructive/5" : offeredSkills.length > 0 ? "border-emerald-500/20 focus:border-emerald-500" : "border-border"

@@ -65,7 +65,7 @@ export function ProposalCard({
     )}>
       {/* Cover Image Section */}
       <div className="relative h-48 sm:h-56 overflow-hidden">
-        {proposal.imageUrl ? (
+        {proposal.imageUrl && !proposal.imageUrl.includes("unsplash.com/photos") ? (
           <Image
             src={proposal.imageUrl}
             alt={proposal.title}
@@ -161,7 +161,7 @@ export function ProposalCard({
               <span className="text-sm font-black text-foreground">{proposal._count?.swaps || 0} Trades</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-2">
               <ProposalDetailsModal
                 proposal={proposal}
                 isOwner={isOwner}
@@ -181,7 +181,7 @@ export function ProposalCard({
                     e.stopPropagation();
                     onDelete(proposal.id);
                   }}
-                  className="p-3 rounded-2xl bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all duration-300 shadow-xl shadow-destructive/5 haptic-touch active:scale-95"
+                  className="p-3 rounded-full sm:rounded-2xl bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all duration-300 shadow-xl shadow-destructive/5 haptic-touch active:scale-95 w-12 h-12 sm:w-auto sm:h-auto flex items-center justify-center"
                 >
                   <Trash2 size={18} />
                 </button>

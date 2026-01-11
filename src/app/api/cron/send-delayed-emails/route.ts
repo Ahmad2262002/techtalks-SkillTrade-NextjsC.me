@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
               </div>
               
               <div style="text-align: center; margin: 32px 0;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}${notification.link}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://skilltrade.solutions'}${notification.link}" 
                    style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); transition: all 0.3s;">
                   ${actionText} →
                 </a>

@@ -20,6 +20,7 @@ import styles from './Dashboard.module.css';
 
 // UI Components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +55,39 @@ import { ActiveSwapsTabContent } from "@/components/features/dashboard/ActiveSwa
 import { LeaderboardTabContent } from "@/components/features/dashboard/LeaderboardTabContent";
 
 // Heavy components dynamic imports
+const TabAnimation = ({ activeTab, loading, children }: { activeTab: string, loading: boolean, children: React.ReactNode }) => {
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!container.current || loading) return;
+
+    // Kill existing animations
+    gsap.killTweensOf(container.current);
+
+    gsap.fromTo(container.current,
+      { opacity: 0, scale: 0.98, y: 10, filter: "blur(4px)" },
+      { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.4, ease: "power3.out", clearProps: "all" }
+    );
+  }, { scope: container, dependencies: [loading, activeTab] });
+
+  if (loading) {
+    return (
+      <div className="tab-content-wrapper pb-24 w-full h-[50vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-300">
+        <div className="flex flex-col items-center gap-4">
+          <LoadingSpinner />
+          <p className="text-muted-foreground/50 text-[10px] uppercase tracking-[0.2em] animate-pulse font-black">Syncing Data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={container} className="tab-content-wrapper pb-24 w-full">
+      {children}
+    </div>
+  );
+};
+
 const PostProposalModal = dynamic(() => import("@/components/PostProposalModal").then(mod => mod.PostProposalModal), { ssr: false });
 const ThemeCustomizer = dynamic(() => import("@/components/ThemeCustomizer").then(mod => mod.ThemeCustomizer), { ssr: false });
 
@@ -88,6 +122,31 @@ export default function DashboardClientContent({
   const { toast } = useToast();
 
   const [localMyProposals, setLocalMyProposals] = useState<Proposal[]>(myProposals);
+
+  // Advanced Navigation State
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // When activeTab changes (e.g. from props update), stop loading
+  // We add a minimum 800ms delay to ensure the animation feels purposeful
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
+        setIsNavigating(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
+
+  const handleTabClick = (tabId: string) => {
+    // Only trigger if changing tabs
+    if (activeTab !== tabId) {
+      setIsNavigating(true);
+    }
+    // Mobile: Re-scroll to top
+    if (window.innerWidth < 1024) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     setLocalMyProposals(myProposals);
@@ -310,8 +369,8 @@ export default function DashboardClientContent({
 
           <nav className="flex flex-col gap-1">
             <p className={cn(styles.navGroupTitle, styles.animateSlideInRight)} style={{ animationDelay: '100ms' }}>Platform</p>
-            <NavLink href="/dashboard?tab=browse" active={activeTab === "browse"} icon={<Layers className="w-5 h-5" />} label="Browse" activeTab={activeTab} />
-            <NavLink href="/dashboard?tab=my-proposals" active={activeTab === "my-proposals"} icon={<Zap className="w-5 h-5" />} label="My Proposals" activeTab={activeTab} />
+            <NavLink href="/dashboard?tab=browse" active={activeTab === "browse"} icon={<Layers className="w-5 h-5" />} label="Browse" activeTab={activeTab} onClick={() => handleTabClick("browse")} />
+            <NavLink href="/dashboard?tab=my-proposals" active={activeTab === "my-proposals"} icon={<Zap className="w-5 h-5" />} label="My Proposals" activeTab={activeTab} onClick={() => handleTabClick("my-proposals")} />
             <NavLink
               href="/dashboard?tab=active-swaps"
               active={activeTab === "active-swaps"}
@@ -319,8 +378,9 @@ export default function DashboardClientContent({
               label="Active Swaps"
               activeTab={activeTab}
               count={swaps.reduce((acc, s) => acc + ((s as any).messages?.length || 0), 0)}
+              onClick={() => handleTabClick("active-swaps")}
             />
-            <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} />
+            <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} onClick={() => handleTabClick("leaderboard")} />
           </nav>
 
           <div className={styles.sidebarFooter}>
@@ -341,19 +401,11 @@ export default function DashboardClientContent({
             {showPersonal && (
               <div className="flex flex-col gap-1 mt-1 animate-in slide-in-from-top-4 fade-in duration-300">
                 <Link href={`/profile/${overview.user?.id}`} className={cn(styles.navLink, "hover:bg-muted pl-8")}>
-                  <UserCircle className="w-4 h-4" /><span>View Profile</span>
+                  <UserCircle className="w-4 h-4 text-primary" /><span>View Profile</span>
                 </Link>
                 <Link href="/" className={cn(styles.navLink, "hover:bg-muted pl-8")}>
-                  <Home className="w-4 h-4" /><span>Landing Page</span>
+                  <Home className="w-4 h-4 text-primary" /><span>Landing Page</span>
                 </Link>
-                <button
-                  onClick={handleSignOut}
-                  disabled={loggingOut}
-                  className={cn(styles.navLink, "w-full text-rose-500 hover:bg-rose-500/10 pl-8 font-black disabled:opacity-50 haptic-touch active:scale-95")}
-                >
-                  <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
-                  <span>{loggingOut ? "Disconnecting..." : "Sign Out"}</span>
-                </button>
               </div>
             )}
           </div>
@@ -381,34 +433,38 @@ export default function DashboardClientContent({
                   <NavSearchButton />
                 </div>
                 <div className="flex items-center gap-2">
-                  <PostProposalModal
-                    userSkills={overview.user?.skills}
-                    buttonText="Post"
-                  />
-                  <div className="flex items-center gap-2 border-l border-border/50 pl-2">
-                    <ThemeCustomizer />
-                    <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
-                    <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
-                  </div>
+                  {mounted && (
+                    <>
+                      <PostProposalModal
+                        userSkills={overview.user?.skills}
+                        buttonText="Post"
+                      />
+                      <div className="flex items-center gap-2 border-l border-border/50 pl-2">
+                        <ThemeCustomizer />
+                        <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
+                        <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           </header>
 
-          <div className="tab-content-wrapper pb-24">
+          <TabAnimation activeTab={activeTab} loading={isNavigating}>
             {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} topMentors={overview.leaderboard} />}
             {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={localMyProposals} handleDelete={handleDeleteProposal} />}
-            {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications} swaps={swaps} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
-            {activeTab === "leaderboard" && <LeaderboardTabContent leaderboard={overview.leaderboard} />}
-          </div>
+            {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications || []} swaps={swaps || []} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
+            {activeTab === "leaderboard" && <LeaderboardTabContent leaderboard={overview.leaderboard || []} />}
+          </TabAnimation>
         </main>
       </div>
 
       {/* Mobile Bottom Navigation - Floating iOS Dock UI (Teleported to Body for Stickiness) */}
       {mounted && createPortal(
-        <div className="mobile-dock-container fixed bottom-8 left-0 right-0 z-[100] lg:hidden flex justify-center px-6 pointer-events-none">
-          <div className="relative flex justify-between items-center h-20 px-8 w-full max-w-[420px] bg-background/40 backdrop-blur-[40px] saturate-[200%] rounded-[3.5rem] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/5 pointer-events-auto transition-all duration-700">
-            <div className="absolute inset-0 rounded-[3.5rem] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+        <div className="mobile-dock-container fixed bottom-10 left-0 right-0 z-[100] lg:hidden flex justify-center px-6 pointer-events-none">
+          <div className="relative flex justify-between items-center h-[76px] px-8 w-full max-w-[440px] bg-background/40 backdrop-blur-[45px] saturate-[210%] rounded-[3.8rem] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.6)] ring-1 ring-white/10 pointer-events-auto transition-all duration-700">
+            <div className="absolute inset-0 rounded-[3.8rem] bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
             {[
               { id: "browse", icon: Layers, label: "Browse" },
               { id: "my-proposals", icon: Zap, label: "Me" },
@@ -418,6 +474,7 @@ export default function DashboardClientContent({
               <Link
                 key={item.id}
                 href={`/dashboard?tab=${item.id}`}
+                onClick={() => handleTabClick(item.id)}
                 className={cn(
                   "relative flex flex-col items-center gap-1 transition-all duration-300 active:scale-95 haptic-touch group",
                   activeTab === item.id ? "text-primary" : "text-muted-foreground/60 hover:text-foreground"
@@ -498,13 +555,14 @@ export default function DashboardClientContent({
 
 // --- Helper Components ---
 
-const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, count }: any) => {
+const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, count, onClick }: any) => {
   const isActive = active !== undefined ? active : activeTab === id;
   const finalHref = href || `?tab=${id}`;
 
   return (
     <Link
       href={finalHref}
+      onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
       className={cn(
         styles.navLink,
@@ -544,40 +602,47 @@ const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, co
 };
 NavLink.displayName = "NavLink";
 
-const UserMenu = ({ user, onSignOut, loggingOut }: any) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 active:scale-95 haptic-touch hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
-        <Avatar className="h-full w-full">
-          <AvatarImage src={user?.avatarUrl || ""} className="object-cover" />
-          <AvatarFallback className="bg-primary text-primary-foreground font-black">{user?.name?.charAt(0)}</AvatarFallback>
-        </Avatar>
-      </button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-64 rounded-3xl border border-border/50 bg-popover/80 backdrop-blur-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] p-2 text-foreground animate-in slide-in-from-top-2 fade-in duration-300">
-      <div className="px-4 py-3 mb-2 border-b border-white/5">
-        <p className="font-bold text-sm truncate">{user?.name}</p>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-60">Connected</p>
-      </div>
-      <DropdownMenuItem asChild className="rounded-xl focus:bg-white/10 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide">
-        <Link href={`/profile/${user?.id}`} className="flex items-center gap-3">
-          <UserCircle className="w-4 h-4 text-primary" /> My Profile
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuSeparator className="bg-white/5 my-1" />
-      <DropdownMenuItem
-        onClick={onSignOut}
-        disabled={loggingOut}
-        className="rounded-xl focus:bg-rose-500/10 focus:text-rose-500 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide text-rose-500/80 hover:text-rose-500 transition-colors disabled:opacity-50"
-      >
-        <span className="flex items-center gap-3">
-          <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
-          {loggingOut ? "Disconnecting..." : "Logout"}
-        </span>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+const UserMenu = ({ user, onSignOut, loggingOut }: any) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-white/10 overflow-hidden hover:border-primary transition-all duration-300 hover:scale-105 active:scale-95 haptic-touch hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] shadow-lg">
+          <Avatar className="h-full w-full">
+            <AvatarImage src={user?.avatarUrl || ""} className="object-cover" />
+            <AvatarFallback className="bg-primary text-primary-foreground font-black">{user?.name?.charAt(0)}</AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64 rounded-3xl border border-border/50 bg-popover/80 backdrop-blur-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] p-2 text-foreground animate-in slide-in-from-top-2 fade-in duration-300">
+        <div className="px-4 py-3 mb-2 border-b border-white/5">
+          <p className="font-bold text-sm truncate">{user?.name}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-60">Connected</p>
+        </div>
+        <DropdownMenuItem asChild className="rounded-xl focus:bg-white/10 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide">
+          <Link href={`/profile/${user?.id}`} className="flex items-center gap-3">
+            <UserCircle className="w-4 h-4 text-primary" /> My Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="rounded-xl focus:bg-white/10 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide">
+          <Link href="/" className="flex items-center gap-3">
+            <Home className="w-4 h-4 text-primary" /> Landing Page
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-white/5 my-1" />
+        <DropdownMenuItem
+          onClick={onSignOut}
+          disabled={loggingOut}
+          className="rounded-xl focus:bg-rose-500/10 focus:text-rose-500 cursor-pointer py-3 px-4 font-bold text-xs uppercase tracking-wide text-rose-500/80 hover:text-rose-500 transition-colors disabled:opacity-50"
+        >
+          <span className="flex items-center gap-3">
+            <LogOut className={cn("w-4 h-4", loggingOut && "animate-spin")} />
+            {loggingOut ? "Disconnecting..." : "Logout"}
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
   const router = useRouter();
@@ -599,7 +664,7 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-          {notifications.length === 0 ? (
+          {(!notifications || notifications.length === 0) ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
               <Bell className="w-12 h-12 mb-4 text-muted-foreground/50" />
               <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">All caught up</p>
