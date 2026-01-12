@@ -4,12 +4,13 @@ import { useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Zap, Globe, Sparkles, Trophy } from "lucide-react";
+import { Zap, Sparkles, Trophy } from "lucide-react";
 import styles from "../../app/(public)/Landing.module.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { PostProposalModal } from "@/components/PostProposalModal";
+import Image from "next/image";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -49,13 +50,20 @@ export default function Hero({ userId }: { userId?: string | null }) {
       title.innerHTML = Array.from(tempDiv.childNodes).map(processNode).join("");
     };
 
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      const tl = gsap.timeline();
+      tl.fromTo(".hero-badge", { opacity: 0, scale: 0.95, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 1, ease: "expo.out" })
+        .fromTo(titleRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 1, ease: "expo.out" }, "-=0.8")
+        .fromTo(`.${styles.heroDescription}`, { opacity: 0, y: 10 }, { opacity: 0.9, y: 0, duration: 1, ease: "expo.out" }, "-=0.8")
+        .fromTo(".stat-card", { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1, duration: 1, ease: "expo.out" }, "-=0.8");
+      return;
+    }
+
     splitTextWithLines(`.${styles.heroTitle}`);
 
     const chars = gsap.utils.toArray(".char");
     const introTl = gsap.timeline();
-
-    // No need for set autoAlpha: 1 since we removed opacity-0
-    // The introTl will now animate FROM hidden state to visible state.
 
     introTl
       .fromTo(".hero-badge", {
@@ -86,8 +94,8 @@ export default function Hero({ userId }: { userId?: string | null }) {
       }, {
         opacity: 1,
         y: 0,
-        stagger: 0.012,
-        duration: 1.4,
+        stagger: 0.008,
+        duration: 1.2,
         ease: "expo.out",
         clearProps: "all"
       }, "-=1.0")
@@ -151,6 +159,41 @@ export default function Hero({ userId }: { userId?: string | null }) {
       ease: "none"
     });
 
+    // Floating particles
+    gsap.to(".particle", {
+      y: "random(-100, 100)",
+      x: "random(-100, 100)",
+      opacity: "random(0.1, 0.4)",
+      duration: "random(15, 25)",
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+
+    // Magnetic Button Effect
+    const magneticBtns = container.current?.querySelectorAll(".proto-btn") as NodeListOf<HTMLElement>;
+    magneticBtns.forEach(btn => {
+      btn.addEventListener("mousemove", (e) => {
+        const { left, top, width, height } = btn.getBoundingClientRect();
+        const x = e.clientX - (left + width / 2);
+        const y = e.clientY - (top + height / 2);
+        gsap.to(btn, {
+          x: x * 0.3,
+          y: y * 0.3,
+          duration: 0.6,
+          ease: "power2.out"
+        });
+      });
+      btn.addEventListener("mouseleave", () => {
+        gsap.to(btn, {
+          x: 0,
+          y: 0,
+          duration: 0.8,
+          ease: "elastic.out(1, 0.3)"
+        });
+      });
+    });
+
     return () => {
       if (titleRef.current && originalHTML) {
         titleRef.current.innerHTML = originalHTML;
@@ -164,6 +207,20 @@ export default function Hero({ userId }: { userId?: string | null }) {
       {/* Mesh Gradient Overlay - Softened for Elegance */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.07),transparent)] pointer-events-none" />
 
+      {/* Floating Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="particle absolute w-1 h-1 bg-primary/20 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
+      </div>
+
       <div className={`${styles.container} relative z-10 text-center parallax-content`}>
 
         {/* Elite Badge - Made responsive */}
@@ -171,7 +228,14 @@ export default function Hero({ userId }: { userId?: string | null }) {
           <div className="flex -space-x-3 mb-2 sm:mb-0">
             {[15, 22, 33, 44].map(id => (
               <div key={id} className="w-8 h-8 rounded-full border-2 border-background overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-500">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`} alt="Avatar" className="object-cover" />
+                <Image
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`}
+                  alt="Avatar"
+                  fill
+                  className="object-cover"
+                  sizes="32px"
+                  priority
+                />
               </div>
             ))}
           </div>
@@ -269,6 +333,5 @@ export default function Hero({ userId }: { userId?: string | null }) {
         </div>
       </div>
     </section>
-
   );
 }

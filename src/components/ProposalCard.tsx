@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import {
   Zap,
   MapPin,
@@ -30,6 +32,64 @@ export function ProposalCard({
   className
 }: ProposalCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (window.innerWidth < 768) return;
+
+    const el = cardRef.current;
+    if (!el) return;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const { left, top, width, height } = el.getBoundingClientRect();
+      const x = e.clientX - left;
+      const y = e.clientY - top;
+
+      const xPercent = (x / width - 0.5) * 2;
+      const yPercent = (y / height - 0.5) * 2;
+
+      gsap.to(el, {
+        rotateY: xPercent * 5,
+        rotateX: -yPercent * 5,
+        duration: 0.4,
+        ease: "power2.out",
+        transformPerspective: 1000,
+      });
+
+      if (glareRef.current) {
+        gsap.to(glareRef.current, {
+          x,
+          y,
+          opacity: 0.5,
+          duration: 0.4,
+          ease: "power2.out"
+        });
+      }
+    };
+
+    const onMouseLeave = () => {
+      gsap.to(el, {
+        rotateY: 0,
+        rotateX: 0,
+        duration: 0.8,
+        ease: "elastic.out(1, 0.4)"
+      });
+      if (glareRef.current) {
+        gsap.to(glareRef.current, {
+          opacity: 0,
+          duration: 0.4
+        });
+      }
+    };
+
+    el.addEventListener("mousemove", onMouseMove);
+    el.addEventListener("mouseleave", onMouseLeave);
+    return () => {
+      el.removeEventListener("mousemove", onMouseMove);
+      el.removeEventListener("mouseleave", onMouseLeave);
+    };
+  }, { scope: cardRef });
 
   const modalityIcon = proposal.modality === "REMOTE"
     ? <Zap size={14} className="text-sky-400" />
@@ -59,10 +119,17 @@ export function ProposalCard({
     : "";
 
   return (
-    <div className={cn(
-      "group relative flex flex-col h-full bg-card border border-border/50 rounded-[2.5rem] overflow-hidden transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-primary/30",
-      className
-    )}>
+    <div
+      ref={cardRef}
+      className={cn(
+        "group relative flex flex-col h-full bg-card border border-border/50 rounded-[2.5rem] overflow-hidden transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] hover:border-primary/30",
+        className
+      )}>
+      {/* Dynamic Glare */}
+      <div
+        ref={glareRef}
+        className="absolute pointer-events-none opacity-0 w-[200px] h-[200px] bg-white rounded-full blur-[100px] z-30 translate-x-[-50%] translate-y-[-50%]"
+      />
       {/* Cover Image Section */}
       <div className="relative h-48 sm:h-56 overflow-hidden">
         {proposal.imageUrl && !proposal.imageUrl.includes("unsplash.com/photos") ? (

@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReputationBadge } from "@/components/ReputationBadge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import styles from "@/app/(public)/Landing.module.css";
 
 type ProposalWithDetails = Awaited<ReturnType<typeof listPublicProposals>>[number];
 
@@ -66,7 +67,7 @@ const ProposalCard = React.memo(({ item, isApplied, applyingId, handleApply }: {
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-30 group-hover:opacity-100 transition-opacity duration-1000"></div>
           </>
         )}
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-20 mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
         {/* Reputation/Level Overlay */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10 font-sans">
@@ -343,8 +344,9 @@ export default function SearchSection() {
           viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 max-w-4xl mx-auto w-full"
         )}>
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] bg-card/50 border-2 border-border/50 space-y-4 sm:space-y-6">
-              <div className="flex justify-between items-center">
+            <div key={i} className={cn("p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] bg-card/50 border-2 border-border/50 space-y-4 sm:space-y-6 overflow-hidden relative")}>
+              <div className={cn("absolute inset-0", styles.premiumShimmer)}></div>
+              <div className="flex justify-between items-center relative z-10">
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="space-y-2">
@@ -354,15 +356,15 @@ export default function SearchSection() {
                 </div>
                 <Skeleton className="h-8 w-12 rounded-xl" />
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 relative z-10">
                 <Skeleton className="h-8 w-full" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
-              <div className="pt-6 border-t border-border/50 grid grid-cols-2 gap-4">
+              <div className="pt-6 border-t border-border/50 grid grid-cols-2 gap-4 relative z-10">
                 <div className="space-y-2"><Skeleton className="h-3 w-12" /><Skeleton className="h-8 w-full rounded-lg" /></div>
                 <div className="space-y-2"><Skeleton className="h-3 w-12" /><Skeleton className="h-8 w-full rounded-lg" /></div>
               </div>
-              <Skeleton className="h-14 w-full rounded-2xl" />
+              <Skeleton className="h-14 w-full rounded-2xl relative z-10" />
             </div>
           ))}
         </div>
@@ -380,14 +382,15 @@ export default function SearchSection() {
               <p className="text-muted-foreground max-w-xs">Try adjusting your search terms or filters to find what you're looking for.</p>
             </div>
           ) : (
-            filteredProposals.map((item) => (
-              <ProposalCard
-                key={item.id}
-                item={item}
-                isApplied={appliedProposals.has(item.id)}
-                applyingId={applyingId}
-                handleApply={handleApply}
-              />
+            filteredProposals.map((item, index) => (
+              <div key={item.id} className={styles.springyEntrance} style={{ animationDelay: `${index * 0.08}s` }}>
+                <ProposalCard
+                  item={item}
+                  isApplied={appliedProposals.has(item.id)}
+                  applyingId={applyingId}
+                  handleApply={handleApply}
+                />
+              </div>
             ))
           )}
         </div>

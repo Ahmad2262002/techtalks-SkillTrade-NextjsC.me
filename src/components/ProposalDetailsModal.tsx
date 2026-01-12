@@ -178,7 +178,7 @@ export function ProposalDetailsModal({
                                                 <div className="relative">
                                                     <div className="w-12 h-12 rounded-full border-2 border-background shadow-lg overflow-hidden">
                                                         <Image
-                                                            src={proposal.owner.avatarUrl || "/default-avatar.png"}
+                                                            src={proposal.owner.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${proposal.owner.name || 'user'}`}
                                                             alt={proposal.owner.name || "User Avatar"}
                                                             width={48}
                                                             height={48}

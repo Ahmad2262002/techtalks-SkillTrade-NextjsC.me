@@ -6,45 +6,49 @@ import styles from "./Background.module.css";
 
 export default function AnimatedBackground() {
     useGSAP(() => {
-        const moveOrbs = (e: MouseEvent) => {
-            const x = (e.clientX - window.innerWidth / 2) * 0.15;
-            const y = (e.clientY - window.innerHeight / 2) * 0.15;
+        const isMobile = window.innerWidth < 768;
 
-            gsap.to(".orb", {
-                x: (i) => x * (i % 2 === 0 ? 1 : -1) * (i + 1),
-                y: (i) => y * (i % 2 === 0 ? -1 : 1) * (i + 1),
-                duration: 6, // Ultra-viscous
-                ease: "expo.out",
-                stagger: 0.15
-            });
-        };
+        // Skip mouse movement logic on mobile to save battery and main thread
+        if (!isMobile) {
+            const moveOrbs = (e: MouseEvent) => {
+                const x = (e.clientX - window.innerWidth / 2) * 0.15;
+                const y = (e.clientY - window.innerHeight / 2) * 0.15;
 
-        window.addEventListener("mousemove", moveOrbs);
+                gsap.to(".orb", {
+                    x: (i) => x * (i % 2 === 0 ? 1 : -1) * (i + 1),
+                    y: (i) => y * (i % 2 === 0 ? -1 : 1) * (i + 1),
+                    duration: 6,
+                    ease: "expo.out",
+                    stagger: 0.15
+                });
+            };
+            window.addEventListener("mousemove", moveOrbs);
+            return () => window.removeEventListener("mousemove", moveOrbs);
+        }
 
-        // Slow cinematic drift
+        // Simpler drift for both mobile and desktop
         gsap.to(".orb", {
-            x: "+=50",
-            y: "-=30",
-            duration: 15,
+            x: "+=30",
+            y: "-=20",
+            duration: isMobile ? 20 : 15,
             repeat: -1,
             yoyo: true,
             ease: "sine.inOut",
             stagger: {
-                amount: 4,
+                amount: isMobile ? 2 : 4,
                 from: "random"
             }
         });
 
-        // Slight scaling pulse
+        // Even simpler scaling
         gsap.to(".orb", {
-            scale: 1.15,
-            duration: 10,
+            scale: 1.1,
+            duration: 12,
             repeat: -1,
             yoyo: true,
             ease: "sine.inOut"
         });
 
-        return () => window.removeEventListener("mousemove", moveOrbs);
     }, []);
 
     return (
