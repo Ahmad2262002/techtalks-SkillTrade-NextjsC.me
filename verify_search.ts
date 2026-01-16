@@ -19,7 +19,7 @@ async function verifyFilters() {
             take: 10
         });
         console.log(`Found ${weekResults.length} proposals using server action.`);
-        weekResults.forEach(p => console.log(`- ${p.title} (${p.status})`));
+        weekResults.forEach((p: any) => console.log(`- ${p.title} (${p.status})`));
 
     } catch (error) {
         console.error(error);

@@ -1,23 +1,23 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
-import { useTheme, CinematicTheme } from "@/context/ThemeContext";
+import { useTheme, Theme } from "@/context/ThemeContext";
 import { useAudio } from "@/hooks/use-audio";
 
 interface CinematicContextType {
     cinematicMode: boolean;
     toggleCinematicMode: () => void;
-    introPlayed: Record<CinematicTheme, boolean>;
-    playIntro: (theme: CinematicTheme) => void;
+    introPlayed: Record<Theme, boolean>;
+    playIntro: (theme: Theme) => void;
 }
 
 const CinematicContextData = createContext<CinematicContextType | null>(null);
 
-const AMBIENCE_URLS: Record<CinematicTheme, string> = {
-    maybach: 'https://cdn.pixabay.com/audio/2022/10/05/audio_6863004889.mp3', // Gentle City Rain / Hum
-    fbi: 'https://cdn.pixabay.com/audio/2022/03/15/audio_2542a20977.mp3', // Low drone
-    neon: 'https://cdn.pixabay.com/audio/2022/03/15/audio_732a9a46a6.mp3', // Cyber swell
-    light: 'https://cdn.pixabay.com/audio/2022/10/05/audio_6863004889.mp3'
+const AMBIENCE_URLS: Record<Theme, string> = {
+    "elite-dark": 'https://cdn.pixabay.com/audio/2022/10/05/audio_6863004889.mp3', // Gentle City Rain / Hum
+    cybersecurity: 'https://cdn.pixabay.com/audio/2022/03/15/audio_2542a20977.mp3', // Low drone
+    programmer: 'https://cdn.pixabay.com/audio/2022/03/15/audio_732a9a46a6.mp3', // Cyber swell
+    "elite-light": 'https://cdn.pixabay.com/audio/2022/10/05/audio_6863004889.mp3'
 };
 
 export function CinematicProvider({ children }: { children: React.ReactNode }) {
@@ -25,11 +25,11 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
     const { playSound, playVoice, startAmbience, stopAmbience, settings, isUnlocked } = useAudio();
 
     const [cinematicMode, setCinematicMode] = useState(false);
-    const [introPlayed, setIntroPlayed] = useState<Record<CinematicTheme, boolean>>({
-        maybach: false,
-        fbi: false,
-        neon: false,
-        light: false
+    const [introPlayed, setIntroPlayed] = useState<Record<Theme, boolean>>({
+        programmer: false,
+        "elite-light": false,
+        "elite-dark": false,
+        cybersecurity: false
     });
 
     const ambienceRef = useRef<HTMLAudioElement | null>(null);
@@ -61,7 +61,7 @@ export function CinematicProvider({ children }: { children: React.ReactNode }) {
 
 
     // Intro Logic
-    const playIntro = (targetTheme: CinematicTheme) => {
+    const playIntro = (targetTheme: Theme) => {
         if (introPlayed[targetTheme]) return;
 
         // Play Voice

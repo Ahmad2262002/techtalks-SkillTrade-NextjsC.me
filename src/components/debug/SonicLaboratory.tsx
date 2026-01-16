@@ -2,8 +2,22 @@
 
 import React from 'react';
 import { useAudio } from "@/hooks/use-audio";
-import { CinematicTheme, useTheme } from "@/context/ThemeContext";
-import { AtmosphereProfile } from "@/context/AudioContext";
+import { useTheme, Theme } from "@/context/ThemeContext";
+
+// Local type for stubbed atmosphere profile
+export interface AtmosphereProfile {
+    name: string;
+    tagline: string;
+    masterPresenceDb: number;
+    masterWarmthDb: number;
+    masterStereoWidth: number;
+    masterComp: { threshold: number; ratio: number };
+    ambienceVolume: number;
+    ambienceLPF: number;
+    ambienceHPF: number;
+    hoverThrottleMs: number;
+    clickHumanize: number;
+}
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, RotateCcw, Activity, Mic, Music, Sliders } from "lucide-react";
 

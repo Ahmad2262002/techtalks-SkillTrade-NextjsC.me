@@ -8,7 +8,7 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'maybach' : 'light');
+    setTheme(theme === 'elite-light' ? 'programmer' : 'elite-light');
   };
 
   return (
