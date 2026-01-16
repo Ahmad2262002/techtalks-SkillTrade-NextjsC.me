@@ -84,7 +84,7 @@ export async function getUserProfile(userId: string) {
       // Calculate endorsements dynamically
       const skillEndorsementMap = new Map<string, number>();
 
-      user.reviewsReceived.forEach(review => {
+      user.reviewsReceived.forEach((review: any) => {
         if (review.rating >= 4) {
           if (review.swap.teacher.id === id) {
             review.swap.proposal.offeredSkills.forEach((s: any) => {
@@ -103,7 +103,7 @@ export async function getUserProfile(userId: string) {
         avatarUrl: user.avatarUrl,
         phoneNumber: user.phoneNumber,
 
-        skills: user.skills.map(s => {
+        skills: user.skills.map((s: any) => {
           const endorsementCount = skillEndorsementMap.get(s.skillId) || 0;
           return {
             id: s.id,
@@ -115,7 +115,7 @@ export async function getUserProfile(userId: string) {
           };
         }),
 
-        reviewsReceived: user.reviewsReceived.map(review => ({
+        reviewsReceived: user.reviewsReceived.map((review: any) => ({
           id: review.id,
           rating: review.rating,
           comment: review.comment,

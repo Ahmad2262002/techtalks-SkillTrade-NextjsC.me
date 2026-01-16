@@ -89,12 +89,20 @@ const TabAnimation = ({ activeTab, loading, children }: { activeTab: string, loa
 };
 
 const PostProposalModal = dynamic(() => import("@/components/PostProposalModal").then(mod => mod.PostProposalModal), { ssr: false });
-const ThemeCustomizer = dynamic(() => import("@/components/ThemeCustomizer").then(mod => mod.ThemeCustomizer), { ssr: false });
+const ThemeSelector = dynamic(() => import("@/components/ThemeSelector").then(mod => mod.ThemeSelector), { ssr: false });
 
 // --- Types ---
+interface DashboardUser {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  industry?: string;
+  skills?: any[];
+}
+
 interface DashboardProps {
   overview: {
-    user: any;
+    user: DashboardUser;
     leaderboard?: LeaderboardEntry[];
   };
   myProposals: Proposal[];
@@ -125,6 +133,8 @@ export default function DashboardClientContent({
 
   // Advanced Navigation State
   const [isNavigating, setIsNavigating] = useState(false);
+  const [activeLoadingId, setActiveLoadingId] = useState<string | null>(null);
+  const [isGlobalTransition, setIsGlobalTransition] = useState(false);
 
   // When activeTab changes (e.g. from props update), stop loading
   // We add a minimum 800ms delay to ensure the animation feels purposeful
@@ -138,10 +148,12 @@ export default function DashboardClientContent({
   }, [activeTab]);
 
   const handleTabClick = (tabId: string) => {
-    // Only trigger if changing tabs
-    if (activeTab !== tabId) {
-      setIsNavigating(true);
-    }
+    // Prevent unnecessary loading trigger if already on the tab
+    if (tabId === activeTab) return;
+
+    // Always trigger loading state for better UX, even on same-tab click
+    setIsNavigating(true);
+
     // Mobile: Re-scroll to top
     if (window.innerWidth < 1024) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -154,7 +166,7 @@ export default function DashboardClientContent({
 
   // Review states
   const [isReviewModalOpen, setReviewModalOpen] = useState(false);
-  const [reviewingSwap, setReviewingSwap] = useState<any | null>(null);
+  const [reviewingSwap, setReviewingSwap] = useState<Swap | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [reviewError, setReviewError] = useState("");
@@ -169,10 +181,10 @@ export default function DashboardClientContent({
 
     // Monitor for modals to hide dock (State-based fallback)
     const checkModals = () => {
-      const isLocked = document.body.hasAttribute('data-scroll-locked');
+      const isLocked = document.body.style.position === 'fixed';
       const hasVisibleDialog = !!document.querySelector('[role="dialog"][data-state="open"]');
-      const hasDetailsActive = document.body.classList.contains('details-modal-active');
-      setIsModalActive(isLocked || hasVisibleDialog || hasDetailsActive);
+      const hasRadixDialog = !!document.querySelector('[data-radix-portal]');
+      setIsModalActive(isLocked || hasVisibleDialog || hasRadixDialog);
     };
 
     const observer = new MutationObserver(checkModals);
@@ -193,7 +205,7 @@ export default function DashboardClientContent({
       try {
         const data = await getNotifications();
         setNotifications(data);
-        setUnreadCount(data.filter((n: any) => !n.isRead).length);
+        setUnreadCount(data.filter(n => !n.isRead).length);
       } catch (e) { console.error(e); }
     };
     fetchNotifs();
@@ -226,18 +238,22 @@ export default function DashboardClientContent({
   };
 
   const handleAccept = async (appId: string) => {
+    setActiveLoadingId(`accept-${appId}`);
     try {
       await createSwapFromApplication(appId);
       toast({ variant: "success", title: "Accepted!", description: "Swap started." });
       router.refresh();
     } catch (e) { toast({ variant: "destructive", title: "Error accepting." }); }
+    finally { setActiveLoadingId(null); }
   };
 
   const handleReject = async (appId: string) => {
+    setActiveLoadingId(`reject-${appId}`);
     try {
       await updateApplicationStatus({ applicationId: appId, status: "REJECTED" });
       router.refresh();
     } catch (e) { toast({ variant: "destructive", title: "Error rejecting." }); }
+    finally { setActiveLoadingId(null); }
   };
 
   const handleUpdateSwapProgress = async (swapId: string) => {
@@ -278,12 +294,13 @@ export default function DashboardClientContent({
       setComment("");
       setReviewError("");
       router.refresh();
-    } catch (error: any) {
-      setReviewError(error.message || "Failed to submit review.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to submit review.";
+      setReviewError(message);
     }
   }
 
-  const handleOpenReviewModal = (swap: any) => {
+  const handleOpenReviewModal = (swap: Swap) => {
     setReviewingSwap(swap);
     setReviewModalOpen(true);
     setRating(0);
@@ -346,7 +363,11 @@ export default function DashboardClientContent({
 
   return (
     <>
-      <div ref={container} className={cn(styles.dashboardLayout, loggingOut && "pointer-events-none")}>
+      <div ref={container} className={cn(
+        styles.dashboardLayout,
+        loggingOut && "pointer-events-none",
+        isGlobalTransition && "opacity-0 scale-95 filter blur-sm pointer-events-none transition-all duration-700 ease-in-out"
+      )}>
         {/* Sidebar */}
         <aside className={cn(
           styles.sidebar,
@@ -377,8 +398,6 @@ export default function DashboardClientContent({
               icon={<MessageSquare className="w-5 h-5" />}
               label="Active Swaps"
               activeTab={activeTab}
-              count={swaps.reduce((acc, s) => acc + ((s as any).messages?.length || 0), 0)}
-              onClick={() => handleTabClick("active-swaps")}
             />
             <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} onClick={() => handleTabClick("leaderboard")} />
           </nav>
@@ -416,6 +435,7 @@ export default function DashboardClientContent({
             scrolled ? styles.scrolledHeader : styles.header,
             "z-[40]"
           )}>
+            <div className={styles.satinShine} />
             <div className="flex items-center gap-4">
               <div>
                 <h1 className={styles.headerTitle}>{tabTitle}</h1>
@@ -440,8 +460,16 @@ export default function DashboardClientContent({
                         buttonText="Post"
                       />
                       <div className="flex items-center gap-2 border-l border-border/50 pl-2">
-                        <ThemeCustomizer />
-                        <Notifications notifications={notifications} unreadCount={unreadCount} handleMarkRead={handleMarkRead} />
+                        <ThemeSelector />
+                        <Notifications
+                          notifications={notifications}
+                          unreadCount={unreadCount}
+                          handleMarkRead={handleMarkRead}
+                          activeLoadingId={activeLoadingId}
+                          setActiveLoadingId={setActiveLoadingId}
+                          onNavigate={setIsNavigating}
+                          setGlobalFade={setIsGlobalTransition}
+                        />
                         <UserMenu user={overview.user} onSignOut={handleSignOut} loggingOut={loggingOut} />
                       </div>
                     </>
@@ -454,7 +482,20 @@ export default function DashboardClientContent({
           <TabAnimation activeTab={activeTab} loading={isNavigating}>
             {activeTab === "browse" && <BrowseTabContent publicOnlyProposals={publicOnlyProposals} scrolled={scrolled} topMentors={overview.leaderboard} />}
             {activeTab === "my-proposals" && <MyProposalsTabContent myProposals={localMyProposals} handleDelete={handleDeleteProposal} />}
-            {activeTab === "active-swaps" && <ActiveSwapsTabContent applications={applications || []} swaps={swaps || []} user={overview.user} handleAccept={handleAccept} handleReject={handleReject} handleComplete={handleUpdateSwapProgress} handleCancel={handleCancelSwapAction} handleReview={handleOpenReviewModal} scrolled={scrolled} />}
+            {activeTab === "active-swaps" && (
+              <ActiveSwapsTabContent
+                applications={applications || []}
+                swaps={swaps || []}
+                user={overview.user}
+                handleAccept={handleAccept}
+                handleReject={handleReject}
+                handleComplete={handleUpdateSwapProgress}
+                handleCancel={handleCancelSwapAction}
+                handleReview={handleOpenReviewModal}
+                scrolled={scrolled}
+                loadingId={activeLoadingId}
+              />
+            )}
             {activeTab === "leaderboard" && <LeaderboardTabContent leaderboard={overview.leaderboard || []} />}
           </TabAnimation>
         </main>
@@ -462,13 +503,20 @@ export default function DashboardClientContent({
 
       {/* Mobile Bottom Navigation - Floating iOS Dock UI (Teleported to Body for Stickiness) */}
       {mounted && createPortal(
-        <div className="mobile-dock-container fixed bottom-10 left-0 right-0 z-[100] lg:hidden flex justify-center px-6 pointer-events-none">
-          <div className="relative flex justify-between items-center h-[76px] px-8 w-full max-w-[440px] bg-background/40 backdrop-blur-[45px] saturate-[210%] rounded-[3.8rem] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.6)] ring-1 ring-white/10 pointer-events-auto transition-all duration-700">
-            <div className="absolute inset-0 rounded-[3.8rem] bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
+        <div className={cn(
+          "mobile-dock-container fixed bottom-10 left-0 right-0 z-[40] md:hidden flex justify-center px-6 transition-all duration-700 pointer-events-none",
+          isModalActive && "translate-y-32 opacity-0"
+        )}>
+          <div className="relative flex justify-between items-center h-[80px] px-8 w-full max-w-[440px] bg-background/30 backdrop-blur-[50px] saturate-[250%] rounded-[4rem] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.7)] ring-1 ring-white/10 pointer-events-auto transition-all duration-700 hover:scale-[1.02] active:scale-[0.98]">
+            <div className="absolute inset-0 rounded-[4rem] bg-gradient-to-b from-white/20 to-transparent pointer-events-none opacity-50" />
             {[
               { id: "browse", icon: Layers, label: "Browse" },
               { id: "my-proposals", icon: Zap, label: "Me" },
-              { id: "active-swaps", icon: MessageSquare, label: "Syncs", count: swaps.reduce((acc: number, s: any) => acc + ((s.messages?.length || 0) as number), 0) },
+              {
+                id: "active-swaps",
+                icon: MessageSquare,
+                label: "Syncs"
+              },
               { id: "leaderboard", icon: Trophy, label: "Top" }
             ].map((item) => (
               <Link
@@ -485,11 +533,6 @@ export default function DashboardClientContent({
                   activeTab === item.id ? "bg-primary/15 scale-110 shadow-[0_0_20px_rgba(var(--primary),0.2)]" : "bg-transparent"
                 )}>
                   <item.icon className={cn("w-6 h-6 transition-all duration-500", activeTab === item.id && "fill-current")} />
-                  {item.count ? (
-                    <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-background shadow-lg">
-                      {item.count}
-                    </span>
-                  ) : null}
                 </div>
                 <span className={cn(
                   "text-[9px] font-black uppercase tracking-widest transition-all duration-500",
@@ -555,7 +598,7 @@ export default function DashboardClientContent({
 
 // --- Helper Components ---
 
-const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, count, onClick }: any) => {
+const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, count = 0, onClick }: { id?: string, label: string, icon: any, delay?: number, href?: string, active?: boolean, activeTab?: string, count?: number, onClick?: () => void }) => {
   const isActive = active !== undefined ? active : activeTab === id;
   const finalHref = href || `?tab=${id}`;
 
@@ -602,7 +645,7 @@ const NavLink = ({ id, label, icon: Icon, delay = 0, href, active, activeTab, co
 };
 NavLink.displayName = "NavLink";
 
-const UserMenu = ({ user, onSignOut, loggingOut }: any) => {
+const UserMenu = ({ user, onSignOut, loggingOut }: { user: DashboardUser, onSignOut: () => void, loggingOut: boolean }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -644,23 +687,42 @@ const UserMenu = ({ user, onSignOut, loggingOut }: any) => {
   );
 };
 
-const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
+const Notifications = ({
+  notifications,
+  unreadCount,
+  handleMarkRead,
+  activeLoadingId,
+  setActiveLoadingId,
+  onNavigate,
+  setGlobalFade
+}: {
+  notifications: any[],
+  unreadCount: number,
+  handleMarkRead: (id: string) => Promise<void>,
+  activeLoadingId: string | null,
+  setActiveLoadingId: (id: string | null) => void,
+  onNavigate?: (val: boolean) => void,
+  setGlobalFade?: (val: boolean) => void
+}) => {
   const router = useRouter();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-background/50 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-background hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 haptic-touch shadow-lg">
-          <Bell className={cn("w-5 h-5", unreadCount > 0 && "animate-swing text-foreground")} />
+        <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-foreground hover:bg-white/20 hover:border-white/20 transition-all duration-500 hover:scale-110 active:scale-90 haptic-touch shadow-[0_8px_32px_rgba(0,0,0,0.12)] group">
+          <Bell className={cn("w-5 h-5 transition-transform duration-500 group-hover:rotate-12", unreadCount > 0 && "text-foreground")} />
           {unreadCount > 0 && (
-            <span className="absolute top-2 right-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+            <>
+              <span className="absolute top-2.5 right-2.5 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-background animate-ping opacity-75" />
+              <span className="absolute top-2.5 right-2.5 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-background shadow-[0_0_15px_rgba(244,63,94,0.8)]" />
+            </>
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[85vw] max-w-[400px] h-[500px] flex flex-col rounded-[2rem] border border-border/50 bg-popover/80 backdrop-blur-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-2 fade-in duration-300 overflow-hidden">
-        <div className="p-6 border-b border-border/10 flex items-center justify-between bg-foreground/[0.02]">
-          <DropdownMenuLabel className="text-lg font-black uppercase italic tracking-tighter">Inbox</DropdownMenuLabel>
-          {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500/10 text-rose-500 border-rose-500/20">{unreadCount} New</Badge>}
+      <DropdownMenuContent align="end" className="w-[90vw] max-w-[420px] h-[550px] flex flex-col rounded-[2.5rem] border border-white/10 bg-background/40 backdrop-blur-[60px] saturate-[250%] shadow-[0_40px_100px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-4 fade-in zoom-in-95 duration-500 overflow-hidden ring-1 ring-white/10">
+        <div className="p-7 border-b border-white/5 flex items-center justify-between bg-white/5">
+          <DropdownMenuLabel className="text-xl font-black uppercase italic tracking-tighter">Activity</DropdownMenuLabel>
+          {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500 text-white border-none px-3 py-1 rounded-full text-[10px] font-black">{unreadCount} NEW</Badge>}
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -670,34 +732,62 @@ const Notifications = ({ notifications, unreadCount, handleMarkRead }: any) => {
               <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">All caught up</p>
             </div>
           ) : (
-            notifications.map((n: any) => (
-              <DropdownMenuItem
-                key={n.id}
-                onClick={() => {
-                  handleMarkRead(n.id);
-                  if (n.link) {
-                    router.push(n.link);
-                  } else if ((n.type === 'MESSAGE' || n.type === 'MESSAGE_RECEIVED' || n.type === 'SWAP_REQUEST') && n.resourceId) {
-                    router.push(`/dashboard?tab=active-swaps&swapId=${n.resourceId}`);
-                  }
-                }}
-                className={cn(
-                  "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent",
-                  !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/15" : "hover:bg-foreground/5 opacity-70 hover:opacity-100"
-                )}
-              >
-                <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />
-                <div className="flex-1 space-y-1">
-                  <p className={cn("text-xs sm:text-sm leading-relaxed", !n.isRead ? "font-bold text-foreground" : "font-medium text-muted-foreground")}>
-                    {n.message}
-                  </p>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
-              </DropdownMenuItem>
-            ))
+            notifications.map((n: any) => {
+              const targetUrl = n.link
+                ? n.link.replace(/tab=(applications|history)/, 'tab=active-swaps')
+                : ((n.type === 'MESSAGE' || n.type === 'MESSAGE_RECEIVED' || n.type === 'SWAP_REQUEST') && n.resourceId)
+                  ? `/dashboard?tab=active-swaps&swapId=${n.resourceId}`
+                  : '/dashboard';
+
+              return (
+                <DropdownMenuItem
+                  key={n.id}
+                  onClick={() => {
+                    router.push(targetUrl);
+
+                    // Handle state updates in background
+                    setActiveLoadingId(`notif-${n.id}`);
+                    if (onNavigate) onNavigate(true);
+
+                    // Mark as read without blocking navigation
+                    handleMarkRead(n.id).catch(console.error);
+
+                    // Reset loading state after transition
+                    setTimeout(() => {
+                      setActiveLoadingId(null);
+                      if (onNavigate) onNavigate(false);
+                    }, 1000);
+
+                    // Trigger Global Fade
+                    if (setGlobalFade) {
+                      setGlobalFade(true);
+                      setTimeout(() => setGlobalFade(false), 1200);
+                    }
+                  }}
+                  className={cn(
+                    "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent relative overflow-hidden",
+                    !n.isRead ? "bg-primary/5 border-primary/10 hover:bg-primary/15" : "hover:bg-foreground/5 opacity-70 hover:opacity-100",
+                    activeLoadingId === `notif-${n.id}` && "opacity-50 pointer-events-none"
+                  )}
+                >
+                  {activeLoadingId === `notif-${n.id}` && (
+                    <div className="absolute inset-0 bg-primary/5 flex items-center justify-center animate-in fade-in duration-300">
+                      <LoadingSpinner className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />
+                  <div className="flex-1 space-y-1">
+                    <p className={cn("text-xs sm:text-sm leading-relaxed", !n.isRead ? "font-bold text-foreground" : "font-medium text-muted-foreground")}>
+                      {n.message}
+                    </p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                </DropdownMenuItem>
+              )
+            })
           )}
         </div>
       </DropdownMenuContent>
-    </DropdownMenu>
+    </DropdownMenu >
   );
 };

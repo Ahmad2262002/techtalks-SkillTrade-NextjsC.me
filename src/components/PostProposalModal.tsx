@@ -29,20 +29,23 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Proposal } from "@/types/dashboard";
 
+
 export function PostProposalModal({
   triggerClassName,
   buttonText = "Post a Proposal",
   userSkills = [],
   proposal, // If provided, we are in EDIT mode
   isOpen: externalIsOpen,
-  onOpenChange: externalOnOpenChange
+  onOpenChange: externalOnOpenChange,
+  onClick
 }: {
   triggerClassName?: string,
   buttonText?: string,
   userSkills?: any[],
   proposal?: Proposal,
   isOpen?: boolean,
-  onOpenChange?: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void,
+  onClick?: () => void
 }) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
@@ -51,6 +54,7 @@ export function PostProposalModal({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+
 
   // Form State
   const [title, setTitle] = useState("");
@@ -63,9 +67,9 @@ export function PostProposalModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Constants
-  const MIN_TITLE = 15;
+  const MIN_TITLE = 20;
   const MAX_TITLE = 50;
-  const MIN_DESC = 50;
+  const MIN_DESC = 20;
 
   // Initialize form if editing
   React.useEffect(() => {
@@ -135,9 +139,9 @@ export function PostProposalModal({
     // Auto-add any pending manual skill on submit
     let currentOffered = [...offeredSkills];
     if (manualOfferedSkill.trim() && !currentOffered.includes(manualOfferedSkill.trim())) {
-        currentOffered.push(manualOfferedSkill.trim());
-        setOfferedSkills(currentOffered);
-        setManualOfferedSkill("");
+      currentOffered.push(manualOfferedSkill.trim());
+      setOfferedSkills(currentOffered);
+      setManualOfferedSkill("");
     }
 
     // High-Fidelity Validation
@@ -247,7 +251,7 @@ export function PostProposalModal({
                   imageUrl === img.url ? 'border-primary ring-4 ring-primary/20' : 'border-transparent'
                 )}
               >
-                <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
+                <img src={img.url} alt={img.alt || "SkillTrade Cover"} className="w-full h-full object-cover" />
                 {imageUrl === img.url && (
                   <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
                     <Check className="h-10 w-10 text-white drop-shadow-lg" />
@@ -274,16 +278,16 @@ export function PostProposalModal({
   const renderProposalForm = () => (
     <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12 rounded-[2.5rem]">
       <DialogHeader className="mb-10">
-        <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">{proposal ? "Edit Sync" : "Create a Sync"}</DialogTitle>
+        <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">{proposal ? "Refine Sync" : "Launch Initiative"}</DialogTitle>
         <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2 opacity-70">
-          {proposal ? "Update your proposal details." : "Share your expertise and find your perfect skill match."}
+          {proposal ? "Adjust the parameters of your existing exchange." : "Formalize your expertise and the learning objectives you wish to pursue."}
         </DialogDescription>
       </DialogHeader>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <div className="flex justify-between items-center px-1">
-            <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-primary">Proposal Title</Label>
+            <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-primary">Sync Objective</Label>
             <span className={cn(
               "text-[8px] font-black uppercase tracking-tighter transition-colors",
               title.length >= MIN_TITLE && title.length < MAX_TITLE ? "text-emerald-500" :
@@ -300,6 +304,7 @@ export function PostProposalModal({
               setTitle(e.target.value);
               if (errors.title) setErrors(prev => ({ ...prev, title: "" }));
             }}
+            aria-label="Sync Objective Title"
             maxLength={MAX_TITLE}
             placeholder="e.g., Master Classical Piano"
             className={cn(
@@ -320,6 +325,7 @@ export function PostProposalModal({
           </div>
           <Textarea
             id="description"
+            aria-label="Detailed Sync Description"
             value={description}
             onChange={(e) => {
               setDescription(e.target.value);
@@ -341,7 +347,7 @@ export function PostProposalModal({
             <div className="w-24 h-24 rounded-2xl bg-muted flex items-center justify-center overflow-hidden border-2 border-border group relative">
               {imageUrl ? (
                 <>
-                  <img src={imageUrl} className="w-full h-full object-cover" />
+                  <img src={imageUrl} alt="Selected Cover" className="w-full h-full object-cover" />
                   <button type="button" onClick={() => setImageUrl('')} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <X className="w-6 h-6 text-white" />
                   </button>
@@ -470,23 +476,31 @@ export function PostProposalModal({
         </div>
 
         <DialogFooter className="pt-4">
-          <Button type="submit" disabled={isLoading} className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.05] active:scale-95 transition-all gap-3 haptic-touch">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-16 rounded-2xl text-xl font-black bg-primary/20 backdrop-blur-xl border border-primary/30 text-primary shadow-xl shadow-primary/10 hover:scale-[1.05] active:scale-95 transition-all gap-3 haptic-touch relative overflow-hidden group hover:bg-primary/30"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
             {proposal ? "Save Changes" : "Publish Proposal"}
           </Button>
         </DialogFooter>
       </form>
-    </div>
+    </div >
   );
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {(!externalIsOpen && !externalOnOpenChange) && (
-          <Button className={cn(
-            "flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold py-3 sm:py-6 px-3 sm:px-8 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 text-xs sm:text-sm",
-            triggerClassName
-          )}>
+          <Button
+            className={cn(
+              "flex items-center gap-2 bg-primary/20 backdrop-blur-xl hover:bg-primary/30 text-primary font-extrabold py-3 sm:py-6 px-3 sm:px-8 rounded-2xl shadow-xl shadow-primary/10 transition-all hover:scale-105 active:scale-95 text-xs sm:text-sm border border-primary/30",
+              triggerClassName
+            )}
+            onClick={onClick}
+          >
             <Plus className="w-5 h-5 sm:w-6 sm:h-6" /> <span className="hidden sm:inline">{buttonText}</span>
           </Button>
         )}

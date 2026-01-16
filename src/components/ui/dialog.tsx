@@ -77,8 +77,8 @@ DialogTrigger.displayName = "DialogTrigger"
 
 const DialogContent = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => {
+    React.HTMLAttributes<HTMLDivElement> & { hideDefaultClose?: boolean }
+>(({ className, children, hideDefaultClose, ...props }, ref) => {
     const { open, onOpenChange } = React.useContext(DialogContext)
     const [mounted, setMounted] = React.useState(false)
 
@@ -115,13 +115,20 @@ const DialogContent = React.forwardRef<
                     "animate-in zoom-in-95 fade-in-0",
                     className
                 )}
+                role="dialog"
+                data-state="open"
                 onClick={(e) => e.stopPropagation()}
                 {...props}
             >
-                <div className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                    <X className="h-4 w-4 cursor-pointer" onClick={() => onOpenChange(false)} />
-                    <span className="sr-only">Close</span>
-                </div>
+                {!hideDefaultClose && (
+                    <div
+                        className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-2 bg-secondary/50 backdrop-blur-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        <X className="h-6 w-6 sm:h-4 sm:w-4" />
+                        <span className="sr-only">Close</span>
+                    </div>
+                )}
                 {children}
             </div>
         </div>,

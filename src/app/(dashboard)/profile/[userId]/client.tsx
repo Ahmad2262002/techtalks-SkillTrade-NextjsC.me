@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "./Profile.module.css";
 import {
     ArrowLeft, Settings, Star, CheckCircle, Award, Briefcase, Phone,
-    Upload, Loader2, Plus, X, AlertTriangle, MessageSquare, Zap, Trophy, Shield, Medal, Quote
+    Upload, Loader2, Plus, X, AlertTriangle, MessageSquare, Zap, Trophy, Shield, Medal, Quote, Share2, Check
 } from "lucide-react";
 
 // UI & Action Imports
@@ -19,7 +19,7 @@ import { addSkillToCurrentUser, removeManualSkillFromCurrentUser } from "@/actio
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { ThemeCustomizer } from "@/components/ThemeCustomizer";
+import { ThemeSelector } from "@/components/ThemeSelector";
 import { findActiveSwapBetweenUsers } from "@/actions/swaps";
 import { ChatModal } from "@/components/ChatModal";
 import {
@@ -115,6 +115,22 @@ export default function ProfileClientContent({ profileData, isOwnProfile, useMoc
         router.refresh();
     }, [formData, router, toast]);
 
+    const handleShare = useCallback(() => {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            toast({
+                title: "Link Copied",
+                description: "Profile link has been copied to your clipboard.",
+            });
+        }).catch(() => {
+            toast({
+                variant: "destructive",
+                title: "Share Failed",
+                description: "Failed to copy link to clipboard.",
+            });
+        });
+    }, [toast]);
+
     const handleCancel = useCallback(() => {
         setFormData({
             name: profileData.name || "", industry: profileData.industry || "", bio: profileData.bio || "",
@@ -136,6 +152,7 @@ export default function ProfileClientContent({ profileData, isOwnProfile, useMoc
                         isOwnProfile={isOwnProfile}
                         editMode={editMode}
                         onEditToggle={() => setEditMode(true)}
+                        onShare={handleShare}
                     />
                 </div>
 
@@ -416,8 +433,16 @@ function ProfileSidebar({ profileData, formData, setFormData, editMode, isOwnPro
 
 
 // --- Other Unchanged Sub-Components ---
-function ProfileNavbar({ isOwnProfile, editMode, onEditToggle }: { isOwnProfile: boolean, editMode: boolean, onEditToggle: () => void }) {
+function ProfileNavbar({ isOwnProfile, editMode, onEditToggle, onShare }: { isOwnProfile: boolean, editMode: boolean, onEditToggle: () => void, onShare: () => void }) {
     const router = useRouter();
+    const [copied, setCopied] = useState(false);
+
+    const handleShareClick = () => {
+        onShare();
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
         <nav className="sticky top-6 z-50 w-full max-w-7xl mx-auto rounded-2xl bg-background/80 backdrop-blur-xl border border-white/10 shadow-premium hover:shadow-intense transition-all duration-700 p-3 flex justify-between items-center mb-8 animate-in slide-in-from-top-4 duration-700">
 
@@ -434,14 +459,18 @@ function ProfileNavbar({ isOwnProfile, editMode, onEditToggle }: { isOwnProfile:
                 </Button>
             </div>
 
-            <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 opacity-50 select-none pointer-events-none">
-                <Shield className="w-4 h-4" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Secure Profile</span>
-            </div>
-
             <div className="flex items-center gap-3">
+                <Button
+                    variant="ghost"
+                    onClick={handleShareClick}
+                    className="h-10 w-10 p-0 rounded-xl bg-background/40 hover:bg-background/80 border border-white/5 hover:border-white/20 text-primary transition-all duration-300"
+                    title="Share Profile"
+                >
+                    {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                </Button>
+
                 <div className="bg-background/40 p-1 rounded-xl border border-white/5">
-                    <ThemeCustomizer />
+                    <ThemeSelector />
                 </div>
 
                 {isOwnProfile && !editMode && (

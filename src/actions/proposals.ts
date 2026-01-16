@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import { ProposalStatus } from "@prisma/client";
+import { logger } from "@/lib/logger";
+import { unstable_cache, revalidatePath } from "next/cache";
 
 export async function createProposal(input: {
   title: string;
@@ -14,7 +16,7 @@ export async function createProposal(input: {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("Not authenticated");
 
-  return prisma.proposal.create({
+  const result = await prisma.proposal.create({
     data: {
       ownerId: userId,
       title: input.title,
@@ -28,141 +30,113 @@ export async function createProposal(input: {
       },
     },
   });
+
+  revalidatePath('/');
+  revalidatePath('/browse');
+  return result;
 }
 
 import { getReputationStats, getBatchReputationStats } from "./reviews";
 
-export async function listPublicProposals(params: {
-  wantSkillIds?: string[];
-  haveSkillIds?: string[];
-  modality?: string;
-  search?: string;
-  take?: number;
-  skip?: number;
-  includeAllStatuses?: boolean;
-  dateRange?: string;
-} = {}) {
-  const {
-    wantSkillIds,
-    haveSkillIds,
-    modality,
-    search,
-    take = 1000,
-    skip = 0,
-    includeAllStatuses = false,
-    dateRange,
-  } = params;
+/**
+ * V3 Lean Cache Pattern: Defines the fetcher separately and wraps it in a versioned key.
+ * This prevents many-to-many payload bloat and stale cache issues.
+ */
+const getCachedPublicProposalsV5 = unstable_cache(
+  async (serializedParams: string) => {
+    const params = JSON.parse(serializedParams);
+    const {
+      wantSkillIds,
+      haveSkillIds,
+      modality,
+      search,
+      take = 25,
+      skip = 0,
+      includeAllStatuses = false,
+      dateRange,
+    } = params;
 
-  // --- DATE FILTER LOGIC ---
-  let dateFilter = {};
-  if (dateRange) {
-    const now = new Date();
-    let startDate = new Date();
+    const dateFilter = dateRange ? {
+      createdAt: {
+        gte: dateRange === 'today' ? new Date(Date.now() - 86400000) :
+          dateRange === 'week' ? new Date(Date.now() - 604800000) :
+            dateRange === 'month' ? new Date(Date.now() - 2592000000) : undefined
+      }
+    } : {};
 
-    if (dateRange === 'today') {
-      startDate.setTime(now.getTime() - (24 * 60 * 60 * 1000)); // Last 24 hours
-    } else if (dateRange === 'week') {
-      startDate.setDate(now.getDate() - 7);
-    } else if (dateRange === 'month') {
-      startDate.setDate(now.getDate() - 30);
-    }
-
-    if (dateRange !== 'ANY') {
-      dateFilter = {
-        createdAt: {
-          gte: startDate,
-        },
-      };
-    }
-  }
-
-  // --- SEARCH LOGIC ---
-  const searchFilter = search
-    ? {
+    const searchFilter = search ? {
       OR: [
         { title: { contains: search, mode: "insensitive" as const } },
-        { description: { contains: search, mode: "insensitive" as const } },
         { owner: { name: { contains: search, mode: "insensitive" as const } } },
-        {
-          offeredSkills: {
-            some: { name: { contains: search, mode: "insensitive" as const } },
-          },
-        },
-        {
-          neededSkills: {
-            some: { name: { contains: search, mode: "insensitive" as const } },
-          },
-        },
       ],
-    }
-    : {};
+    } : {};
 
-  const proposals = await prisma.proposal.findMany({
-    where: {
-      status: includeAllStatuses ? undefined : "OPEN",
-      modality: modality ?? undefined,
-      ...searchFilter,
-      ...dateFilter,
-      AND: [
-        wantSkillIds && wantSkillIds.length
-          ? {
-            neededSkills: {
-              some: {
-                id: {
-                  in: wantSkillIds,
-                },
-              },
-            },
+    return prisma.proposal.findMany({
+      where: {
+        status: includeAllStatuses ? undefined : "OPEN",
+        modality: modality ?? undefined,
+        ...searchFilter,
+        ...(dateFilter.createdAt?.gte ? dateFilter : {}),
+        AND: [
+          wantSkillIds?.length ? { neededSkills: { some: { id: { in: wantSkillIds } } } } : {},
+          haveSkillIds?.length ? { offeredSkills: { some: { id: { in: haveSkillIds } } } } : {},
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        modality: true,
+        status: true,
+        imageUrl: true,
+        createdAt: true,
+        ownerId: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            // avatarUrl EXCLUDED to avoid Base64 bloat in cache
+            industry: true,
           }
-          : {},
-        haveSkillIds && haveSkillIds.length
-          ? {
-            offeredSkills: {
-              some: {
-                id: {
-                  in: haveSkillIds,
-                },
-              },
-            },
-          }
-          : {},
-      ],
-    },
-    include: {
-      owner: true,
-      offeredSkills: true,
-      neededSkills: true,
-      _count: {
-        select: {
-          applications: true,
-          swaps: true,
         },
+        offeredSkills: { select: { id: true, name: true } },
+        neededSkills: { select: { id: true, name: true } },
+        _count: { select: { applications: true, swaps: true } },
       },
+      orderBy: { createdAt: "desc" },
+      take,
+      skip,
+    });
+  },
+  ['v5-public-proposals'],
+  { tags: ['proposals-public'], revalidate: 3600 }
+);
+
+export async function listPublicProposals(params: any = {}) {
+  const serialized = JSON.stringify(params);
+  const proposals = await getCachedPublicProposalsV5(serialized);
+
+  // Batch fetch reputation AND avatars OUTSIDE of cache
+  const ownerIds = [...new Set(proposals.map((p: any) => p.ownerId))] as string[];
+
+  const [reputationMap, ownersWithAvatars] = await Promise.all([
+    getBatchReputationStats(ownerIds),
+    prisma.user.findMany({
+      where: { id: { in: ownerIds } },
+      select: { id: true, avatarUrl: true }
+    })
+  ]);
+
+  const avatarMap = Object.fromEntries(ownersWithAvatars.map((u: any) => [u.id, u.avatarUrl]));
+
+  return proposals.map((p: any) => ({
+    ...p,
+    owner: {
+      ...p.owner,
+      reputation: reputationMap[p.ownerId],
+      avatarUrl: avatarMap[p.ownerId]
     },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take,
-    skip,
-  });
-
-  console.log(`[API] listPublicProposals: found ${proposals.length} items. Params:`, { search, modality, includeAllStatuses });
-
-  // Batch fetch reputation for all owners
-  const ownerIds = proposals.map(p => p.ownerId);
-  const reputationMap = await getBatchReputationStats(ownerIds);
-
-  const proposalsWithReputation = proposals.map((p) => {
-    return {
-      ...p,
-      owner: {
-        ...p.owner,
-        reputation: reputationMap[p.ownerId],
-      },
-    };
-  });
-
-  return proposalsWithReputation;
+  }));
 }
 
 export async function listMyProposals() {
@@ -212,10 +186,10 @@ export async function getProposalById(proposalId: string) {
   const ownerReputation = await getReputationStats(proposal.ownerId);
 
   // Attach reputation to applicants in batch
-  const applicantIds = proposal.applications.map(app => app.applicantId);
+  const applicantIds = proposal.applications.map((app: any) => app.applicantId) as string[];
   const reputationMap = await getBatchReputationStats(applicantIds);
 
-  const applicationsWithReputation = proposal.applications.map((app) => {
+  const applicationsWithReputation = proposal.applications.map((app: any) => {
     return {
       ...app,
       applicant: {

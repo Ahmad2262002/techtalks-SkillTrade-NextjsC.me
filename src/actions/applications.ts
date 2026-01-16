@@ -56,7 +56,7 @@ export async function createApplication(input: {
       userId: proposal.ownerId,
       type: "APPLICATION_RECEIVED",
       message: `New application for "${proposal.title}"`,
-      link: `/dashboard?tab=applications`,
+      link: `/dashboard?tab=active-swaps`,
     },
   });
 
@@ -71,12 +71,13 @@ export async function createApplication(input: {
       to: owner.email,
       subject: `New Application: ${proposal.title}`,
       html: `
-        <p>You have a new application for your proposal: <strong>${proposal.title}</strong></p>
-        <p>Message from applicant:</p>
-        <blockquote style="border-left: 4px solid #6366f1; padding-left: 15px; margin: 15px 0;">
-          ${input.pitchMessage}
-        </blockquote>
-        <p><a href="${appUrl}/dashboard?tab=applications" style="color: #6366f1; font-weight: bold;">Review application in Dashboard</a></p>
+        <p style="font-size: 18px; color: #1e293b; font-weight: 600;">You have a new application!</p>
+        <p>Someone is interested in your proposal: <strong>${proposal.title}</strong></p>
+        <div style="background-color: #f1f5f9; padding: 20px; border-radius: 12px; margin: 24px 0;">
+          <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em;">Pitch from applicant</p>
+          <p style="margin: 0; font-style: italic; color: #334155;">"${input.pitchMessage}"</p>
+        </div>
+        <p>Head over to your dashboard to review their profile and start the sync.</p>
       `
     });
   }
@@ -152,7 +153,7 @@ export async function updateApplicationStatus(params: {
         userId: application.applicantId,
         type: params.status === "ACCEPTED" ? "APPLICATION_ACCEPTED" : "APPLICATION_REJECTED",
         message: `Your application for "${application.proposal.title}" was ${params.status.toLowerCase()}`,
-        link: params.status === "ACCEPTED" ? `/dashboard?tab=active-swaps` : `/dashboard?tab=my-proposals`,
+        link: params.status === "ACCEPTED" ? `/dashboard?tab=active-swaps` : `/dashboard?tab=browse`,
       },
     });
 
@@ -168,18 +169,16 @@ export async function updateApplicationStatus(params: {
         to: applicant.email,
         subject: `Application ${isAccepted ? 'Accepted' : 'Rejected'}: ${application.proposal.title}`,
         html: `
-          <h2 style="color: #111827; margin-top: 0;">Update on your Application 📝</h2>
+          <p style="font-size: 18px; color: #1e293b; font-weight: 600;">Update on your application 📝</p>
           <p>Your application for <strong>${application.proposal.title}</strong> has been <strong>${params.status.toLowerCase()}</strong>.</p>
           ${isAccepted
-            ? `<div style="background-color: #eef2ff; padding: 20px; border-radius: 12px; border-left: 4px solid #6366f1; margin: 20px 0;">
-                 <p style="margin: 0; color: #4338ca; font-weight: 600;">Congratulations! 🎉</p>
-                 <p style="margin: 10px 0 0 0; color: #4338ca; font-size: 14px;">You can now start chatting and collaborate on this project. Head over to your active syncs to say hello!</p>
-               </div>
-               <p><a href="${appUrl}/dashboard?tab=active-swaps" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Go to Swaps & Chat</a></p>`
-            : `<div style="background-color: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
-                 <p style="margin: 0; color: #6b7280;">Don't worry, there are many other opportunities waiting for you. Keep exploring and find your perfect match!</p>
-               </div>
-               <p><a href="${appUrl}/dashboard?tab=browse" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Browse more proposals</a></p>`
+            ? `<div style="background-color: #f0fdf4; padding: 24px; border-radius: 12px; border: 1px solid #dcfce7; margin: 24px 0;">
+                 <p style="margin: 0; color: #166534; font-weight: 700; font-size: 18px;">Congratulations! 🎉</p>
+                 <p style="margin: 12px 0 0 0; color: #166534; font-size: 15px; line-height: 1.5;">Your skills have found a match. You can now start collaborating and chatting with your partner.</p>
+               </div>`
+            : `<div style="background-color: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
+                 <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.5;">Don't lose momentum. There are many other experts waiting to sync skills with you. Keep exploring!</p>
+               </div>`
           }
         `
       });

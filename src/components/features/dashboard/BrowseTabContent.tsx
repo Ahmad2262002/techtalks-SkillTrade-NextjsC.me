@@ -46,13 +46,38 @@ export const BrowseTabContent = React.memo(({ publicOnlyProposals, scrolled, top
                     <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
                     <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-10">
-                        <div className="max-w-xl space-y-6">
-                            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg mb-2 hover:bg-white/20 transition-colors cursor-default">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                Global Talent Network
+                        <div className="max-w-xl space-y-8">
+                            <div className="flex flex-col items-start gap-4">
+                                <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-white/20 transition-colors cursor-default">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    </span>
+                                    The Cooperative Growth Protocol
+                                </div>
+
+                                {/* Social Proof - Stacked */}
+                                <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-1000 delay-200">
+                                    <div className="flex -space-x-3">
+                                        {[1, 2, 3, 4].map((_, i) => (
+                                            <div key={i} className="w-8 h-8 rounded-full border-2 border-[#1e293b] bg-white/10 backdrop-blur-md overflow-hidden relative shadow-lg">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                                                <img
+                                                    src={`https://i.pravatar.cc/100?img=${10 + i}`}
+                                                    alt="Elite Learner"
+                                                    className="w-full h-full object-cover opacity-90"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-white font-black text-sm tracking-tight">2.4k Elite Learners</span>
+                                            <div className="w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center text-[10px] text-black font-bold">★</div>
+                                        </div>
+                                        <span className="text-[10px] text-white/50 font-bold uppercase tracking-widest">Joined this week</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <h2 className="text-5xl sm:text-7xl font-black tracking-tighter leading-[0.9] drop-shadow-2xl">
@@ -66,41 +91,64 @@ export const BrowseTabContent = React.memo(({ publicOnlyProposals, scrolled, top
                         </div>
 
                         <div
-                            className="hidden md:flex flex-col gap-4 items-end opacity-80 mix-blend-screen w-1/2"
+                            className="hidden md:flex flex-col gap-6 items-end opacity-80 w-1/2"
                             style={{
-                                maskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)',
-                                WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
+                                maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+                                WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)'
                             }}
                         >
-                            <div className="flex gap-3 animate-marquee hover:pause">
-                                {[
-                                    "React", "Node.js", "Python", "Solidity", "Design", "DevOps",
-                                    "React", "Node.js", "Python", "Solidity", "Design", "DevOps"
-                                ].map((s, i) => (
-                                    <span key={i} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-pointer">
-                                        {s}
-                                    </span>
-                                ))}
+                            {/* Row 1 */}
+                            <div className="flex overflow-hidden relative w-full group">
+                                <div className="flex min-w-full shrink-0 justify-around gap-4 animate-marquee group-hover:[animation-play-state:paused]">
+                                    {["React", "Node.js", "Python", "Solidity", "Design", "DevOps"].map((s, i) => (
+                                        <span key={`r1-1-${i}`} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-default">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="flex min-w-full shrink-0 justify-around gap-4 animate-marquee group-hover:[animation-play-state:paused]" aria-hidden="true">
+                                    {["React", "Node.js", "Python", "Solidity", "Design", "DevOps"].map((s, i) => (
+                                        <span key={`r1-2-${i}`} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-default">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex gap-3 animate-marquee-reverse hover:pause">
-                                {[
-                                    "Piano", "Marketing", "SEO", "Copywriting", "Fitness", "Cooking",
-                                    "Piano", "Marketing", "SEO", "Copywriting", "Fitness", "Cooking"
-                                ].map((s, i) => (
-                                    <span key={i} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-pointer">
-                                        {s}
-                                    </span>
-                                ))}
+
+                            {/* Row 2 (Reverse) */}
+                            <div className="flex overflow-hidden relative w-full group">
+                                <div className="flex min-w-full shrink-0 justify-around gap-4 animate-marquee-reverse group-hover:[animation-play-state:paused]">
+                                    {["Piano", "Marketing", "SEO", "Copywriting", "Fitness", "Cooking"].map((s, i) => (
+                                        <span key={`r2-1-${i}`} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-default">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="flex min-w-full shrink-0 justify-around gap-4 animate-marquee-reverse group-hover:[animation-play-state:paused]" aria-hidden="true">
+                                    {["Piano", "Marketing", "SEO", "Copywriting", "Fitness", "Cooking"].map((s, i) => (
+                                        <span key={`r2-2-${i}`} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-default">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex gap-3 animate-marquee hover:pause">
-                                {[
-                                    "Photography", "Video Editing", "Public Speaking", "Leadership", "Sales",
-                                    "Photography", "Video Editing", "Public Speaking", "Leadership", "Sales"
-                                ].map((s, i) => (
-                                    <span key={i} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-pointer">
-                                        {s}
-                                    </span>
-                                ))}
+
+                            {/* Row 3 */}
+                            <div className="flex overflow-hidden relative w-full group">
+                                <div className="flex min-w-full shrink-0 justify-around gap-4 animate-marquee group-hover:[animation-play-state:paused]">
+                                    {["Photography", "Video Editing", "Public Speaking", "Leadership", "Sales"].map((s, i) => (
+                                        <span key={`r3-1-${i}`} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-default">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="flex min-w-full shrink-0 justify-around gap-4 animate-marquee group-hover:[animation-play-state:paused]" aria-hidden="true">
+                                    {["Photography", "Video Editing", "Public Speaking", "Leadership", "Sales"].map((s, i) => (
+                                        <span key={`r3-2-${i}`} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap hover:bg-white hover:text-black transition-all cursor-default">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>

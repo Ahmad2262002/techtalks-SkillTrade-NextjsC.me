@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReputationBadge } from "@/components/ReputationBadge";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import dynamic from "next/dynamic";
 
 const ChatModal = dynamic(() => import("@/components/ChatModal").then(mod => mod.ChatModal), { ssr: false });
@@ -37,6 +38,7 @@ interface ActiveSwapsTabContentProps {
     handleCancel: (id: string) => void;
     handleReview: (s: Swap) => void;
     scrolled: boolean;
+    loadingId?: string | null;
 }
 
 const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCancel, onReview, hasReviewed }: {
@@ -114,9 +116,9 @@ const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCance
                             otherUserName={partner.name}
                             triggerClassName="h-14 md:h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 shadow-[0_15px_30px_rgba(var(--primary),0.3)] border-none px-6 md:px-8 font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.05] active:scale-95"
                         />
-                        {(swap as any).messages?.length > 0 && (
+                        {currentUserId && (swap as any).messages?.filter((m: any) => !m.isRead && String(m.senderId) !== String(currentUserId)).length > 0 && (
                             <div className="absolute -top-2 -right-2 bg-rose-500 text-white min-w-[24px] h-[24px] rounded-full flex items-center justify-center text-[10px] font-black border-2 border-background animate-bounce-slow shadow-lg shadow-rose-500/30 z-20">
-                                {(swap as any).messages.length}
+                                {(swap as any).messages.filter((m: any) => !m.isRead && String(m.senderId) !== String(currentUserId)).length}
                             </div>
                         )}
                     </div>
@@ -183,16 +185,23 @@ const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCance
 });
 SwapCard.displayName = "SwapCard";
 
-const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
+const ApplicationCard = React.memo(({ app, onAccept, onReject, isLoading }: {
     app: Application,
     onAccept: (id: string) => void,
-    onReject: (id: string) => void
+    onReject: (id: string) => void,
+    isLoading?: boolean
 }) => (
     <div className={cn(
         styles.applicationCard,
-        "group relative overflow-hidden transition-all duration-500 rounded-[2.5rem] sm:rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-xl"
+        "group relative overflow-hidden transition-all duration-500 rounded-[2.5rem] sm:rounded-[3.5rem] p-1 bg-gradient-to-br from-orange-500/20 via-border/40 to-primary/10 hover:from-orange-500/40 border-none shadow-xl",
+        isLoading && "opacity-50 pointer-events-none"
     )}>
         <div className="bg-card/95 backdrop-blur-xl rounded-[2.4rem] sm:rounded-[3.4rem] p-6 sm:p-12 h-full flex flex-col relative overflow-hidden">
+            {isLoading && (
+                <div className="absolute inset-0 bg-background/20 backdrop-blur-[2px] z-[30] flex items-center justify-center animate-in fade-in duration-300">
+                    <LoadingSpinner className="h-12 w-12 text-orange-500" />
+                </div>
+            )}
             <div className="absolute -top-32 -right-32 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px] group-hover:bg-orange-500/20 transition-all duration-[2000ms]" />
 
             <div className="p-0 relative z-10 flex-1 flex flex-col">
@@ -251,7 +260,7 @@ const ApplicationCard = React.memo(({ app, onAccept, onReject }: {
 ));
 ApplicationCard.displayName = "ApplicationCard";
 
-export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, handleAccept, handleReject, handleComplete, handleCancel, handleReview, scrolled }: ActiveSwapsTabContentProps) => {
+export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, handleAccept, handleReject, handleComplete, handleCancel, handleReview, scrolled, loadingId }: ActiveSwapsTabContentProps) => {
     const router = useRouter();
     const pendingApps = applications.filter((a: any) => a.status === "PENDING");
 
@@ -273,7 +282,13 @@ export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, ha
                     </div>
                     <div className="grid gap-10 grid-cols-1 lg:grid-cols-2">
                         {pendingApps.map((app: any) => (
-                            <ApplicationCard key={app.id} app={app} onAccept={handleAccept} onReject={handleReject} />
+                            <ApplicationCard
+                                key={app.id}
+                                app={app}
+                                onAccept={handleAccept}
+                                onReject={handleReject}
+                                isLoading={loadingId === `accept-${app.id}` || loadingId === `reject-${app.id}`}
+                            />
                         ))}
                     </div>
                 </section>

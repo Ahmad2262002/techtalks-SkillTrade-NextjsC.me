@@ -17,6 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReputationBadge } from "@/components/ReputationBadge";
 import { ProposalDetailsModal } from "./ProposalDetailsModal";
 import { Proposal } from "@/types/dashboard";
+import { usePerformanceTier } from "@/lib/performance";
+
 
 interface ProposalCardProps {
   proposal: Proposal;
@@ -34,9 +36,12 @@ export function ProposalCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
+  const specs = usePerformanceTier();
+
 
   useGSAP(() => {
-    if (window.innerWidth < 768) return;
+    // Hardware-Aware Tilt: Only engage on High/Ultra tiers
+    if (window.innerWidth < 768 || specs?.tier === 'low' || specs?.tier === 'medium') return;
 
     const el = cardRef.current;
     if (!el) return;
@@ -48,6 +53,10 @@ export function ProposalCard({
 
       const xPercent = (x / width - 0.5) * 2;
       const yPercent = (y / height - 0.5) * 2;
+
+      if (!el.classList.contains('hovering')) {
+        el.classList.add('hovering');
+      }
 
       gsap.to(el, {
         rotateY: xPercent * 5,
@@ -72,8 +81,8 @@ export function ProposalCard({
       gsap.to(el, {
         rotateY: 0,
         rotateX: 0,
-        duration: 0.8,
-        ease: "elastic.out(1, 0.4)"
+        duration: 1.2,
+        ease: "power3.out"
       });
       if (glareRef.current) {
         gsap.to(glareRef.current, {
@@ -81,6 +90,7 @@ export function ProposalCard({
           duration: 0.4
         });
       }
+      el.classList.remove('hovering');
     };
 
     el.addEventListener("mousemove", onMouseMove);
@@ -118,6 +128,16 @@ export function ProposalCard({
     ? ` +${proposal.neededSkills.length - 2}`
     : "";
 
+  const ownerLevel = proposal.owner?.reputation?.level || 1;
+
+  const levelBarThemes: Record<number, string> = {
+    1: "bg-white/5",
+    2: "bg-white/10",
+    3: "bg-white/20",
+    4: "bg-primary/20",
+    5: "bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.4)]",
+  };
+
   return (
     <div
       ref={cardRef}
@@ -125,6 +145,8 @@ export function ProposalCard({
         "group relative flex flex-col h-full bg-card border border-border/50 rounded-[2.5rem] overflow-hidden transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] hover:border-primary/30",
         className
       )}>
+      {/* Subtle Level Accent - Maybach Restraint */}
+      <div className={cn("absolute top-0 left-0 right-0 h-[2px] z-20 transition-colors duration-1000", levelBarThemes[ownerLevel])} />
       {/* Dynamic Glare */}
       <div
         ref={glareRef}
@@ -166,7 +188,7 @@ export function ProposalCard({
         <div className="absolute top-0 left-0 w-1 h-1/2 bg-primary rounded-full opacity-30 group-hover:h-full transition-all duration-700" />
 
         <div className="mb-6">
-          <h3 className="text-xl sm:text-2xl font-black text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-500 uppercase italic break-words">
+          <h3 className="text-2xl sm:text-3xl font-playfair font-medium text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-700 italic px-1">
             {proposal.title}
           </h3>
 
@@ -183,16 +205,16 @@ export function ProposalCard({
         {/* Skills Grid */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Offering
+            <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] text-primary/60">
+              Offering
             </div>
-            <div className="text-sm font-bold text-foreground truncate">{offered}{remainingOffered}</div>
+            <div className="text-sm font-medium text-foreground/90 truncate">{offered}{remainingOffered}</div>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-500">
-              <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(251,146,60,0.6)]" /> Seeking
+            <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
+              Seeking
             </div>
-            <div className="text-sm font-bold text-foreground truncate">
+            <div className="text-sm font-medium text-foreground/70 truncate">
               {needed}{remainingNeeded}
             </div>
           </div>
@@ -223,12 +245,12 @@ export function ProposalCard({
           )}
 
           <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-primary uppercase tracking-tighter">Velocity</span>
-              <span className="text-sm font-black text-foreground">{proposal._count?.swaps || 0} Trades</span>
+            <div className="flex flex-col items-end opacity-60">
+              <span className="text-[10px] font-medium text-primary uppercase tracking-widest">Velocity</span>
+              <span className="text-xs font-medium text-foreground">{proposal._count?.swaps || 0} Trades</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2">
               <ProposalDetailsModal
                 proposal={proposal}
                 isOwner={isOwner}
@@ -236,11 +258,13 @@ export function ProposalCard({
                 onOpenChange={setIsModalOpen}
               />
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="w-12 h-12 rounded-full bg-primary text-white hover:scale-110 active:scale-95 transition-all duration-300 shadow-xl shadow-primary/40 flex items-center justify-center group/btn haptic-touch select-none"
-                aria-label="View proposal details and apply"
+                onClick={() => {
+                  setIsModalOpen(true);
+                }}
+                className="w-12 h-12 rounded-full bg-primary text-primary-foreground hover:scale-105 active:scale-98 transition-all duration-500 shadow-2xl flex items-center justify-center group/btn haptic-touch select-none border-none"
+                aria-label="View proposal details"
               >
-                <ArrowRight className="w-6 h-6 transition-transform group-hover/btn:translate-x-1" />
+                <ArrowRight className="w-5 h-5 transition-transform group-hover/btn:translate-x-1" />
               </button>
               {isOwner && onDelete && (
                 <button
@@ -257,6 +281,6 @@ export function ProposalCard({
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { createApplication } from "@/actions/applications";
 import { deleteProposal } from "@/actions/proposal-actions";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Send, Zap, MapPin, Code2, Palette, Music, MessageCircle, Edit, X, Check, Star } from "lucide-react";
+import { Loader2, Trash2, Send, Zap, MapPin, Code2, Palette, Music, MessageCircle, Edit, X, Check, Star, ArrowRight } from "lucide-react";
 import { ReputationBadge } from "@/components/ReputationBadge";
 import { Proposal } from "@/types/dashboard";
 import Image from "next/image";
@@ -23,6 +23,7 @@ import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PostProposalModal } from "./PostProposalModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
 
 export function ProposalDetailsModal({
     proposal,
@@ -40,6 +41,7 @@ export function ProposalDetailsModal({
     const [pitch, setPitch] = useState("");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+
 
     const handleApply = async () => {
         if (!pitch.trim()) return;
@@ -143,7 +145,7 @@ export function ProposalDetailsModal({
                                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Verified Opportunity</span>
                                         </div>
 
-                                        <DialogTitle className="text-3xl sm:text-4xl md:text-6xl font-black text-foreground tracking-tighter uppercase italic leading-[1.1] mb-2 break-words">
+                                        <DialogTitle className="text-4xl sm:text-5xl md:text-7xl font-playfair font-medium text-foreground tracking-tight leading-[1.05] mb-2 break-words italic">
                                             {proposal.title}
                                         </DialogTitle>
 
@@ -162,10 +164,10 @@ export function ProposalDetailsModal({
                                             }
 
                                             return (
-                                                <div className={`inline-flex items-center gap-2 mt-2 px-4 py-1.5 rounded-full border ${category.border} ${category.bg} animate-in fade-in zoom-in-50 duration-500`}>
-                                                    <span className={`${category.color} animate-pulse`}>{category.icon}</span>
-                                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${category.color}`}>
-                                                        AI DETECTED: {category.label}
+                                                <div className="inline-flex items-center gap-2 mt-4 px-5 py-2 rounded-full border border-primary/20 bg-primary/5">
+                                                    <span className="text-primary animate-pulse">{category.icon}</span>
+                                                    <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-primary/80">
+                                                        Expertise Alignment: {category.label}
                                                     </span>
                                                 </div>
                                             );
@@ -189,7 +191,7 @@ export function ProposalDetailsModal({
                                                 </div>
                                             </Link>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Expert Mind</span>
+                                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Expert Strategist</span>
                                                 <Link href={`/profile/${proposal.ownerId}`} className="text-lg font-black text-foreground hover:text-primary transition-colors truncate">
                                                     {proposal.owner.name}
                                                 </Link>
@@ -287,7 +289,7 @@ export function ProposalDetailsModal({
                         </div>
                     </ScrollArea>
 
-                    <DialogFooter className="border-t border-border/10 p-6 sm:p-8 pt-6 !flex-col md:!flex-row !justify-between items-center gap-4 bg-background/95 backdrop-blur-xl shrink-0 sticky bottom-0 z-[100] md:relative">
+                    <DialogFooter className="border-t border-border/10 p-6 sm:p-8 pt-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] !flex-col md:!flex-row !justify-between items-center gap-4 bg-background/95 backdrop-blur-xl shrink-0 sticky bottom-0 z-[100] md:relative">
                         <div className="w-full md:w-auto hidden md:block">
                             {!isOwner && (
                                 <Button variant="ghost" size="sm" className="font-bold text-muted-foreground uppercase tracking-widest text-[9px] hover:text-destructive transition-colors" asChild>
@@ -309,13 +311,14 @@ export function ProposalDetailsModal({
                                 </>
                             ) : (
                                 !isApplying ? (
-                                    <Button onClick={() => setIsApplying(true)} className="h-16 w-full md:w-auto px-10 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all gap-3 haptic-touch">
-                                        Request Swap <Zap className="w-5 h-5" />
+                                    <Button onClick={() => setIsApplying(true)} className="h-16 w-full md:w-auto px-12 rounded-full text-lg font-playfair italic font-medium bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-98 transition-all duration-700 gap-3">
+                                        Initiate Strategic Synergy <ArrowRight className="w-5 h-5" />
                                     </Button>
                                 ) : (
                                     <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">
                                         <Textarea
-                                            placeholder="Introduce yourself and explain why this is a perfect match..."
+                                            aria-label="Propose Strategic Initiative"
+                                            placeholder="Outline your strategic intent and why this synergy is a perfect match..."
                                             value={pitch}
                                             onChange={e => setPitch(e.target.value)}
                                             className="min-h-[120px] rounded-2xl border-2 border-primary/20 focus:border-primary p-4 text-base font-medium"
@@ -323,7 +326,7 @@ export function ProposalDetailsModal({
                                         <div className="flex gap-3">
                                             <Button variant="ghost" onClick={() => setIsApplying(false)} className="h-14 flex-1 rounded-2xl font-bold uppercase tracking-widest text-xs">Cancel</Button>
                                             <Button onClick={handleApply} disabled={loading} className="h-14 flex-[2] rounded-2xl font-black text-lg gap-2 shadow-xl shadow-primary/10">
-                                                {loading ? <LoadingSpinner size="icon" noText /> : <Send className="w-5 h-5" />} Send Request
+                                                {loading ? <LoadingSpinner size="icon" noText /> : <Send className="w-5 h-5" />} Dispatch Proposal
                                             </Button>
                                         </div>
                                     </div>

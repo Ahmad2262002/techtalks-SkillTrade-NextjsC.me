@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import { cache } from "react";
+import { unstable_cache, revalidatePath } from "next/cache";
 
 export async function createReview(input: {
   swapId: string;
@@ -90,6 +91,7 @@ export async function createReview(input: {
     }
   }
 
+  revalidatePath('/');
   return review;
 }
 
@@ -106,17 +108,42 @@ export async function listReviewsForUser(userId: string) {
   });
 }
 
-export async function getPublicReviews(limit = 6) {
-  return prisma.review.findMany({
-    include: {
-      author: true,
-      swap: {
-        include: { proposal: true },
+const getCachedPublicReviewsV3 = unstable_cache(
+  async (limit: number) => {
+    return prisma.review.findMany({
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true
+          }
+        },
+        swap: {
+          select: {
+            id: true,
+            proposal: {
+              select: {
+                title: true
+              }
+            }
+          }
+        },
       },
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    });
+  },
+  ['v3-public-reviews'],
+  { tags: ['reviews-public'], revalidate: 3600 }
+);
+
+export async function getPublicReviews(limit = 6) {
+  return getCachedPublicReviewsV3(limit);
 }
 
 

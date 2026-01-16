@@ -100,6 +100,7 @@ export type Swap = {
     teacherHasCompleted: boolean;
     studentHasCompleted: boolean;
     reviews?: any[];
+    messages?: any[];
 };
 
 export type Application = {

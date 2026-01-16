@@ -44,7 +44,7 @@ const ProposalCard = React.memo(({ item, isApplied, applyingId, handleApply }: {
   const mesh = meshColors[colorIndex];
 
   return (
-    <div className="group relative flex flex-col rounded-[2rem] sm:rounded-[2.5rem] bg-card border border-border/50 hover:border-primary/50 transition-all duration-700 hover:shadow-[0_20px_80px_-20px_rgba(var(--primary-rgb),0.15)] overflow-hidden isolate">
+    <div className="group relative flex flex-col rounded-[2.5rem] bg-card border border-border/50 hover:border-primary/50 transition-all duration-700 hover:shadow-[0_30px_100px_-20px_rgba(var(--primary-rgb),0.15)] hover:-translate-y-2 overflow-hidden isolate">
       {/* Visual Header "Image" */}
       <div className="h-40 sm:h-48 w-full relative overflow-hidden shrink-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
         {item.imageUrl ? (
@@ -127,7 +127,7 @@ const ProposalCard = React.memo(({ item, isApplied, applyingId, handleApply }: {
                 Offers
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {item.offeredSkills.slice(0, 2).map(s => (
+                {item.offeredSkills.slice(0, 2).map((s: any) => (
                   <Badge key={s.id} variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/10 text-[10px] font-bold px-2 py-0.5 h-6 hover:bg-emerald-500 hover:text-white transition-all cursor-default">{s.name}</Badge>
                 ))}
                 {item.offeredSkills.length > 2 && <span className="text-[10px] font-black text-muted-foreground/50 self-center">+{item.offeredSkills.length - 2}</span>}
@@ -139,7 +139,7 @@ const ProposalCard = React.memo(({ item, isApplied, applyingId, handleApply }: {
                 Needs
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {item.neededSkills.slice(0, 2).map(s => (
+                {item.neededSkills.slice(0, 2).map((s: any) => (
                   <Badge key={s.id} variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/10 text-[10px] font-bold px-2 py-0.5 h-6 hover:bg-amber-500 hover:text-white transition-all cursor-default">{s.name}</Badge>
                 ))}
                 {item.neededSkills.length > 2 && <span className="text-[10px] font-black text-muted-foreground/50 self-center">+{item.neededSkills.length - 2}</span>}
@@ -253,9 +253,9 @@ export default function SearchSection() {
               placeholder="What do you want to learn today?"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="w-full bg-background/50 border-2 border-border rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-12 sm:pl-14 pr-4 sm:pr-6 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-base sm:text-lg"
+              className="w-full bg-background/50 border-2 border-border rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-12 sm:pl-14 pr-4 sm:pr-6 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-base sm:text-lg focus:shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]"
             />
-            <Search className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-500" />
           </div>
 
           {/* Filter and View Mode Controls - Horizontal on all sizes, but filter takes full width on mobile */}

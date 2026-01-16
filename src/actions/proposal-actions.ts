@@ -4,11 +4,12 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 // --- Zod Schema for Validation ---
 const CreateProposalSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters.").max(60, "Title is too long. Keep it concise (max 60 chars)."),
-  description: z.string().min(20, "Please provide a detailed description.").max(500, "Description is too long."),
+  title: z.string().min(20, "Title must be at least 20 characters.").max(60, "Title is too long. Keep it concise (max 60 chars)."),
+  description: z.string().min(20, "Please provide a detailed description (at least 20 chars).").max(500, "Description is too long."),
   modality: z.enum(["Remote", "In-Person"] as const),
   offeredSkillNames: z.string().min(1, "You must offer at least one skill."),
   neededSkillNames: z.string().min(1, "You must seek at least one skill."),
@@ -23,12 +24,12 @@ export async function createProposal(
   options: { revalidate: boolean } = { revalidate: true }
 ) {
   // --- SERVER DEBUG LOG 1 ---
-  console.log("Server action 'createProposal' received data:", formData);
+  logger.log("Server action 'createProposal' received data:", formData);
 
   const userId = await getCurrentUserId();
 
   if (!userId) {
-    console.log("User not authenticated. Aborting.");
+    logger.log("User not authenticated. Aborting.");
     return {
       success: false,
       message: 'You must be logged in to post a proposal.',
@@ -40,7 +41,7 @@ export async function createProposal(
 
   if (!validatedFields.success) {
     // --- SERVER DEBUG LOG 2 ---
-    console.log("Zod validation failed:", validatedFields.error.flatten().fieldErrors);
+    logger.log("Zod validation failed:", validatedFields.error.flatten().fieldErrors);
     return {
       success: false,
       errors: validatedFields.error.flatten().fieldErrors,
@@ -51,7 +52,7 @@ export async function createProposal(
   const { title, description, modality, offeredSkillNames, neededSkillNames, imageUrl } = validatedFields.data;
 
   try {
-    console.log("Validation passed. Attempting to create proposal in DB...");
+    logger.log("Validation passed. Attempting to create proposal in DB...");
     // 2. Get or Create Offered Skills
     const offeredSkillsList = offeredSkillNames.split(',').map(s => s.trim()).filter(s => s);
     const offeredSkillIds: string[] = [];
@@ -98,7 +99,7 @@ export async function createProposal(
       },
     });
 
-    console.log("Proposal created successfully with ID:", proposal.id);
+    logger.log("Proposal created successfully with ID:", proposal.id);
 
     if (options.revalidate) {
       revalidatePath('/dashboard');
@@ -113,7 +114,7 @@ export async function createProposal(
 
   } catch (error) {
     // --- SERVER DEBUG LOG 3 ---
-    console.error('Server action error:', error);
+    logger.error('Server action error:', error);
     return {
       success: false,
       message: 'Failed to create proposal due to an unexpected server error.',
@@ -209,7 +210,7 @@ export async function updateProposal(
     return { success: true, message: 'Proposal updated successfully!' };
 
   } catch (error) {
-    console.error('Update Error:', error);
+    logger.error('Update Error:', error);
     return { success: false, message: 'Failed to update proposal.' };
   }
 }
@@ -238,7 +239,7 @@ export async function deleteProposal(proposalId: string) {
       select: { id: true }
     });
 
-    const swapIds = swapsToDelete.map(s => s.id);
+    const swapIds = swapsToDelete.map((s: any) => s.id);
 
     await prisma.$transaction([
       prisma.review.deleteMany({ where: { swapId: { in: swapIds } } }), // Delete reviews first
@@ -251,7 +252,7 @@ export async function deleteProposal(proposalId: string) {
     revalidatePath('/'); // Update landing page recent posts
     return { success: true, message: 'Proposal deleted successfully.' };
   } catch (error) {
-    console.error("Delete Error:", error);
+    logger.error("Delete Error:", error);
     return { success: false, message: 'Failed to delete proposal.' };
   }
 }

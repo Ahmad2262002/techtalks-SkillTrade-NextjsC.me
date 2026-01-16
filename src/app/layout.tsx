@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Outfit } from "next/font/google";
+import { Geist, Geist_Mono, Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AudioProvider } from "@/context/AudioContext";
 import NextTopLoader from 'nextjs-toploader';
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,6 +24,21 @@ const outfit = Outfit({
   subsets: ["latin"],
   display: 'swap',
 });
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  display: 'swap',
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#000000',
+};
 
 export const metadata: Metadata = {
   title: {
@@ -108,14 +125,9 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
 
 import { Toaster } from "@/components/ui/toaster";
+// Debug tools removed
 
 export default function RootLayout({
   children,
@@ -125,10 +137,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${playfair.variable} antialiased selection:bg-primary/20 selection:text-primary`}
       >
         <script dangerouslySetInnerHTML={{
           __html: `
+          // Smart Locale Detection
+          try {
+            const locale = navigator.language?.split('-')[0] || 'en';
+            document.documentElement.lang = locale;
+          } catch (e) {}
+
           const updateViewportHeight = () => {
             document.documentElement.style.setProperty('--visual-viewport-height', window.visualViewport ? window.visualViewport.height + 'px' : window.innerHeight + 'px');
           };
@@ -137,24 +155,26 @@ export default function RootLayout({
           updateViewportHeight();
         `}} />
         <ThemeProvider>
-          <NextTopLoader
-            color="var(--primary)"
-            initialPosition={0.08}
-            crawlSpeed={200}
-            height={3}
-            crawl={true}
-            showSpinner={false}
-            easing="ease"
-            speed={200}
-            shadow="0 0 10px var(--primary),0 0 5px var(--primary)"
-          />
-          <div className="page-enter">
-            {children}
-          </div>
-          <Toaster />
-          <SpeedInsights />
+          <AudioProvider>
+            <NextTopLoader
+              color="hsl(var(--primary))"
+              initialPosition={0.08}
+              crawlSpeed={200}
+              height={3}
+              crawl={true}
+              showSpinner={false}
+              easing="ease"
+              speed={200}
+              shadow="0 0 10px var(--primary),0 0 5px var(--primary)"
+            />
+            <div className="page-enter">
+              {children}
+            </div>
+            <Toaster />
+            <SpeedInsights />
+          </AudioProvider>
         </ThemeProvider>
       </body>
-    </html>
+    </html >
   );
 }

@@ -3,6 +3,7 @@ import { getDashboardUserBasic, getMySentApplications, getMyProposals, getMySwap
 import { getCurrentUserId } from "@/actions/auth";
 import DashboardClientContent from "./client";
 import { redirect } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 import { Proposal, Skill } from "@/types/dashboard";
 
@@ -61,7 +62,7 @@ export default async function DashboardPage({
         listPublicProposals({
           search: search || undefined,
           modality: modalityFilter,
-          take: 20,
+          take: 15,
           includeAllStatuses: true,
         }).then(res => publicProposals = res),
         getLeaderboard().then(res => overview.leaderboard = res)
@@ -96,7 +97,7 @@ export default async function DashboardPage({
     await Promise.all(promises);
 
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
+    logger.error("Error fetching dashboard data:", error);
     return <div>Error loading dashboard. Please try again.</div>;
   }
 
@@ -109,7 +110,7 @@ export default async function DashboardPage({
   const allProposals = Array.from(proposalById.values());
   const publicOnlyProposals = allProposals.filter(p => p.ownerId !== userId);
 
-  console.log(`[Dashboard] Tab: ${activeTab} | ${publicOnlyProposals.length} public items`);
+  logger.log(`[Dashboard] Tab: ${activeTab} | ${publicOnlyProposals.length} public items`);
 
   const myProposals = overview.proposals;
 

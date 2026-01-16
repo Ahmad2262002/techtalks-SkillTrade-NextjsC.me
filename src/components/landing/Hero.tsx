@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,8 @@ import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { PostProposalModal } from "@/components/PostProposalModal";
 import Image from "next/image";
+import { usePerformanceTier } from "@/lib/performance";
+// Audio removed for simplicity
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -19,8 +21,22 @@ if (typeof window !== "undefined") {
 export default function Hero({ userId }: { userId?: string | null }) {
   const container = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const [cursorPos, setCursorPos] = useState({ x: 50, y: 50 });
+  const specs = usePerformanceTier();
+
+  const [particles, setParticles] = useState<{ left: string; top: string }[]>([]);
 
   useGSAP(() => {
+    // Dynamic Particle Count based on Hardware Specs
+    const particleCount = specs?.tier === 'ultra' ? 60 :
+      specs?.tier === 'high' ? 40 :
+        specs?.tier === 'medium' ? 20 : 10;
+
+    setParticles([...Array(particleCount)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+    })));
+
     const originalHTML = titleRef.current?.innerHTML;
 
     const splitTextWithLines = (selector: string): void => {
@@ -50,55 +66,40 @@ export default function Hero({ userId }: { userId?: string | null }) {
       title.innerHTML = Array.from(tempDiv.childNodes).map(processNode).join("");
     };
 
+    // Unified Smart Animation Sequence
+    const primaryEase = "power4.out";
+    const durationMultiplier = specs?.tier === 'ultra' ? 1.6 : specs?.tier === 'high' ? 1.4 : 1.2;
     const isMobile = window.innerWidth < 768;
-    if (isMobile) {
-      const tl = gsap.timeline();
-      tl.fromTo(".hero-badge", { opacity: 0, scale: 0.95, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 1, ease: "expo.out" })
-        .fromTo(titleRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 1, ease: "expo.out" }, "-=0.8")
-        .fromTo(`.${styles.heroDescription}`, { opacity: 0, y: 10 }, { opacity: 0.9, y: 0, duration: 1, ease: "expo.out" }, "-=0.8")
-        .fromTo(".stat-card", { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1, duration: 1, ease: "expo.out" }, "-=0.8");
-      return;
-    }
 
     splitTextWithLines(`.${styles.heroTitle}`);
-
     const chars = gsap.utils.toArray(".char");
     const introTl = gsap.timeline();
 
+    // Universal entrance sequence adjusted by spec tier
     introTl
       .fromTo(".hero-badge", {
         opacity: 0,
-        scale: 0.95,
-        y: -20,
+        y: isMobile ? -20 : -10,
+        scale: isMobile ? 0.9 : 1
       }, {
         opacity: 1,
+        y: 0,
         scale: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "expo.out",
-        clearProps: "all"
+        duration: (isMobile ? 1.2 : 1.8) * durationMultiplier,
+        ease: primaryEase,
+        clearProps: specs?.tier === 'ultra' ? "" : "all"
       })
-      .fromTo(`.${styles.eyebrow}`, {
-        opacity: 0,
-        y: 20,
-      }, {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "expo.out",
-        clearProps: "all"
-      }, "-=1.1")
       .fromTo(chars, {
         opacity: 0,
-        y: 40,
+        y: 30,
       }, {
         opacity: 1,
         y: 0,
-        stagger: 0.008,
-        duration: 1.2,
-        ease: "expo.out",
-        clearProps: "all"
-      }, "-=1.0")
+        stagger: specs?.tier === 'ultra' ? 0.02 : specs?.tier === 'high' ? 0.01 : 0,
+        duration: (isMobile ? 1.2 : 2) * durationMultiplier,
+        ease: primaryEase,
+        clearProps: specs?.tier === 'ultra' ? "" : "all"
+      }, "-=2.8")
       .fromTo(`.${styles.heroDescription}`, {
         opacity: 0,
         y: 20,
@@ -109,7 +110,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         ease: "power3.out",
         clearProps: "all"
       }, "-=1.1")
-      .fromTo(`.${styles.heroActions} .proto-btn`, {
+      .fromTo(`.${styles.heroActions}`, {
         opacity: 0,
         y: 20,
         scale: 0.95
@@ -117,7 +118,6 @@ export default function Hero({ userId }: { userId?: string | null }) {
         opacity: 1,
         y: 0,
         scale: 1,
-        stagger: 0.15,
         duration: 1.2,
         ease: "expo.out",
         clearProps: "all"
@@ -130,7 +130,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         opacity: 1,
         y: 0,
         scale: 1,
-        stagger: 0.1,
+        stagger: specs?.tier === 'ultra' ? 0.1 : 0.05,
         duration: 1.4,
         ease: "expo.out",
         clearProps: "all"
@@ -170,28 +170,59 @@ export default function Hero({ userId }: { userId?: string | null }) {
       ease: "sine.inOut"
     });
 
-    // Magnetic Button Effect
+    // Cursor tracking for spotlight effect
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!container.current) return;
+      const rect = container.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      setCursorPos({ x, y });
+    };
+
+    container.current?.addEventListener("mousemove", handleMouseMove);
+
+    // Enhanced Magnetic Button Effect with Spring Physics
     const magneticBtns = container.current?.querySelectorAll(".proto-btn") as NodeListOf<HTMLElement>;
     magneticBtns.forEach(btn => {
+      btn.addEventListener("mouseenter", () => {
+        gsap.to(btn, {
+          scale: 1.05,
+          duration: 0.4,
+          ease: "power2.out"
+        });
+
+      });
+
       btn.addEventListener("mousemove", (e) => {
         const { left, top, width, height } = btn.getBoundingClientRect();
         const x = e.clientX - (left + width / 2);
         const y = e.clientY - (top + height / 2);
         gsap.to(btn, {
-          x: x * 0.3,
-          y: y * 0.3,
-          duration: 0.6,
-          ease: "power2.out"
+          x: x * 0.4,
+          y: y * 0.4,
+          duration: 0.5,
+          ease: "power3.out"
         });
       });
+
       btn.addEventListener("mouseleave", () => {
         gsap.to(btn, {
           x: 0,
           y: 0,
-          duration: 0.8,
-          ease: "elastic.out(1, 0.3)"
+          scale: 1,
+          duration: 1.2,
+          ease: "power3.out"
         });
       });
+    });
+
+    // Floating animation for hero badge
+    gsap.to(".hero-badge", {
+      y: -10,
+      duration: 2.5,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
     });
 
     return () => {
@@ -204,18 +235,26 @@ export default function Hero({ userId }: { userId?: string | null }) {
   return (
     <section id="hero" ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center w-full max-w-full overflow-x-hidden")}>
 
+      {/* Cursor-following Spotlight */}
+      <div
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300 opacity-0 hover:opacity-100"
+        style={{
+          background: `radial-gradient(circle 600px at ${cursorPos.x}% ${cursorPos.y}%, rgba(var(--primary), 0.15), transparent 40%)`,
+        }}
+      />
+
       {/* Mesh Gradient Overlay - Softened for Elegance */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.07),transparent)] pointer-events-none" />
 
       {/* Floating Particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full">
-        {[...Array(20)].map((_, i) => (
+        {particles.map((p, i) => (
           <div
             key={i}
             className="particle absolute w-1 h-1 bg-primary/20 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: p.left,
+              top: p.top,
             }}
           />
         ))}
@@ -223,78 +262,89 @@ export default function Hero({ userId }: { userId?: string | null }) {
 
       <div className={`${styles.container} relative z-10 text-center parallax-content`}>
 
-        {/* Elite Badge - Made responsive */}
-        <div className="hero-badge inline-flex flex-col sm:flex-row items-center gap-2 px-6 py-2 rounded-[2rem] border border-primary/20 bg-primary/5 backdrop-blur-xl mb-12 shadow-[0_10px_30px_hsl(var(--primary)/0.1)]">
-          <div className="flex -space-x-3 mb-2 sm:mb-0">
-            {[15, 22, 33, 44].map(id => (
-              <div key={id} className="w-8 h-8 rounded-full border-2 border-background overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-500">
-                <Image
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`}
-                  alt="Avatar"
-                  fill
-                  className="object-cover"
-                  sizes="32px"
-                  priority
-                />
-              </div>
-            ))}
+        {/* Social Proof & Badge Stack */}
+        <div className="flex flex-col items-center gap-6 mb-12">
+          {/* Badge */}
+          <div className="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-md shadow-[0_0_20px_rgba(var(--primary),0.1)]">
+            <Sparkles className="w-3 h-3 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/90">
+              The Cooperative Growth Protocol
+            </span>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/80 pl-0 sm:pl-2 border-l-0 sm:border-l border-white/10 ml-0 sm:ml-2">
-            <Trophy className="w-3 h-3 inline-block -mt-1 mr-1 text-primary" />
-            2.4k Elite Learners
-          </span>
+
+          {/* Social Proof Group */}
+          <div className="flex flex-col items-center gap-2 group cursor-default hero-badge">
+            <div className="flex -space-x-4 transition-transform duration-300 group-hover:scale-105">
+              {[
+                "https://randomuser.me/api/portraits/women/44.jpg",
+                "https://randomuser.me/api/portraits/men/32.jpg",
+                "https://randomuser.me/api/portraits/women/68.jpg",
+                "https://randomuser.me/api/portraits/men/86.jpg",
+                "https://randomuser.me/api/portraits/women/12.jpg"
+              ].map((src, i) => (
+                <div key={i} className="relative w-10 h-10 rounded-full border-2 border-background overflow-hidden relative grayscale group-hover:grayscale-0 transition-all duration-500 shadow-lg cursor-pointer" title="Elite Learner">
+                  <Image
+                    src={src}
+                    alt="Elite Learner"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground/80">
+              <div className="flex items-center gap-1">
+                <span className="text-foreground font-black">2.4k</span> Elite Learners
+              </div>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+              <div className="flex items-center gap-1 text-emerald-500 font-bold">
+                <span>★</span> Joined this week
+              </div>
+            </div>
+          </div>
         </div>
 
-        <span className={cn(styles.eyebrow, "hero-badge")}>
-          The Cooperative Growth Protocol
-        </span>
-
-        {/* Hero Title - Made responsive with word breaking */}
-        <h1 ref={titleRef} className={cn(styles.heroTitle, "mb-8 sm:mb-12 font-[Outfit] px-4 break-words text-4xl sm:text-6xl md:text-7xl leading-[1.1] sm:leading-[0.9]")}>
-          Share Your <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent italic drop-shadow-sm inline-block will-change-transform">Expertise.</span>
-          <br className="hidden sm:block" />
-          Master New <span className="text-foreground/40 font-black tracking-tight underline decoration-primary/30 decoration-wavy underline-offset-8 inline-block will-change-transform">Skills.</span>
+        {/* Hero Title - Maybach Typography */}
+        <h1 ref={titleRef} className={cn(styles.heroTitle, "mb-10 font-playfair font-medium px-4 break-words text-5xl sm:text-7xl md:text-8xl leading-[1.05] tracking-tight text-balance")}>
+          The Pinnacle of <br className="hidden sm:block" />
+          <span className="text-primary italic relative inline-block">
+            Collaborative Expertise.
+            <svg className="absolute w-full h-3 -bottom-1 left-0 text-primary opacity-30" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.00025 6.99997C2.00025 6.99997 102.5 1.49997 197.5 6.49997" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+          </span>
         </h1>
 
-        <p className={cn(styles.heroDescription, "text-balance max-w-2xl mx-auto font-medium text-lg mb-16 leading-relaxed text-muted-foreground/90 px-4")}>
-          SkillTrade is a premium ecosystem for collaborative growth. We bridge the gap between your unique talents and the expertise you seek, fostering a <span className="text-primary font-bold">community where knowledge is the only currency.</span>
+        <p className={cn(styles.heroDescription, "text-balance max-w-2xl mx-auto font-medium text-lg sm:text-xl mb-14 sm:mb-24 leading-relaxed text-muted-foreground/90 tracking-wide px-4")}>
+          Share Your Expertise. Master New Skills. SkillTrade is a premium ecosystem for collaborative growth. We bridge the gap between your unique talents and the expertise you seek, fostering a community where knowledge is the only currency.
         </p>
 
-        <div className={cn(styles.heroActions, "flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 relative px-4 w-full")}>
+        <div className={cn(styles.heroActions, "flex flex-col sm:flex-row items-center justify-center gap-6 mb-20 sm:mb-32 relative px-4 w-full")}>
           <div className="absolute -inset-4 bg-primary/5 blur-3xl rounded-full -z-10 animate-pulse" />
           {userId ? (
             <PostProposalModal
-              buttonText="Initialize New Sync"
-              triggerClassName="proto-btn h-20 px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_hsl(var(--primary)/0.4)] hover:scale-110 active:scale-95 transition-all border-none relative overflow-hidden group w-full sm:w-auto break-words whitespace-normal text-center"
+              buttonText="Initiate Strategic Synergy"
+              triggerClassName={cn(styles.glassyBtn, styles.silverHub, "h-16 sm:h-20 px-10 sm:px-16 rounded-full text-xs sm:text-sm font-playfair italic font-medium tracking-tight shadow-2xl hover:scale-105 active:scale-98 transition-all duration-700 border-none relative overflow-hidden group w-full sm:w-auto")}
             />
           ) : (
-            <Link href="/dashboard" className="proto-btn w-full sm:w-auto">
-              <Button size="lg" className="h-20 w-full sm:w-auto px-12 rounded-[2rem] text-xs font-black uppercase tracking-widest bg-primary text-white shadow-[0_20px_50px_hsl(var(--primary)/0.4)] hover:scale-110 active:scale-95 transition-all group border-none relative overflow-hidden whitespace-normal break-words text-center">
-                <span className="relative z-10 flex items-center justify-center">
-                  Access Explorer
-                  <Zap className="ml-3 w-4 h-4 group-hover:fill-current transition-all shrink-0" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            <Link href="/dashboard" className="w-full sm:w-auto">
+              <Button size="lg" className={cn(styles.glassyBtn, "h-16 sm:h-20 w-full sm:w-auto px-10 sm:px-16 rounded-full text-xs sm:text-sm font-playfair italic font-medium tracking-tight shadow-2xl hover:scale-105 active:scale-98 transition-all duration-700 group border-none relative overflow-hidden")}>
+                Join the Elite Collective
               </Button>
             </Link>
           )}
         </div>
 
-        {/* Dynamic Stats Grid - Optimized for Mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto border-t border-white/5 pt-20 px-4">
+        {/* Maybach Stats - Faded Glass Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto px-4 mt-20">
           {[
-            { label: "Community Swaps", value: "12,402", sub: "SYNCED", color: "from-blue-500/20" },
-            { label: "Vetted Mentors", value: "840+", sub: "ACTIVE", color: "from-purple-500/20" },
-            { label: "Learning Paths", value: "154", sub: "UNIQUE", color: "from-emerald-500/20" },
-            { label: "Global Trust", value: "4.95", sub: "RATING", color: "from-amber-500/20" }
+            { label: "Elite Members", value: "2.4k", sub: "VETTED" },
+            { label: "Active Syncs", value: "12,402", sub: "COMPLETE" },
+            { label: "Global Trust", value: "4.98", sub: "RATING" },
+            { label: "Market Status", value: "Locked", sub: "STABLE" }
           ].map((stat, i) => (
-            <div key={i} className="stat-card relative group p-px rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-white/10 to-transparent hover:from-primary/50 transition-all duration-500">
-              <div className={cn("bg-background/40 backdrop-blur-2xl rounded-[1.9rem] sm:rounded-[2.4rem] p-6 sm:p-10 h-full flex flex-col items-center justify-center group-hover:bg-background/20 transition-all duration-700 relative overflow-hidden")}>
-                <div className={cn("absolute inset-0 bg-gradient-to-br to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700", stat.color)} />
-                <span className="relative z-10 text-[8px] sm:text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3 sm:mb-4 opacity-60 group-hover:opacity-100">{stat.label}</span>
-                <span className="relative z-10 text-3xl sm:text-4xl font-black text-foreground tracking-tighter mb-2 italic">{stat.value}</span>
-                <div className="relative z-10 px-3 py-1 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest border border-primary/20">{stat.sub}</div>
-              </div>
+            <div key={i} className="stat-card flex flex-col items-center gap-2 bg-primary/5 hover:bg-primary/10 backdrop-blur-sm border border-white/5 p-6 rounded-2xl transition-all duration-500 hover:scale-105 cursor-default group shadow-lg shadow-black/5">
+              <span className="text-[9px] uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary transition-colors font-medium">{stat.label}</span>
+              <span className="text-3xl font-playfair italic text-foreground leading-none">{stat.value}</span>
+              <span className="text-[8px] tracking-[0.2em] text-muted-foreground/60">{stat.sub}</span>
             </div>
           ))}
         </div>
@@ -308,16 +358,16 @@ export default function Hero({ userId }: { userId?: string | null }) {
           </div>
           <div className={styles.marqueeContainer}>
             <div className={styles.marqueeContent}>
-              {["GSAP", "NEXT.JS", "PRISMA", "SUPABASE", "SHADCN", "CLERK", "RESEND", "TAILWIND"].map(brand => (
-                <div key={brand} className="flex items-center gap-8 mx-12">
-                  <span className="text-4xl font-black tracking-tighter text-foreground/20 italic hover:text-primary transition-colors cursor-default whitespace-nowrap">{brand}</span>
-                  <Sparkles className="w-5 h-5 text-primary/20" />
+              {["EXCLUSIVITY", "CALM", "CONFIDENCE", "POWER", "REFINEMENT", "MASTERY"].map(brand => (
+                <div key={brand} className="flex items-center gap-12 mx-16">
+                  <span className="text-3xl font-playfair italic font-light tracking-[0.2em] text-foreground/20 hover:text-primary/40 transition-colors duration-1000 cursor-default whitespace-nowrap">{brand}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/10" />
                 </div>
               ))}
-              {["GSAP", "NEXT.JS", "PRISMA", "SUPABASE", "SHADCN", "CLERK", "RESEND", "TAILWIND"].map(brand => (
-                <div key={`${brand}-dup`} className="flex items-center gap-8 mx-12">
-                  <span className="text-4xl font-black tracking-tighter text-foreground/20 italic hover:text-primary transition-colors cursor-default whitespace-nowrap">{brand}</span>
-                  <Sparkles className="w-5 h-5 text-primary/20" />
+              {["EXCLUSIVITY", "CALM", "CONFIDENCE", "POWER", "REFINEMENT", "MASTERY"].map(brand => (
+                <div key={`${brand}-dup`} className="flex items-center gap-12 mx-16">
+                  <span className="text-3xl font-playfair italic font-light tracking-[0.2em] text-foreground/20 hover:text-primary/40 transition-colors duration-1000 cursor-default whitespace-nowrap">{brand}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/10" />
                 </div>
               ))}
             </div>
@@ -328,7 +378,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 animate-pulse-slow opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer group" onClick={() => {
           window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
         }}>
-          <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary group-hover:tracking-[0.6em] transition-all">Slide to Explore</span>
+          <span className="text-[9px] font-medium uppercase tracking-[0.6em] text-primary/40 group-hover:text-primary/80 transition-all duration-700">Ascend</span>
           <div className="w-[1px] h-12 bg-gradient-to-b from-primary to-transparent" />
         </div>
       </div>

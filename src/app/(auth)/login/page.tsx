@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { authSchema } from "@/lib/validations/auth";
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useToast } from "@/components/ui/use-toast";
 
+
 export default function LoginPage() {
   const router = useRouter();
   const container = useRef<HTMLDivElement>(null);
@@ -32,7 +34,9 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const { toast } = useToast();
+
 
   useGSAP(() => {
     const tl = gsap.timeline();
@@ -80,6 +84,15 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Zod Validation
+    const result = authSchema.safeParse({ email, password });
+    if (!result.success) {
+      const firstError = (result.error as any).errors?.[0]?.message || "Invalid input parameters";
+      setError(firstError);
+      setLoading(false);
+      return;
+    }
 
     const supabase = getSupabaseBrowserClient();
 
@@ -143,6 +156,7 @@ export default function LoginPage() {
       }, 100);
 
     } catch (err: any) {
+      console.error("Auth error:", err);
       let errorMessage = err.message ?? "Authentication failed. Please check your credentials.";
 
       if (errorMessage.toLowerCase().includes("email not confirmed") || errorMessage.toLowerCase().includes("email not verified")) {

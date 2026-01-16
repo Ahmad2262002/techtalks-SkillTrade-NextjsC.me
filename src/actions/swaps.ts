@@ -79,17 +79,16 @@ export async function createSwapFromApplication(applicationId: string) {
       to: student.email,
       subject: `Sync Started: ${application.proposal.title}`,
       html: `
-        <h2 style="color: #111827; margin-top: 0;">It's a Match! 🎭</h2>
-        <p>Congratulations! Your request to learn <strong>${application.proposal.title}</strong> has been accepted by <strong>${teacher?.name}</strong>.</p>
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 12px; margin: 20px 0;">
-          <p style="margin: 0; font-weight: 600; color: #4b5563;">Next Steps:</p>
-          <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #4b5563;">
-            <li>Navigate to your dashboard</li>
-            <li>Open the "Syncs" tab to find your new chat</li>
-            <li>Say hello and coordinate your skill exchange!</li>
+        <p style="font-size: 18px; color: #1e293b; font-weight: 600;">It's a match! 🎭</p>
+        <p>Your request to learn <strong>${application.proposal.title}</strong> has been accepted by <strong>${teacher?.name}</strong>.</p>
+        <div style="background-color: #f1f5f9; padding: 24px; border-radius: 12px; margin: 24px 0;">
+          <p style="margin: 0 0 12px 0; font-weight: 700; color: #1e293b;">Next Steps:</p>
+          <ul style="margin: 0; padding-left: 20px; color: #475569; line-height: 1.6;">
+            <li>Go to your dashboard and find the "Syncs" tab.</li>
+            <li>Connect with your partner via the secure chat.</li>
+            <li>Coordinate your first skill exchange session!</li>
           </ul>
         </div>
-        <p><a href="${appUrl}/dashboard?tab=active-swaps" style="color: #6366f1; font-weight: bold; text-decoration: underline;">View your active syncs</a></p>
       `
     });
   }
@@ -119,6 +118,13 @@ export async function listMySwaps() {
       teacher: true,
       student: true,
       reviews: true,
+      messages: {
+        select: {
+          id: true,
+          isRead: true,
+          receiverId: true,
+        }
+      },
     },
     orderBy: { startedAt: "desc" },
   });
@@ -174,7 +180,7 @@ export async function updateSwapProgress(swapId: string) {
         userId: partnerId,
         type: "SWAP_COMPLETED",
         message: `Congratulations! Your sync for "${swap.proposal.title}" is now COMPLETE.`,
-        link: `/dashboard?tab=history`,
+        link: `/dashboard?tab=active-swaps`,
       }
     });
 
@@ -183,10 +189,11 @@ export async function updateSwapProgress(swapId: string) {
         to: partner.email,
         subject: `Sync Completed: ${swap.proposal.title}`,
         html: `
-          <h2 style="color: #111827; margin-top: 0;">Mission Accomplished! 🏆</h2>
-          <p>Fantastic news! Your skill exchange for <strong>${swap.proposal.title}</strong> has been marked as complete by both parties.</p>
-          <p>We hope you had a great experience learning and sharing. Don't forget to leave a review for your partner if you haven't already!</p>
-          <p><a href="${appUrl}/dashboard?tab=history" style="color: #6366f1; font-weight: bold; text-decoration: underline;">See your history & leave a review</a></p>
+        <p style="font-size: 18px; color: #1e293b; font-weight: 600;">Mission accomplished! 🏆</p>
+        <p>The skill exchange for <strong>${swap.proposal.title}</strong> is now complete.</p>
+        <div style="background-color: #f0fdf4; padding: 24px; border-radius: 12px; border: 1px solid #dcfce7; margin: 24px 0;">
+          <p style="margin: 0; color: #166534; line-height: 1.6;">We hope this was a valuable growth experience. If you haven't already, please leave a review for your partner to help the community thrive.</p>
+        </div>
         `
       });
     }
@@ -246,10 +253,11 @@ export async function cancelSwap(swapId: string) {
       to: partner.email,
       subject: `Sync Cancelled: ${swap.proposal.title}`,
       html: `
-        <p>Hello,</p>
+        <p style="font-size: 18px; color: #1e293b; font-weight: 600;">Sync update</p>
         <p>The sync for <strong>${swap.proposal.title}</strong> was recently cancelled by your partner.</p>
-        <p>The proposal has been re-opened, and you can continue browsing for other exchange opportunities.</p>
-        <p><a href="${appUrl}/dashboard?tab=browse" style="color: #6366f1; font-weight: bold; text-decoration: underline;">Browse more proposals</a></p>
+        <div style="background-color: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
+          <p style="margin: 0; color: #475569; line-height: 1.6;">The proposal has been re-opened for new connections. You can continue exploring other exchange opportunities in the browser.</p>
+        </div>
       `
     });
   }

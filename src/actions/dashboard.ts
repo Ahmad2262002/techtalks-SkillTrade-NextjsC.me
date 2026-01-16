@@ -97,6 +97,13 @@ export async function getMySwapsAndInteractions() {
       teacher: true,
       student: true,
       reviews: true,
+      messages: {
+        select: {
+          id: true,
+          isRead: true,
+          receiverId: true,
+        }
+      },
     },
     orderBy: { startedAt: "desc" },
     take: 20
@@ -124,9 +131,9 @@ export async function getMySwapsAndInteractions() {
     }
   });
 
-  const receivedApplications = myProposals.flatMap(p =>
-    p.applications.map(app => ({ ...app, proposal: p }))
-  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  const receivedApplications = myProposals.flatMap((p: any) =>
+    p.applications.map((app: any) => ({ ...app, proposal: p }))
+  ).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 20);
 
   return { swaps, receivedApplications };
@@ -156,31 +163,41 @@ export async function getDashboardOverview() {
   };
 }
 
-export const getLeaderboard = unstable_cache(
+const getCachedLeaderboardV5 = unstable_cache(
   async () => {
     // Fetch users who have completed swaps or received reviews
-    // For a better leaderboard, we could query for users with most activities first
-    const users = await prisma.user.findMany({
+    return prisma.user.findMany({
       take: 50,
       select: {
         id: true,
         name: true,
-        avatarUrl: true,
+        // avatarUrl EXCLUDED to avoid Base64 bloat
         industry: true,
       }
     });
-
-    const userIds = users.map(u => u.id);
-    const statsMap = await getBatchReputationStats(userIds);
-
-    const leaderboard = users.map(user => ({
-      ...user,
-      reputation: statsMap[user.id],
-    })).sort((a, b) => (b.reputation?.reputationPoints || 0) - (a.reputation?.reputationPoints || 0))
-      .slice(0, 10); // Return top 10
-
-    return leaderboard;
   },
-  ['dashboard_leaderboard'], // Cache key
-  { revalidate: 60, tags: ['leaderboard'] } // Revalidate every 60 seconds
+  ['v5-dashboard-leaderboard'],
+  { revalidate: 60, tags: ['leaderboard'] }
 );
+
+export async function getLeaderboard() {
+  const users = await getCachedLeaderboardV5();
+  const userIds = users.map((u: any) => u.id);
+
+  const [statsMap, userAvatars] = await Promise.all([
+    getBatchReputationStats(userIds),
+    prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, avatarUrl: true }
+    })
+  ]);
+
+  const avatarMap = Object.fromEntries(userAvatars.map((u: any) => [u.id, u.avatarUrl]));
+
+  return users.map((user: any) => ({
+    ...user,
+    reputation: statsMap[user.id],
+    avatarUrl: avatarMap[user.id]
+  })).sort((a: any, b: any) => (b.reputation?.reputationPoints || 0) - (a.reputation?.reputationPoints || 0))
+    .slice(0, 10); // Return top 10
+}

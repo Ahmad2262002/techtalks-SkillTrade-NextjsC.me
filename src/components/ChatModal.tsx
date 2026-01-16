@@ -16,6 +16,7 @@ import { MessageSquare, Send, Loader2, Paperclip, Image as ImageIcon, File as Fi
 import { getSwapMessages, sendMessage, markMessagesAsRead } from "@/actions/messages";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useAudioContext } from "@/context/AudioContext";
 
 interface Message {
     id: string;
@@ -47,8 +48,8 @@ const MessageItem = React.memo(({ msg, isMe, showAvatar, onViewImage }: { msg: M
             <div className={cn(
                 "px-5 py-3 rounded-[1.5rem] text-sm font-medium shadow-sm transition-all group-hover:shadow-md overflow-hidden",
                 isMe
-                    ? "bg-primary text-white rounded-tr-none shadow-primary/10"
-                    : "bg-muted text-foreground rounded-tl-none border border-border/50"
+                    ? "bg-primary text-white rounded-2xl rounded-tr-sm shadow-md shadow-primary/20"
+                    : "bg-muted/50 backdrop-blur-sm text-foreground rounded-2xl rounded-tl-sm border border-border/40 shadow-sm"
             )}>
                 {msg.mediaUrl && (
                     <div className="mb-2 max-w-full rounded-xl overflow-hidden bg-black/5">
@@ -119,11 +120,25 @@ export function ChatModal({
     const [viewingImage, setViewingImage] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { playSound } = useAudioContext();
+    const lastMessageCount = useRef(0);
 
     const fetchMessages = async () => {
         try {
             const data = await getSwapMessages(swapId);
-            setMessages(data as unknown as Message[]);
+            const newMessages = data as unknown as Message[];
+
+            // Check for new messages from others to play sound
+            if (isOpen && newMessages.length > lastMessageCount.current) {
+                const lastNew = newMessages[newMessages.length - 1];
+                if (lastNew.senderId !== currentUserId && lastMessageCount.current > 0) {
+                    playSound('chat-receive');
+                }
+            }
+
+            lastMessageCount.current = newMessages.length;
+            setMessages(newMessages);
+
             // Mark as read when fetching if any are unread for us
             const hasUnread = data.some((m: any) => m.receiverId === currentUserId && !m.isRead);
             if (hasUnread) {
@@ -193,6 +208,7 @@ export function ChatModal({
                 mediaUrl: attachment?.url,
                 mediaType: attachment?.type
             });
+            playSound('chat-send');
             setNewMessage("");
             setAttachment(null);
             await fetchMessages();
@@ -213,7 +229,7 @@ export function ChatModal({
                         </Button>
                     </div>
                 </DialogTrigger>
-                <DialogContent className="chat-modal-content sm:max-w-[450px] max-sm:w-screen max-sm:h-screen max-sm:max-h-screen p-0 overflow-hidden sm:rounded-[3.2rem] max-sm:rounded-none border-none shadow-2xl haptic-touch">
+                <DialogContent hideDefaultClose className="chat-modal-content sm:max-w-[450px] max-sm:w-screen max-sm:h-screen max-sm:max-h-screen p-0 overflow-hidden sm:rounded-[3.2rem] max-sm:rounded-none border-none shadow-2xl haptic-touch">
                     <div className="flex flex-col h-[600px] max-sm:h-screen bg-background">
                         <DialogHeader className="p-6 pb-4 border-b border-border/50 bg-muted/20 backdrop-blur-xl">
                             <div className="flex items-center justify-between w-full">
@@ -229,8 +245,13 @@ export function ChatModal({
                                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Online now</p>
                                     </div>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full h-10 w-10 hover:bg-foreground/10 active:scale-95 transition-all text-muted-foreground hover:text-foreground">
-                                    <X className="w-5 h-5 transition-transform group-hover:rotate-90" />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setIsOpen(false)}
+                                    className="h-7 w-7 rounded-full bg-zinc-200/50 dark:bg-zinc-800/50 hover:bg-zinc-300 dark:hover:bg-zinc-700 backdrop-blur-md border border-black/5 text-foreground/60 hover:text-foreground transition-all duration-300 active:scale-95 shadow-sm haptic-touch"
+                                >
+                                    <X className="w-3.5 h-3.5 font-bold" />
                                 </Button>
                             </div>
                         </DialogHeader>
@@ -270,7 +291,7 @@ export function ChatModal({
                                     </Button>
                                 </div>
                             )}
-                            <form onSubmit={handleSendMessage} className="flex gap-2 bg-background p-1.5 rounded-2xl border-2 border-border focus-within:border-primary transition-all shadow-sm">
+                            <form onSubmit={handleSendMessage} className="flex gap-2 bg-background/50 backdrop-blur-xl p-2 rounded-[1.5rem] border border-white/10 focus-within:border-primary/50 transition-all shadow-lg ring-1 ring-black/5">
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -284,16 +305,16 @@ export function ChatModal({
                                     size="icon"
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={loading}
-                                    className="h-10 w-10 shrink-0 rounded-xl hover:bg-primary/10 text-primary transition-all"
+                                    className="h-10 w-10 shrink-0 rounded-2xl hover:bg-primary/10 text-primary transition-all"
                                 >
                                     <Paperclip className="w-5 h-5" />
                                 </Button>
                                 <Input
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder="Message your partner..."
+                                    placeholder="Message..."
                                     disabled={loading}
-                                    className="border-none focus-visible:ring-0 font-bold bg-transparent"
+                                    className="border-none focus-visible:ring-0 font-bold bg-transparent px-2 placeholder:text-muted-foreground/50"
                                 />
                                 <Button
                                     type="submit"
