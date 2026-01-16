@@ -270,9 +270,9 @@ export const getBatchReputationStats = cache(async (userIds: string[]): Promise<
   const statsMap: Record<string, ReputationStats> = {};
 
   for (const userId of uniqueUserIds) {
-    const userSwaps = swaps.filter(s => s.teacherId === userId || s.studentId === userId).length;
-    const userReviews = reviews.filter(r => r.receiverId === userId);
-    const userEndorsements = userSkills.filter(us => us.userId === userId).length;
+    const userSwaps = swaps.filter((s: { teacherId: string; studentId: string }) => s.teacherId === userId || s.studentId === userId).length;
+    const userReviews = reviews.filter((r: { receiverId: string; rating: number }) => r.receiverId === userId);
+    const userEndorsements = userSkills.filter((us: { userId: string }) => us.userId === userId).length;
 
     statsMap[userId] = calculateReputation(userSwaps, userReviews, userEndorsements);
   }

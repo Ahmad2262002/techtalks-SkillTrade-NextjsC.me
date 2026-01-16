@@ -1,15 +1,15 @@
 "use client";
 
-import { useTheme, CinematicTheme } from "@/context/ThemeContext";
+import { useTheme, Theme } from "@/context/ThemeContext";
 import { useAudio } from "@/hooks/use-audio";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ATMOSPHERE_NAMES: Record<CinematicTheme, string> = {
-    maybach: "MAYBACH NOIR",
-    fbi: "INVESTIGATION MODE",
-    neon: "NEON SYNDICATE",
-    light: "EXCLUSIVE LOUNGE"
+const ATMOSPHERE_NAMES: Record<Theme, string> = {
+    programmer: "TERMINAL PROTOCOL",
+    "elite-light": "EXCLUSIVE LOUNGE",
+    "elite-dark": "MAYBACH NOIR",
+    cybersecurity: "INVESTIGATION MODE"
 };
 
 export function AtmosphereTransition() {
