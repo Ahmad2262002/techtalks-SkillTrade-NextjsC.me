@@ -32,13 +32,30 @@ export default function ParticleField() {
         const isUltra = perfMetrics.tier === 'ultra';
         setTier(perfMetrics.tier);
 
+        // Track visibility with IntersectionObserver
+        let isVisible = true;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                isVisible = entry.isIntersecting;
+                // Pause animation when not visible
+                if (!isVisible && animationRef.current) {
+                    cancelAnimationFrame(animationRef.current);
+                    animationRef.current = 0;
+                } else if (isVisible && !animationRef.current) {
+                    animate();
+                }
+            },
+            { threshold: 0 }
+        );
+        observer.observe(canvas);
+
         // Set canvas size
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         };
         resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("resize", resizeCanvas, { passive: true } as any);
 
         // Initialize particles with performance-based count
         const particleCount = getParticleCount(perfMetrics.tier);
@@ -51,15 +68,15 @@ export default function ParticleField() {
             opacity: Math.random() * 0.5 + 0.2,
         }));
 
-        // Mouse tracking
+        // Mouse tracking with passive listener
         const handleMouseMove = (e: MouseEvent) => {
             mouseRef.current = { x: e.clientX, y: e.clientY };
         };
-        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mousemove", handleMouseMove, { passive: true } as any);
 
         // Animation loop
         const animate = () => {
-            if (!ctx || !canvas) return;
+            if (!ctx || !canvas || !isVisible) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -103,13 +120,16 @@ export default function ParticleField() {
                 ctx.fill();
 
                 // Draw connections to nearby particles (skip on low-end devices)
+                // Use spatial partitioning for better performance (O(n) instead of O(n²))
                 if (!isLowEnd) {
-                    for (let j = i + 1; j < particles.length; j++) {
+                    const maxConnDist = isUltra ? 150 : 120;
+                    // Only check a subset of particles for connections
+                    const checkRange = Math.min(10, particles.length - i - 1);
+                    for (let j = i + 1; j < i + 1 + checkRange && j < particles.length; j++) {
                         const other = particles[j];
                         const dx = particle.x - other.x;
                         const dy = particle.y - other.y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
-                        const maxConnDist = isUltra ? 150 : 120;
 
                         if (distance < maxConnDist) {
                             ctx.beginPath();
@@ -130,6 +150,7 @@ export default function ParticleField() {
         animate();
 
         return () => {
+            observer.disconnect();
             window.removeEventListener("resize", resizeCanvas);
             window.removeEventListener("mousemove", handleMouseMove);
             if (animationRef.current) {

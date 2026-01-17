@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,17 +26,20 @@ export default function Hero({ userId }: { userId?: string | null }) {
 
   const [particles, setParticles] = useState<{ left: string; top: string }[]>([]);
 
-  useGSAP(() => {
-    // Dynamic Particle Count based on Hardware Specs
-    const particleCount = specs?.tier === 'ultra' ? 60 :
-      specs?.tier === 'high' ? 40 :
-        specs?.tier === 'medium' ? 20 : 10;
+  // Generate particles only once on mount to avoid double-render cycle
+  useEffect(() => {
+    if (!specs?.tier) return;
+    const particleCount = specs.tier === 'ultra' ? 40 :
+      specs.tier === 'high' ? 25 :
+        specs.tier === 'medium' ? 15 : 5;
 
     setParticles([...Array(particleCount)].map(() => ({
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
     })));
+  }, [specs?.tier]);
 
+  useGSAP(() => {
     const originalHTML = titleRef.current?.innerHTML;
 
     const splitTextWithLines = (selector: string): void => {
@@ -70,8 +73,12 @@ export default function Hero({ userId }: { userId?: string | null }) {
     const primaryEase = "power4.out";
     const durationMultiplier = specs?.tier === 'ultra' ? 1.6 : specs?.tier === 'high' ? 1.4 : 1.2;
     const isMobile = window.innerWidth < 768;
+    const isUltra = specs?.tier === 'ultra';
 
-    splitTextWithLines(`.${styles.heroTitle}`);
+    if (isUltra) {
+      splitTextWithLines(`.${styles.heroTitle}`);
+    }
+
     const chars = gsap.utils.toArray(".char");
     const introTl = gsap.timeline();
 
@@ -89,7 +96,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         ease: primaryEase,
         clearProps: specs?.tier === 'ultra' ? "" : "all"
       })
-      .fromTo(chars, {
+      .fromTo(chars.length > 0 ? chars : `.${styles.heroTitle}`, {
         opacity: 0,
         y: 30,
       }, {
@@ -143,23 +150,31 @@ export default function Hero({ userId }: { userId?: string | null }) {
         y: 0,
         duration: 1.2,
         ease: "expo.out",
-        clearProps: "all"
+        clearProps: "all",
+        force3D: true
       }, "-=1.2");
 
-    // Scroll-based parallax
+    // Optimize GSAP ticker for 60fps target
+    gsap.ticker.fps(60);
+    gsap.ticker.lagSmoothing(1000, 16);
+
+    // Scroll-based parallax (Optimized)
     gsap.to(".parallax-content", {
       scrollTrigger: {
         trigger: container.current,
         start: "top top",
         end: "bottom top",
-        scrub: true
+        scrub: true,
+        fastScrollEnd: true,
+        preventOverlaps: true
       },
       y: 150,
       opacity: 0.5,
-      ease: "none"
+      ease: "none",
+      force3D: true
     });
 
-    // Floating particles
+    // Floating particles (Optimized)
     gsap.to(".particle", {
       y: "random(-100, 100)",
       x: "random(-100, 100)",
@@ -167,7 +182,8 @@ export default function Hero({ userId }: { userId?: string | null }) {
       duration: "random(15, 25)",
       repeat: -1,
       yoyo: true,
-      ease: "sine.inOut"
+      ease: "sine.inOut",
+      force3D: true
     });
 
     // Cursor tracking for spotlight effect
@@ -251,10 +267,11 @@ export default function Hero({ userId }: { userId?: string | null }) {
         {particles.map((p, i) => (
           <div
             key={i}
-            className="particle absolute w-1 h-1 bg-primary/20 rounded-full"
+            className="particle absolute w-1 h-1 bg-primary/20 rounded-full will-change-transform"
             style={{
               left: p.left,
               top: p.top,
+              willChange: "transform"
             }}
           />
         ))}
@@ -288,6 +305,8 @@ export default function Hero({ userId }: { userId?: string | null }) {
                     alt="Elite Learner"
                     fill
                     className="object-cover"
+                    sizes="40px"
+                    loading="eager"
                   />
                 </div>
               ))}

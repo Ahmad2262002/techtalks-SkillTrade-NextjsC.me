@@ -25,13 +25,15 @@ interface ProposalCardProps {
   isOwner?: boolean;
   onDelete?: (id: string) => void;
   className?: string;
+  priority?: boolean;
 }
 
 export function ProposalCard({
   proposal,
   isOwner = false,
   onDelete,
-  className
+  className,
+  priority = false
 }: ProposalCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -159,6 +161,7 @@ export function ProposalCard({
             src={proposal.imageUrl}
             alt={proposal.title}
             fill
+            priority={priority}
             className="object-cover transition-transform duration-1000 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />

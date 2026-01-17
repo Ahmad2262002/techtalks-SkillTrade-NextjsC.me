@@ -34,6 +34,9 @@ export function detectPerformanceTier(): PerformanceMetrics {
     // Get CPU cores
     const hardwareConcurrency = navigator.hardwareConcurrency || 4;
 
+    // Detect Brave browser
+    const isBrave = !!(navigator as any).brave && typeof (navigator as any).brave.isBrave === 'function';
+
     // Detect GPU
     let gpu = 'unknown';
     try {
@@ -57,14 +60,28 @@ export function detectPerformanceTier(): PerformanceMetrics {
     const isDiscreteGPU = /NVIDIA|AMD|Radeon|GeForce|RTX/i.test(gpu);
     const isHighEndSilicon = /Apple M[1-9]/i.test(gpu);
 
-    if ((hardwareConcurrency >= 8 && isDiscreteGPU) || isHighEndSilicon) {
-        tier = 'ultra';
-    } else if (hardwareConcurrency >= 6 || isDiscreteGPU || deviceMemory >= 8) {
-        tier = 'high';
-    } else if (hardwareConcurrency >= 4) {
-        tier = 'medium';
+    // Brave browser may have shields that affect performance detection
+    // Use more conservative tier if Brave is detected
+    if (isBrave) {
+        if ((hardwareConcurrency >= 8 && deviceMemory >= 8) || isHighEndSilicon) {
+            tier = 'high'; // Cap at high for Brave
+        } else if (hardwareConcurrency >= 6 || deviceMemory >= 8) {
+            tier = 'medium';
+        } else if (hardwareConcurrency >= 4) {
+            tier = 'medium';
+        } else {
+            tier = 'low';
+        }
     } else {
-        tier = 'low';
+        if ((hardwareConcurrency >= 8 && isDiscreteGPU) || isHighEndSilicon) {
+            tier = 'ultra';
+        } else if (hardwareConcurrency >= 6 || isDiscreteGPU || deviceMemory >= 8) {
+            tier = 'high';
+        } else if (hardwareConcurrency >= 4) {
+            tier = 'medium';
+        } else {
+            tier = 'low';
+        }
     }
 
     // Override to low if reduced motion is preferred
@@ -88,15 +105,15 @@ export function detectPerformanceTier(): PerformanceMetrics {
 export function getParticleCount(tier: PerformanceTier): number {
     switch (tier) {
         case 'ultra':
-            return 100;
+            return 50; // Reduced from 100
         case 'high':
-            return 60;
+            return 30; // Reduced from 60
         case 'medium':
-            return 30;
+            return 15; // Reduced from 30
         case 'low':
-            return 15;
+            return 8;  // Reduced from 15
         default:
-            return 30;
+            return 15;
     }
 }
 

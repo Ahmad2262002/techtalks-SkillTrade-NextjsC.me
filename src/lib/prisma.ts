@@ -6,6 +6,10 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const createPrismaClient = () => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("🛠️  Creating new Prisma client instance");
+  }
+
   const basePrisma = new PrismaClient({
     log:
       process.env.NODE_ENV === "development"

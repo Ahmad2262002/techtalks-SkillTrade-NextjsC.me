@@ -35,6 +35,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import NavSearchButton from "../../../components/features/search/NavSearchButton";
 import { cn } from "@/lib/utils";
+import { useAudioContext } from "@/context/AudioContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -128,6 +129,12 @@ export default function DashboardClientContent({
 
   const router = useRouter();
   const { toast } = useToast();
+  const { playSound } = useAudioContext();
+
+  const unreadMessagesCount = swaps?.reduce((acc, swap) => {
+    const swapUnread = (swap as any).messages?.filter((m: any) => !m.isRead && String(m.senderId) !== String(overview.user?.id)).length || 0;
+    return acc + swapUnread;
+  }, 0) || 0;
 
   const [localMyProposals, setLocalMyProposals] = useState<Proposal[]>(myProposals);
 
@@ -148,11 +155,15 @@ export default function DashboardClientContent({
   }, [activeTab]);
 
   const handleTabClick = (tabId: string) => {
-    // Prevent unnecessary loading trigger if already on the tab
-    if (tabId === activeTab) return;
-
-    // Always trigger loading state for better UX, even on same-tab click
+    // Always trigger loading state for better UX
     setIsNavigating(true);
+
+    // If clicking the current tab, we need a manual timeout to clear the state
+    // since the prop 'activeTab' won't change to trigger the clearing useEffect
+    if (tabId === activeTab) {
+      setTimeout(() => setIsNavigating(false), 800);
+      return;
+    }
 
     // Mobile: Re-scroll to top
     if (window.innerWidth < 1024) {
@@ -345,6 +356,7 @@ export default function DashboardClientContent({
 
   const handleSignOut = async () => {
     setLoggingOut(true);
+    playSound('logout');
     gsap.to(container.current, {
       opacity: 0,
       scale: 0.98,
@@ -398,6 +410,7 @@ export default function DashboardClientContent({
               icon={<MessageSquare className="w-5 h-5" />}
               label="Active Swaps"
               activeTab={activeTab}
+              onClick={() => handleTabClick("active-swaps")}
             />
             <NavLink href="/dashboard?tab=leaderboard" active={activeTab === "leaderboard"} icon={<Trophy className="w-5 h-5" />} label="Leaderboard" activeTab={activeTab} onClick={() => handleTabClick("leaderboard")} />
           </nav>
@@ -504,11 +517,11 @@ export default function DashboardClientContent({
       {/* Mobile Bottom Navigation - Floating iOS Dock UI (Teleported to Body for Stickiness) */}
       {mounted && createPortal(
         <div className={cn(
-          "mobile-dock-container fixed bottom-10 left-0 right-0 z-[40] md:hidden flex justify-center px-6 transition-all duration-700 pointer-events-none",
-          isModalActive && "translate-y-32 opacity-0"
+          "fixed left-0 right-0 z-[40] md:hidden flex justify-center px-4 transition-all duration-700 pointer-events-none",
+          isModalActive ? "translate-y-32 opacity-0" : "bottom-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
         )}>
-          <div className="relative flex justify-between items-center h-[80px] px-8 w-full max-w-[440px] bg-background/30 backdrop-blur-[50px] saturate-[250%] rounded-[4rem] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.7)] ring-1 ring-white/10 pointer-events-auto transition-all duration-700 hover:scale-[1.02] active:scale-[0.98]">
-            <div className="absolute inset-0 rounded-[4rem] bg-gradient-to-b from-white/20 to-transparent pointer-events-none opacity-50" />
+          <div className="relative flex justify-between items-center h-[72px] px-8 w-full max-w-[400px] bg-background/60 backdrop-blur-xl saturate-[160%] rounded-[2.5rem] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] pointer-events-auto transition-all duration-500 hover:scale-[1.01]">
+            <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-b from-white/5 to-transparent pointer-events-none opacity-20" />
             {[
               { id: "browse", icon: Layers, label: "Browse" },
               { id: "my-proposals", icon: Zap, label: "Me" },
@@ -533,6 +546,7 @@ export default function DashboardClientContent({
                   activeTab === item.id ? "bg-primary/15 scale-110 shadow-[0_0_20px_rgba(var(--primary),0.2)]" : "bg-transparent"
                 )}>
                   <item.icon className={cn("w-6 h-6 transition-all duration-500", activeTab === item.id && "fill-current")} />
+
                 </div>
                 <span className={cn(
                   "text-[9px] font-black uppercase tracking-widest transition-all duration-500",
@@ -710,7 +724,11 @@ const Notifications = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="relative h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-foreground hover:bg-white/20 hover:border-white/20 transition-all duration-500 hover:scale-110 active:scale-90 haptic-touch shadow-[0_8px_32px_rgba(0,0,0,0.12)] group">
-          <Bell className={cn("w-5 h-5 transition-transform duration-500 group-hover:rotate-12", unreadCount > 0 && "text-foreground")} />
+          <Bell className={cn(
+            "w-5 h-5 transition-transform duration-500 group-hover:rotate-12",
+            unreadCount > 0 && styles.bellRing,
+            unreadCount > 0 && "text-foreground"
+          )} />
           {unreadCount > 0 && (
             <>
               <span className="absolute top-2.5 right-2.5 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-background animate-ping opacity-75" />
@@ -721,7 +739,9 @@ const Notifications = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[90vw] max-w-[420px] h-[550px] flex flex-col rounded-[2.5rem] border border-white/10 bg-background/40 backdrop-blur-[60px] saturate-[250%] shadow-[0_40px_100px_rgba(0,0,0,0.6)] p-0 text-foreground animate-in slide-in-from-top-4 fade-in zoom-in-95 duration-500 overflow-hidden ring-1 ring-white/10">
         <div className="p-7 border-b border-white/5 flex items-center justify-between bg-white/5">
-          <DropdownMenuLabel className="text-xl font-black uppercase italic tracking-tighter">Activity</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xl font-black uppercase italic tracking-tighter">
+            {unreadCount > 0 ? "Activity" : "Inbox"}
+          </DropdownMenuLabel>
           {unreadCount > 0 && <Badge variant="secondary" className="bg-rose-500 text-white border-none px-3 py-1 rounded-full text-[10px] font-black">{unreadCount} NEW</Badge>}
         </div>
 
@@ -743,26 +763,13 @@ const Notifications = ({
                 <DropdownMenuItem
                   key={n.id}
                   onClick={() => {
-                    router.push(targetUrl);
-
-                    // Handle state updates in background
-                    setActiveLoadingId(`notif-${n.id}`);
-                    if (onNavigate) onNavigate(true);
-
                     // Mark as read without blocking navigation
                     handleMarkRead(n.id).catch(console.error);
 
-                    // Reset loading state after transition
-                    setTimeout(() => {
-                      setActiveLoadingId(null);
-                      if (onNavigate) onNavigate(false);
-                    }, 1000);
+                    // Trigger main content loading spinner
+                    if (onNavigate) onNavigate(true);
 
-                    // Trigger Global Fade
-                    if (setGlobalFade) {
-                      setGlobalFade(true);
-                      setTimeout(() => setGlobalFade(false), 1200);
-                    }
+                    router.push(targetUrl);
                   }}
                   className={cn(
                     "cursor-pointer rounded-2xl p-4 items-start gap-4 transition-all duration-300 border border-transparent relative overflow-hidden",
@@ -771,8 +778,8 @@ const Notifications = ({
                   )}
                 >
                   {activeLoadingId === `notif-${n.id}` && (
-                    <div className="absolute inset-0 bg-primary/5 flex items-center justify-center animate-in fade-in duration-300">
-                      <LoadingSpinner className="h-5 w-5" />
+                    <div className="absolute inset-0 bg-background/40 backdrop-blur-md flex items-center justify-center animate-in fade-in zoom-in-95 duration-200 z-10 rounded-2xl">
+                      <LoadingSpinner className="h-6 w-6 text-primary" />
                     </div>
                   )}
                   <div className={cn("mt-1 w-2 h-2 rounded-full shrink-0", !n.isRead ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border")} />

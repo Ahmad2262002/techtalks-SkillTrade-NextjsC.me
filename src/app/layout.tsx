@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import "./responsive.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AudioProvider } from "@/context/AudioContext";
 import NextTopLoader from 'nextjs-toploader';
@@ -34,8 +35,8 @@ const playfair = Playfair_Display({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5, // Allow zoom for accessibility
+  userScalable: true, // Enable user scaling
   viewportFit: 'cover',
   themeColor: '#000000',
 };
@@ -66,7 +67,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://skilltrade.solutions'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.skilltrade.solutions'),
   alternates: {
     canonical: '/',
   },
@@ -158,14 +159,15 @@ export default function RootLayout({
           <AudioProvider>
             <NextTopLoader
               color="hsl(var(--primary))"
-              initialPosition={0.08}
-              crawlSpeed={200}
-              height={3}
+              initialPosition={0.2}
+              crawlSpeed={100}
+              height={2}
               crawl={true}
               showSpinner={false}
               easing="ease"
-              speed={200}
-              shadow="0 0 10px var(--primary),0 0 5px var(--primary)"
+              speed={100}
+              shadow="0 0 5px var(--primary)"
+              zIndex={9999}
             />
             <div className="page-enter">
               {children}

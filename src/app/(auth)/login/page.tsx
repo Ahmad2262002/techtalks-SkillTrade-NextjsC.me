@@ -23,6 +23,7 @@ import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useToast } from "@/components/ui/use-toast";
+import { useAudioContext } from "@/context/AudioContext";
 
 
 export default function LoginPage() {
@@ -36,6 +37,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const { playSound } = useAudioContext();
 
 
   useGSAP(() => {
@@ -150,6 +152,7 @@ export default function LoginPage() {
       }
 
       // Fast transition - speed up the process
+      playSound('login');
       setTimeout(() => {
         router.refresh();
         router.push("/dashboard");

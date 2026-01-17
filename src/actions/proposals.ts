@@ -95,7 +95,7 @@ const getCachedPublicProposalsV5 = unstable_cache(
           select: {
             id: true,
             name: true,
-            // avatarUrl EXCLUDED to avoid Base64 bloat in cache
+            // avatarUrl EXCLUDED to stay under Next.js 2MB cache limit (prevents payload bloat)
             industry: true,
           }
         },
@@ -116,7 +116,7 @@ export async function listPublicProposals(params: any = {}) {
   const serialized = JSON.stringify(params);
   const proposals = await getCachedPublicProposalsV5(serialized);
 
-  // Batch fetch reputation AND avatars OUTSIDE of cache
+  // Batch fetch reputation AND avatars efficiently outside of cache
   const ownerIds = [...new Set(proposals.map((p: any) => p.ownerId))] as string[];
 
   const [reputationMap, ownersWithAvatars] = await Promise.all([

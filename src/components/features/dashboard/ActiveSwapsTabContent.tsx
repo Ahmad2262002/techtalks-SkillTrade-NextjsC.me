@@ -116,11 +116,6 @@ const SwapCard = React.memo(({ swap, partner, currentUserId, onComplete, onCance
                             otherUserName={partner.name}
                             triggerClassName="h-14 md:h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 shadow-[0_15px_30px_rgba(var(--primary),0.3)] border-none px-6 md:px-8 font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.05] active:scale-95"
                         />
-                        {currentUserId && (swap as any).messages?.filter((m: any) => !m.isRead && String(m.senderId) !== String(currentUserId)).length > 0 && (
-                            <div className="absolute -top-2 -right-2 bg-rose-500 text-white min-w-[24px] h-[24px] rounded-full flex items-center justify-center text-[10px] font-black border-2 border-background animate-bounce-slow shadow-lg shadow-rose-500/30 z-20">
-                                {(swap as any).messages.filter((m: any) => !m.isRead && String(m.senderId) !== String(currentUserId)).length}
-                            </div>
-                        )}
                     </div>
                     {swap.status === 'ACTIVE' && (
                         <Button
@@ -274,7 +269,7 @@ export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, ha
                     )}>
                         <div>
                             <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase italic leading-none flex items-center gap-4 transition-all flex-wrap">
-                                Requests <span className="text-primary opacity-20 text-2xl sm:text-3xl">/ {pendingApps.length}</span>
+                                Requests
                             </h2>
                             <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[8px] sm:text-[10px] opacity-60">Success potential: High</p>
                         </div>
@@ -301,7 +296,7 @@ export const ActiveSwapsTabContent = React.memo(({ applications, swaps, user, ha
                 )}>
                     <div>
                         <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase leading-none flex items-center gap-4 transition-all flex-wrap">
-                            Syncs <span className="text-emerald-500 opacity-20 text-2xl sm:text-3xl">/ {swaps.length}</span>
+                            Syncs
                         </h2>
                         <p className="text-muted-foreground font-bold mt-2 max-w-md uppercase tracking-widest text-[8px] sm:text-[10px] opacity-60">Ongoing collaborations</p>
                     </div>

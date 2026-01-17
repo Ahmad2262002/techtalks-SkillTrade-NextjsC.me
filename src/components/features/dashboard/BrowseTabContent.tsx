@@ -204,7 +204,7 @@ export const BrowseTabContent = React.memo(({ publicOnlyProposals, scrolled, top
                     ) : (
                         publicOnlyProposals.map((p, i) => (
                             <div key={p.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out" style={{ animationDelay: `${Math.min(i * 100, 500)}ms` }}>
-                                <ProposalCard proposal={p} />
+                                <ProposalCard proposal={p} priority={i < 4} />
                             </div>
                         ))
                     )}

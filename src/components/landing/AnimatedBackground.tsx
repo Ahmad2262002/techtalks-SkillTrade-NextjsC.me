@@ -12,61 +12,71 @@ export default function AnimatedBackground() {
     useGSAP(() => {
         const isMobile = window.innerWidth < 768;
         const perfMetrics = detectPerformanceTier();
+        setIsLowPerf(perfMetrics.tier === 'low' || perfMetrics.tier === 'medium');
         const isLowEnd = perfMetrics.tier === 'low';
-        setIsLowPerf(isLowEnd);
+        const isMediumOrLow = perfMetrics.tier === 'low' || perfMetrics.tier === 'medium';
 
         // Enhanced mouse movement with magnetic attraction (skip on low-end)
+        // Throttled mouse movement for magnetic attraction
         if (!isMobile && !isLowEnd) {
+            let rafId: number;
             const moveOrbs = (e: MouseEvent) => {
-                const x = (e.clientX - window.innerWidth / 2) * 0.02;
-                const y = (e.clientY - window.innerHeight / 2) * 0.02;
+                cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    const x = (e.clientX - window.innerWidth / 2) * 0.02;
+                    const y = (e.clientY - window.innerHeight / 2) * 0.02;
+                    setMousePos({ x: e.clientX, y: e.clientY });
 
-                setMousePos({ x: e.clientX, y: e.clientY });
-
-                gsap.to(".orb", {
-                    x: (i) => x * (i % 2 === 0 ? 1 : -1) * (i + 1) * 8,
-                    y: (i) => y * (i % 2 === 0 ? -1 : 1) * (i + 1) * 8,
-                    duration: 8,
-                    ease: "expo.out",
-                    stagger: 0.2
+                    gsap.to(".orb", {
+                        x: (i) => x * (i % 2 === 0 ? 1 : -1) * (i + 1) * 8,
+                        y: (i) => y * (i % 2 === 0 ? -1 : 1) * (i + 1) * 8,
+                        duration: 8,
+                        ease: "expo.out",
+                        stagger: 0.1,
+                        force3D: true
+                    });
                 });
             };
-            window.addEventListener("mousemove", moveOrbs);
-            return () => window.removeEventListener("mousemove", moveOrbs);
+            window.addEventListener("mousemove", moveOrbs, { passive: true } as any);
+            return () => {
+                window.removeEventListener("mousemove", moveOrbs);
+                cancelAnimationFrame(rafId);
+            };
         }
 
-        // Organic drift animation (simplified on low-end)
+        // Organic drift animation (Simplified for 60fps)
         gsap.to(".orb", {
             x: "random(-50, 50)",
             y: "random(-50, 50)",
-            duration: isLowEnd ? 30 : (isMobile ? 25 : 20),
+            duration: isLowEnd ? 20 : (isMobile ? 15 : 12), // Faster animations
             repeat: -1,
             yoyo: true,
             ease: "sine.inOut",
+            force3D: true,
             stagger: {
-                amount: isLowEnd ? 2 : (isMobile ? 3 : 5),
+                amount: isLowEnd ? 1 : (isMobile ? 2 : 3), // Reduced stagger
                 from: "random"
             }
         });
 
-        // Pulsing scale animation (skip on low-end)
-        if (!isLowEnd) {
+        // Pulsing scale animation (skip on low/medium-end)
+        if (!isMediumOrLow) {
             gsap.to(".orb", {
-                scale: "random(0.95, 1.15)",
-                duration: 15,
+                scale: "random(0.98, 1.08)", // Reduced scale range
+                duration: 10, // Faster
                 repeat: -1,
                 yoyo: true,
                 ease: "sine.inOut",
                 stagger: {
-                    amount: 2,
+                    amount: 1.5, // Reduced
                     from: "random"
                 }
             });
 
             // Rotation for more organic feel
             gsap.to(".orb", {
-                rotation: "random(-15, 15)",
-                duration: 20,
+                rotation: "random(-10, 10)", // Reduced rotation
+                duration: 15, // Faster
                 repeat: -1,
                 yoyo: true,
                 ease: "sine.inOut"

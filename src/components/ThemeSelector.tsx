@@ -108,7 +108,7 @@ export function ThemeSelector({ align = 'end' }: ThemeSelectorProps) {
             <DropdownMenuContent
                 align={align}
                 sideOffset={16}
-                className="w-72 rounded-[2rem] bg-background/40 backdrop-blur-[60px] saturate-[250%] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.5)] p-3 space-y-1 z-[110] animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500 ring-1 ring-white/10"
+                className="w-72 rounded-[2rem] bg-background/60 backdrop-blur-xl saturate-[160%] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-3 space-y-1 z-[110] animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500"
             >
                 <div className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 border-b border-white/5 mb-2 flex items-center justify-between">
                     <span>Atmospheric Sync</span>

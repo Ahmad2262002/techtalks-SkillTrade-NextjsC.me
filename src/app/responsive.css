@@ -1,0 +1,67 @@
+/* Mobile-first responsive breakpoints */
+/* Force mobile layout in landscape mode */
+
+@media (max-width: 768px) {
+
+    /* Mobile portrait and landscape - treat the same */
+    html {
+        font-size: 16px;
+    }
+
+    /* Support for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    /* Tablet */
+    html {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 1025px) {
+
+    /* Desktop */
+    html {
+        font-size: 16px;
+    }
+}
+
+/* Force mobile layout in landscape orientation */
+@media (max-height: 500px) and (orientation: landscape) {
+
+    /* This is mobile landscape - use mobile styles */
+    html {
+        font-size: 14px;
+    }
+
+    /* Reduce header height in mobile landscape */
+    header {
+        min-height: 50px !important;
+    }
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+
+    /* Reduce blur on mobile for better performance */
+    .bgLayer {
+        filter: blur(40px) !important;
+        /* Reduced from 80px */
+    }
+
+    /* Simplify animations */
+    /* REMOVED: global override was making animations too fast on mobile */
+
+    /* Disable expensive effects on mobile */
+    .orb {
+        will-change: auto !important;
+    }
+}

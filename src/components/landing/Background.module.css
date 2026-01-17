@@ -2,7 +2,8 @@
     position: fixed;
     inset: 0;
     z-index: -1;
-    filter: blur(80px);
+    filter: blur(60px);
+    /* Reduced from 80px for better performance */
     pointer-events: none;
     overflow: hidden;
     background:
@@ -11,25 +12,47 @@
     background-blend-mode: soft-light;
     opacity: 0.95;
     animation: gradientShift 30s ease-in-out infinite;
+    /* Performance optimizations */
+    will-change: opacity, transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: layout style paint;
+    content-visibility: auto;
+}
+
+/* Mobile optimization - reduce blur even more */
+@media (max-width: 768px) {
+    .bgLayer {
+        filter: blur(30px);
+        /* Much lighter on mobile */
+        opacity: 0.8;
+    }
 }
 
 @keyframes gradientShift {
 
     0%,
     100% {
-        filter: blur(80px) hue-rotate(0deg);
+        opacity: 0.95;
+        transform: scale(1);
     }
 
     50% {
-        filter: blur(90px) hue-rotate(10deg);
+        opacity: 1;
+        transform: scale(1.02);
     }
 }
 
 .orb {
     position: absolute;
     border-radius: 50%;
-    will-change: transform;
+    will-change: transform, opacity;
     mix-blend-mode: screen;
+    /* GPU acceleration */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    contain: layout style paint;
 }
 
 :global(.light) .orb {

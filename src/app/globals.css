@@ -179,6 +179,11 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-feature-settings: "kern" 1, "liga" 1;
+  /* Performance optimizations */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+  font-display: swap;
 }
 
 /* Scrollbar */

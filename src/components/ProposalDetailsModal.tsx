@@ -145,7 +145,7 @@ export function ProposalDetailsModal({
                                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Verified Opportunity</span>
                                         </div>
 
-                                        <DialogTitle className="text-4xl sm:text-5xl md:text-7xl font-playfair font-medium text-foreground tracking-tight leading-[1.05] mb-2 break-words italic">
+                                        <DialogTitle className="text-3xl sm:text-4xl md:text-5xl font-playfair font-medium text-foreground tracking-tight leading-[1.1] mb-2 break-words italic">
                                             {proposal.title}
                                         </DialogTitle>
 
@@ -164,10 +164,10 @@ export function ProposalDetailsModal({
                                             }
 
                                             return (
-                                                <div className="inline-flex items-center gap-2 mt-4 px-5 py-2 rounded-full border border-primary/20 bg-primary/5">
-                                                    <span className="text-primary animate-pulse">{category.icon}</span>
-                                                    <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-primary/80">
-                                                        Expertise Alignment: {category.label}
+                                                <div className="inline-flex items-center gap-2 mt-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5">
+                                                    <span className="text-primary scale-75 animate-pulse">{category.icon}</span>
+                                                    <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-primary/80">
+                                                        Alignment: {category.label}
                                                     </span>
                                                 </div>
                                             );
@@ -311,8 +311,8 @@ export function ProposalDetailsModal({
                                 </>
                             ) : (
                                 !isApplying ? (
-                                    <Button onClick={() => setIsApplying(true)} className="h-16 w-full md:w-auto px-12 rounded-full text-lg font-playfair italic font-medium bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-98 transition-all duration-700 gap-3">
-                                        Initiate Strategic Synergy <ArrowRight className="w-5 h-5" />
+                                    <Button onClick={() => setIsApplying(true)} className="h-14 w-full md:w-auto px-10 rounded-full text-base font-playfair italic font-medium bg-primary text-primary-foreground shadow-lg hover:scale-105 active:scale-98 transition-all duration-500 gap-2">
+                                        Establish Synergy <ArrowRight className="w-4 h-4" />
                                     </Button>
                                 ) : (
                                     <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">

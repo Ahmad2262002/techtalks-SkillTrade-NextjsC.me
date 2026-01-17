@@ -284,7 +284,7 @@ function ProfileSidebar({ profileData, formData, setFormData, editMode, isOwnPro
     const progressPercent = Math.min(100, (profileData.reputation.reputationPoints / nextLevelExp) * 100);
 
     return (
-        <aside className={cn("rounded-[2rem] p-4 sm:p-8 flex flex-col items-center text-center relative overflow-hidden transition-all duration-500 group", "bg-background/60 backdrop-blur-2xl border border-white/[0.08]", "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_48px_rgba(0,0,0,0.16)]", styles.sidebar)}>
+        <aside className={cn("flex flex-col items-center text-center relative overflow-hidden transition-all duration-500 group", "bg-background/60 backdrop-blur-2xl border border-white/[0.08]", "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_48px_rgba(0,0,0,0.16)]", styles.sidebar)}>
 
             {/* Subtle iOS-style gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
@@ -444,41 +444,41 @@ function ProfileNavbar({ isOwnProfile, editMode, onEditToggle, onShare }: { isOw
     };
 
     return (
-        <nav className="sticky top-6 z-50 w-full max-w-7xl mx-auto rounded-2xl bg-background/80 backdrop-blur-xl border border-white/10 shadow-premium hover:shadow-intense transition-all duration-700 p-3 flex justify-between items-center mb-8 animate-in slide-in-from-top-4 duration-700">
+        <nav className="sticky top-4 sm:top-6 z-50 w-full max-w-7xl mx-auto rounded-2xl bg-background/80 backdrop-blur-xl border border-white/10 shadow-premium p-2 sm:p-3 flex justify-between items-center mb-4 sm:mb-8 animate-in slide-in-from-top-4 duration-700">
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
                 <Button
                     variant="ghost"
                     onClick={() => router.push("/dashboard")}
-                    className="rounded-xl h-10 pl-3 pr-4 bg-background/40 hover:bg-background/80 border border-white/5 hover:border-white/20 text-muted-foreground hover:text-foreground transition-all duration-300 group"
+                    className="rounded-xl h-9 sm:h-10 pl-2 sm:pl-3 pr-3 sm:pr-4 bg-background/40 hover:bg-background/80 border border-white/5 hover:border-white/20 text-muted-foreground hover:text-foreground transition-all duration-300 group active:scale-95"
                 >
-                    <div className="w-6 h-6 rounded-lg bg-background flex items-center justify-center mr-2 group-hover:scale-105 transition-transform shadow-sm">
-                        <ArrowLeft className="w-3.5 h-3.5" />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-background flex items-center justify-center mr-1.5 sm:mr-2 group-hover:scale-105 transition-transform shadow-sm">
+                        <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </div>
-                    <span className="font-semibold text-sm">Dashboard</span>
+                    <span className="font-semibold text-xs sm:text-sm">Dashboard</span>
                 </Button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
                 <Button
                     variant="ghost"
                     onClick={handleShareClick}
-                    className="h-10 w-10 p-0 rounded-xl bg-background/40 hover:bg-background/80 border border-white/5 hover:border-white/20 text-primary transition-all duration-300"
+                    className="h-9 w-9 sm:h-10 sm:w-10 p-0 rounded-xl bg-background/40 hover:bg-background/80 border border-white/5 hover:border-white/20 text-primary transition-all duration-300 active:scale-90"
                     title="Share Profile"
                 >
-                    {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                    {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 </Button>
 
-                <div className="bg-background/40 p-1 rounded-xl border border-white/5">
+                <div className="bg-background/40 p-0.5 sm:p-1 rounded-xl border border-white/5">
                     <ThemeSelector />
                 </div>
 
                 {isOwnProfile && !editMode && (
                     <Button
                         onClick={onEditToggle}
-                        className="h-10 px-4 sm:px-6 rounded-xl font-bold text-xs uppercase tracking-wide bg-foreground text-background hover:bg-foreground/90 hover:scale-105 shadow-md transition-all duration-300"
+                        className="h-9 sm:h-10 px-3 sm:px-6 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-wide bg-foreground text-background hover:bg-foreground/90 active:scale-95 shadow-md transition-all duration-300"
                     >
-                        <Settings className="w-3.5 h-3.5 mr-2 animate-spin-slow" />
+                        <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 sm:mr-2 animate-spin-slow" />
                         <span className="hidden sm:inline">Edit Profile</span>
                         <span className="sm:hidden">Edit</span>
                     </Button>
@@ -678,16 +678,16 @@ function SkillsTab({ skills, editMode }: { skills: ProfileData['skills'], editMo
                     <h2 className="text-xl font-bold text-foreground tracking-tight">Expertise</h2>
                 </div>
                 {editMode && (
-                    <div className="flex items-center gap-2 bg-background/50 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl shadow-xl transition-all duration-500 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/20 focus-within:shadow-glow">
+                    <div className="flex flex-1 sm:flex-none items-center gap-2 bg-background/50 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl shadow-xl transition-all duration-500 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/20 focus-within:shadow-glow">
                         <Input
                             value={newSkill}
                             onChange={e => setNewSkill(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddSkill()}
-                            placeholder="Add a skill..."
-                            className="border-none focus-visible:ring-0 font-bold w-[200px] h-10 bg-transparent"
+                            placeholder="Add skill..."
+                            className="border-none focus-visible:ring-0 font-bold flex-1 sm:w-[200px] h-9 sm:h-10 bg-transparent text-xs sm:text-sm"
                         />
-                        <Button size="sm" onClick={handleAddSkill} disabled={isAddingSkill} className="rounded-xl h-10 w-10 p-0 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-500 hover:scale-110">
-                            {isAddingSkill ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                        <Button size="sm" onClick={handleAddSkill} disabled={isAddingSkill} className="rounded-xl h-9 w-9 sm:h-10 sm:w-10 p-0 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-500 hover:scale-110 active:scale-90">
+                            {isAddingSkill ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </Button>
                     </div>
                 )}
@@ -813,11 +813,18 @@ function ReviewsTab({ reviews }: { reviews: any[] }) {
 
 function EditModeActions({ onSave, onCancel }: { onSave: () => void, onCancel: () => void }) {
     return (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex gap-4 bg-foreground p-3 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-background/10 backdrop-blur-xl animate-float">
-            <Button variant="ghost" onClick={onCancel} className="h-14 px-8 rounded-2xl font-bold text-background hover:bg-background/20 hover:text-background transition-all">
-                Discard Changes
+        <div className={styles.editActions}>
+            <Button
+                variant="ghost"
+                onClick={onCancel}
+                className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all active:scale-95"
+            >
+                Discard
             </Button>
-            <Button onClick={onSave} className="h-14 px-10 rounded-2xl font-bold text-foreground bg-background hover:bg-primary hover:text-white transition-all shadow-xl">
+            <Button
+                onClick={onSave}
+                className="flex-[1.5] h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold text-background bg-foreground hover:bg-foreground/90 transition-all shadow-xl active:scale-95"
+            >
                 Confirm & Save
             </Button>
         </div>

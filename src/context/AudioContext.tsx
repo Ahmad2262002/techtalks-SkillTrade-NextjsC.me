@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 
-export type SoundType = 'notification' | 'success' | 'error' | 'click' | 'chat-send' | 'chat-receive';
+export type SoundType = 'notification' | 'success' | 'error' | 'click' | 'chat-send' | 'chat-receive' | 'login' | 'logout';
 
 interface AudioContextType {
     playSound: (type: SoundType) => void;
@@ -28,20 +28,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
         if (savedVolume) setVolume(parseFloat(savedVolume));
         if (savedMuted) setIsMuted(savedMuted === 'true');
-
-        /* 
-        // Preload sounds - Commented out to prevent 404s since assets are missing
-        const soundFiles: SoundType[] = ['notification', 'success', 'error', 'click'];
-        soundFiles.forEach(type => {
-            try {
-                const audio = new Audio(`/sounds/${type}.mp3`);
-                audio.preload = 'auto';
-                sounds.current[type] = audio;
-            } catch (e) {
-                console.warn(`Failed to initialize audio for ${type}:`, e);
-            }
-        });
-        */
     }, []);
 
     // Persist settings
@@ -66,111 +52,170 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
             const now = ctx.currentTime;
 
-            // iOS-Style System Sounds
+            // iOS-Style & Luxury System Sounds
             switch (type) {
                 case 'click':
-                    // "Taptic" Click - Short, low frequency, dull
+                    // "Taptic" Click
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(150, now);
                     gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.3, now + 0.005);
+                    gain.gain.linearRampToValueAtTime(0.3 * volume, now + 0.005);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
                     osc.start(now);
                     osc.stop(now + 0.04);
                     break;
 
                 case 'success':
-                    // "Payment Success" - Clean, rising chime (Apple Pay style)
+                    // Clean, rising chime
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, now); // D5
-                    osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.3); // D6
-
-                    const oscS2 = ctx.createOscillator();
-                    const gainS2 = ctx.createGain();
-                    oscS2.connect(gainS2);
-                    gainS2.connect(ctx.destination);
-                    oscS2.frequency.setValueAtTime(880, now); // A5
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.3);
 
                     gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.05);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-
-                    gainS2.gain.setValueAtTime(0, now);
-                    gainS2.gain.linearRampToValueAtTime(0.1, now + 0.05);
-                    gainS2.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
 
                     osc.start(now);
                     osc.stop(now + 0.6);
-                    oscS2.start(now);
-                    oscS2.stop(now + 0.6);
                     break;
-                case 'error':
-                    // "Haptic Failure" - Low, double pulse
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(80, now);
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
-                    gain.gain.linearRampToValueAtTime(0, now + 0.15); // End pulse 1
 
-                    gain.gain.linearRampToValueAtTime(0, now + 0.25); // Gap
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.27); // Start pulse 2
-                    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                case 'chat-send':
+                    // "Pop" (iPhone Sent) - Quick, hollow wood/bubble pop
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.15 * volume, now + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
 
                     osc.start(now);
-                    osc.stop(now + 0.45);
+                    osc.stop(now + 0.1);
                     break;
-                case 'notification':
-                    // "Tri-tone" (Classic iOS) - Three distinct notes
-                    osc.frequency.setValueAtTime(523.25, now); // C5
-                    osc.frequency.setValueAtTime(440.00, now + 0.15); // A4
-                    osc.frequency.setValueAtTime(587.33, now + 0.3); // D5
+
+                case 'chat-receive':
+                    // "Note" (iPhone Received) - Two distinct, clean bell tones (A4 -> E5)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now); // A4
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
 
                     gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
-                    gain.gain.setValueAtTime(0.2, now + 0.1);
-                    gain.gain.linearRampToValueAtTime(0.1, now + 0.2);
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.02);
+                    gain.gain.setValueAtTime(0.2 * volume, now + 0.08); // Sustain first
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.12); // Pulse second
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+
+                    // Add a high shimmery overtone
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880, now);
+                    osc2.frequency.setValueAtTime(1318.5, now + 0.1);
+                    gain2.gain.setValueAtTime(0, now);
+                    gain2.gain.linearRampToValueAtTime(0.05 * volume, now + 0.02);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc2.start(now);
+                    osc2.stop(now + 0.3);
+                    break;
+
+                case 'login':
+                    // Luxury Swell - Low piano-style chord fading in with shimmery harmonics
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(65.41, now); // C2
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.3 * volume, now + 0.5); // Slow swell
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 2.0);
+
+                    // Shimmer harmonic 1
+                    const harm1 = ctx.createOscillator();
+                    const hGain1 = ctx.createGain();
+                    harm1.connect(hGain1);
+                    hGain1.connect(ctx.destination);
+                    harm1.type = 'sine';
+                    harm1.frequency.setValueAtTime(130.81, now); // C3
+                    hGain1.gain.setValueAtTime(0, now);
+                    hGain1.gain.linearRampToValueAtTime(0.1 * volume, now + 0.8);
+                    hGain1.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
+
+                    // Shimmer harmonic 2 (Luxury bell)
+                    const harm2 = ctx.createOscillator();
+                    const hGain2 = ctx.createGain();
+                    harm2.connect(hGain2);
+                    hGain2.connect(ctx.destination);
+                    harm2.type = 'sine';
+                    harm2.frequency.setValueAtTime(523.25, now + 0.4); // Sparkle appears later
+                    hGain2.gain.setValueAtTime(0, now);
+                    hGain2.gain.linearRampToValueAtTime(0, now + 0.4);
+                    hGain2.gain.linearRampToValueAtTime(0.05 * volume, now + 0.8);
+                    hGain2.gain.exponentialRampToValueAtTime(0.01, now + 3.0);
+
+                    osc.start(now);
+                    harm1.start(now);
+                    harm2.start(now);
+                    osc.stop(now + 3.0);
+                    harm1.stop(now + 3.0);
+                    harm2.stop(now + 3.0);
+                    break;
+
+                case 'logout':
+                    // Luxury Descent - Deep breathy exhale with a final soft "thud"
+                    osc.type = 'sine'; // Breathy component
+                    osc.frequency.setValueAtTime(110, now);
+                    osc.frequency.exponentialRampToValueAtTime(55, now + 1.2);
+
+                    gain.gain.setValueAtTime(0.15 * volume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+
+                    // Noise-like exhale
+                    const whiteNoise = ctx.createOscillator(); // Using a low square for breathiness
+                    const nGain = ctx.createGain();
+                    whiteNoise.connect(nGain);
+                    nGain.connect(ctx.destination);
+                    whiteNoise.type = 'square';
+                    whiteNoise.frequency.setValueAtTime(50, now);
+                    nGain.gain.setValueAtTime(0.02 * volume, now);
+                    nGain.gain.linearRampToValueAtTime(0.01, now + 0.8);
+                    nGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+
+                    osc.start(now);
+                    whiteNoise.start(now);
+                    osc.stop(now + 1.5);
+                    whiteNoise.stop(now + 1.5);
+                    break;
+
+                case 'notification':
+                    // "Tri-tone"
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(440.00, now + 0.15);
+                    osc.frequency.setValueAtTime(587.33, now + 0.3);
+
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.05);
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.1);
+                    gain.gain.linearRampToValueAtTime(0.1 * volume, now + 0.2);
                     gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
 
                     osc.start(now);
                     osc.stop(now + 0.6);
                     break;
-                case 'chat-send':
-                    // "Swoosh" / "Pop" - Quick upward swipe
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(200, now);
-                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
-
+                case 'error':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(80, now);
                     gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.02);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.15);
+
+                    gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                    gain.gain.linearRampToValueAtTime(0.2 * volume, now + 0.27);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.4);
 
                     osc.start(now);
-                    osc.stop(now + 0.2);
-                    break;
-                case 'chat-receive':
-                    // "Note" (Modern iOS) - Clean, simple bell
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(880, now); // A5
-
-                    // Add a slight overtone for "bell" character
-                    const oscR2 = ctx.createOscillator();
-                    const gainR2 = ctx.createGain();
-                    oscR2.connect(gainR2);
-                    gainR2.connect(ctx.destination);
-                    oscR2.frequency.setValueAtTime(1760, now); // A6 (Octave up)
-
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-
-                    gainR2.gain.setValueAtTime(0, now);
-                    gainR2.gain.linearRampToValueAtTime(0.05, now + 0.01);
-                    gainR2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-
-                    osc.start(now);
-                    osc.stop(now + 0.4);
-                    oscR2.start(now);
-                    oscR2.stop(now + 0.2);
+                    osc.stop(now + 0.45);
                     break;
             }
         } catch (e) {

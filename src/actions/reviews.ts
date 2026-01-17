@@ -240,42 +240,100 @@ export const getBatchReputationStats = cache(async (userIds: string[]): Promise<
 
   const uniqueUserIds = [...new Set(userIds)];
 
-  // 1. Fetch data sequentially to respect small connection pool (limit 5)
-  // We explicitly await each to ensure we never have more than 1 query at a time here
-  const swaps = await prisma.swap.findMany({
-    where: {
-      status: "COMPLETED",
-      OR: [
-        { teacherId: { in: uniqueUserIds } },
-        { studentId: { in: uniqueUserIds } }
-      ]
-    },
-    select: { teacherId: true, studentId: true }
-  });
+  // 1. Efficient parallel database aggregation (SQL Level)
+  const [swapsAsTeacher, swapsAsStudent, reviewAggregates, endorsementCounts] = await Promise.all([
+    prisma.swap.groupBy({
+      by: ['teacherId'],
+      where: { teacherId: { in: uniqueUserIds }, status: "COMPLETED" },
+      _count: true
+    }),
+    prisma.swap.groupBy({
+      by: ['studentId'],
+      where: { studentId: { in: uniqueUserIds }, status: "COMPLETED" },
+      _count: true
+    }),
+    prisma.review.groupBy({
+      by: ['receiverId'],
+      where: { receiverId: { in: uniqueUserIds } },
+      _count: { rating: true },
+      _sum: { rating: true }
+    }),
+    prisma.userSkill.groupBy({
+      by: ['userId'],
+      where: { userId: { in: uniqueUserIds }, source: "ENDORSED" },
+      _count: true
+    })
+  ]);
 
-  const reviews = await prisma.review.findMany({
-    where: { receiverId: { in: uniqueUserIds } },
-    select: { receiverId: true, rating: true }
-  });
+  // 2. Map results for O(1) lookup
+  const teacherCounts = Object.fromEntries(swapsAsTeacher.map((g: any) => [g.teacherId, g._count]));
+  const studentCounts = Object.fromEntries(swapsAsStudent.map((g: any) => [g.studentId, g._count]));
+  const reviewCounts = Object.fromEntries(reviewAggregates.map((g: any) => [g.receiverId, g._count.rating]));
+  const reviewSums = Object.fromEntries(reviewAggregates.map((g: any) => [g.receiverId, g._sum.rating || 0]));
+  const endorsementsMap = Object.fromEntries(endorsementCounts.map((g: any) => [g.userId, g._count]));
 
-  const userSkills = await prisma.userSkill.findMany({
-    where: {
-      userId: { in: uniqueUserIds },
-      source: "ENDORSED"
-    },
-    select: { userId: true }
-  });
-
-  // 2. Process data into maps
+  // 3. Final calculation using optimized data
   const statsMap: Record<string, ReputationStats> = {};
+  uniqueUserIds.forEach(userId => {
+    const completedSwaps = (teacherCounts[userId] || 0) + (studentCounts[userId] || 0);
+    const totalReviews = reviewCounts[userId] || 0;
+    const totalRatingSum = reviewSums[userId] || 0;
 
-  for (const userId of uniqueUserIds) {
-    const userSwaps = swaps.filter((s: { teacherId: string; studentId: string }) => s.teacherId === userId || s.studentId === userId).length;
-    const userReviews = reviews.filter((r: { receiverId: string; rating: number }) => r.receiverId === userId);
-    const userEndorsements = userSkills.filter((us: { userId: string }) => us.userId === userId).length;
+    // We need to approximate the average rating for calculateReputation
+    // but calculateReputation expects the full list of reviews for some reason.
+    // Let's modify calculateReputation to take summary data or mock the list.
+    // For now, let's mock the list with a single entry if we have the average, 
+    // but that's slightly inaccurate for positive review count.
 
-    statsMap[userId] = calculateReputation(userSwaps, userReviews, userEndorsements);
-  }
+    // Actually, calculateReputation uses `reviews.filter(r => r.rating >= 4).length`.
+    // Let's also fetch positive review count in the aggregation.
+  });
+
+  // Re-calculating with more granular aggregation to avoid fetching ALL reviews
+  const [positiveReviewCounts] = await Promise.all([
+    prisma.review.groupBy({
+      by: ['receiverId'],
+      where: { receiverId: { in: uniqueUserIds }, rating: { gte: 4 } },
+      _count: true
+    })
+  ]);
+
+  const positiveCounts = Object.fromEntries(positiveReviewCounts.map((g: any) => [g.receiverId, g._count]));
+
+  uniqueUserIds.forEach(userId => {
+    const completedSwaps = (teacherCounts[userId] || 0) + (studentCounts[userId] || 0);
+    const totalReviews = reviewCounts[userId] || 0;
+    const totalRatingSum = reviewSums[userId] || 0;
+    const positiveReviews = positiveCounts[userId] || 0;
+    const averageRating = totalReviews > 0 ? Number((totalRatingSum / totalReviews).toFixed(1)) : 0;
+    const endorsements = endorsementsMap[userId] || 0;
+
+    // Direct reputation points logic to avoid needing the full reviews array
+    const basePoints = (completedSwaps * 10) + (positiveReviews * 5) + (endorsements * 3);
+    const reputationPoints = Math.floor(basePoints * (1 + (averageRating / 5)));
+
+    let level = 1;
+    let title = "Newcomer";
+    let color = "text-slate-400";
+
+    if (reputationPoints >= 1000) { level = 5; title = "Skill Legend"; color = "text-amber-400"; }
+    else if (reputationPoints >= 400) { level = 4; title = "Master Mentor"; color = "text-purple-400"; }
+    else if (reputationPoints >= 150) { level = 3; title = "Swap Pro"; color = "text-sky-400"; }
+    else if (reputationPoints >= 50) { level = 2; title = "Rising Talent"; color = "text-emerald-400"; }
+
+    statsMap[userId] = {
+      completedSwaps,
+      totalReviews,
+      positiveReviews,
+      averageRating,
+      totalEndorsements: endorsements,
+      reputationPoints,
+      level,
+      title,
+      color,
+      battingAverage: totalReviews === 0 ? 0 : Number((positiveReviews / totalReviews).toFixed(2)),
+    };
+  });
 
   return statsMap;
 });
