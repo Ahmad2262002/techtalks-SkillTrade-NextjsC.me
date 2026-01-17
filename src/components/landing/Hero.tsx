@@ -293,13 +293,13 @@ export default function Hero({ userId }: { userId?: string | null }) {
           <div className="flex flex-col items-center gap-2 group cursor-default hero-badge">
             <div className="flex -space-x-4 transition-transform duration-300 group-hover:scale-105">
               {[
-                "https://randomuser.me/api/portraits/women/44.jpg",
-                "https://randomuser.me/api/portraits/men/32.jpg",
-                "https://randomuser.me/api/portraits/women/68.jpg",
-                "https://randomuser.me/api/portraits/men/86.jpg",
-                "https://randomuser.me/api/portraits/women/12.jpg"
+                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150",
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+                "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150",
+                "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150",
+                "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150"
               ].map((src, i) => (
-                <div key={i} className="relative w-10 h-10 rounded-full border-2 border-background overflow-hidden relative grayscale group-hover:grayscale-0 transition-all duration-500 shadow-lg cursor-pointer" title="Elite Learner">
+                <div key={i} className="relative w-10 h-10 rounded-full border-2 border-background overflow-hidden relative shadow-lg cursor-pointer" title="Elite Learner">
                   <Image
                     src={src}
                     alt="Elite Learner"

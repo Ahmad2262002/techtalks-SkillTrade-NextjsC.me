@@ -8,8 +8,8 @@ import { logger } from "@/lib/logger";
 
 // --- Zod Schema for Validation ---
 const CreateProposalSchema = z.object({
-  title: z.string().min(20, "Title must be at least 20 characters.").max(60, "Title is too long. Keep it concise (max 60 chars)."),
-  description: z.string().min(20, "Please provide a detailed description (at least 20 chars).").max(500, "Description is too long."),
+  title: z.string().min(5, "Title must be at least 5 characters.").max(100, "Title is too long. Keep it concise (max 100 chars)."),
+  description: z.string().min(10, "Please provide a description (at least 10 chars).").max(1000, "Description is too long."),
   modality: z.enum(["Remote", "In-Person"] as const),
   offeredSkillNames: z.string().min(1, "You must offer at least one skill."),
   neededSkillNames: z.string().min(1, "You must seek at least one skill."),

@@ -67,9 +67,9 @@ export function PostProposalModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Constants
-  const MIN_TITLE = 20;
-  const MAX_TITLE = 50;
-  const MIN_DESC = 20;
+  const MIN_TITLE = 5;
+  const MAX_TITLE = 100;
+  const MIN_DESC = 10;
 
   // Initialize form if editing
   React.useEffect(() => {
@@ -205,7 +205,7 @@ export function PostProposalModal({
 
   // Render the Image Browser UI
   const renderImageBrowser = () => (
-    <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12 rounded-[2.5rem]">
+    <div className="bg-gradient-to-br from-primary/25 via-background to-background p-10 py-12 rounded-[2.5rem]">
       <DialogHeader className="mb-8">
         <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">Select Photo</DialogTitle>
         <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2 opacity-70">
@@ -276,7 +276,7 @@ export function PostProposalModal({
 
   // Render the Main Proposal Form UI
   const renderProposalForm = () => (
-    <div className="bg-gradient-to-br from-primary/10 via-background to-background p-10 py-12 rounded-[2.5rem]">
+    <div className="bg-gradient-to-br from-primary/25 via-background to-background p-10 py-12 rounded-[2.5rem]">
       <DialogHeader className="mb-10">
         <DialogTitle className="text-4xl font-black text-foreground tracking-tighter uppercase italic">{proposal ? "Refine Sync" : "Launch Initiative"}</DialogTitle>
         <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2 opacity-70">

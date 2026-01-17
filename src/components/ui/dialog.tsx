@@ -104,7 +104,7 @@ const DialogContent = React.forwardRef<
 
     return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200 overflow-y-auto"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 transition-opacity duration-200 overflow-y-auto"
             onClick={() => onOpenChange(false)}
         >
             <div
@@ -122,10 +122,10 @@ const DialogContent = React.forwardRef<
             >
                 {!hideDefaultClose && (
                     <div
-                        className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-2 bg-secondary/50 backdrop-blur-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
+                        className="absolute right-4 top-4 rounded-full p-2 bg-black/40 dark:bg-white/10 backdrop-blur-3xl transition-all active:scale-90 z-[60] flex items-center justify-center cursor-pointer shadow-lg border border-white/5 group h-8 w-8 sm:h-9 sm:w-9"
                         onClick={() => onOpenChange(false)}
                     >
-                        <X className="h-6 w-6 sm:h-4 sm:w-4" />
+                        <X className="h-4 w-4 text-white transition-transform group-hover:scale-110 duration-300" strokeWidth={3} />
                         <span className="sr-only">Close</span>
                     </div>
                 )}
