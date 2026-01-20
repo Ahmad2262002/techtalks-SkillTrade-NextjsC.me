@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 
+import { updateTag } from "next/cache";
+
 export async function searchSkills(query: string, limit = 10) {
   if (!query.trim()) return [];
 
@@ -42,6 +44,7 @@ export async function addSkillToCurrentUser(input: { name: string }) {
     },
   });
 
+  updateTag(`profile-${userId}`);
   return userSkill;
 }
 
@@ -53,8 +56,14 @@ export async function removeManualSkillFromCurrentUser(userSkillId: string) {
     where: { id: userSkillId },
   });
 
-  if (!existing || existing.userId !== userId) {
-    throw new Error("Skill not found");
+  if (!existing) {
+    // Idempotent: if it's already gone, good.
+    updateTag(`profile-${userId}`);
+    return true;
+  }
+
+  if (existing.userId !== userId) {
+    throw new Error("Unauthorized");
   }
 
   // Only allow hard-delete for manual skills; endorsed skills should be hidden instead.
@@ -62,6 +71,7 @@ export async function removeManualSkillFromCurrentUser(userSkillId: string) {
     await prisma.userSkill.delete({ where: { id: userSkillId } });
   }
 
+  updateTag(`profile-${userId}`);
   return true;
 }
 
@@ -80,10 +90,13 @@ export async function setUserSkillVisibility(params: {
     throw new Error("Skill not found");
   }
 
-  return prisma.userSkill.update({
+  const updated = await prisma.userSkill.update({
     where: { id: params.userSkillId },
     data: { isVisible: params.isVisible },
   });
+
+  updateTag(`profile-${userId}`);
+  return updated;
 }
 
 export async function endorseUserSkill(params: {
@@ -95,7 +108,7 @@ export async function endorseUserSkill(params: {
 
   // In a fuller system you might ensure currentUserId has completed a swap
   // with the target user for this skill before endorsing.
-  return prisma.userSkill.update({
+  const updated = await prisma.userSkill.update({
     where: {
       userId_skillId: {
         userId: params.userId,
@@ -109,6 +122,9 @@ export async function endorseUserSkill(params: {
       source: "ENDORSED",
     },
   });
+
+  updateTag(`profile-${params.userId}`);
+  return updated;
 }
 
 
