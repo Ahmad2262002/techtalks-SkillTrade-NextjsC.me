@@ -14,6 +14,9 @@ export interface PerformanceMetrics {
     reducedMotion: boolean;
 }
 
+// Singleton cache for performance metrics
+let cachedMetrics: PerformanceMetrics | null = null;
+
 /**
  * Detect device performance tier
  */
@@ -24,6 +27,8 @@ export function detectPerformanceTier(): PerformanceMetrics {
             reducedMotion: false,
         };
     }
+
+    if (cachedMetrics) return cachedMetrics;
 
     // Check for reduced motion preference
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -89,7 +94,7 @@ export function detectPerformanceTier(): PerformanceMetrics {
         tier = 'low';
     }
 
-    return {
+    cachedMetrics = {
         tier,
         deviceMemory,
         hardwareConcurrency,
@@ -97,6 +102,8 @@ export function detectPerformanceTier(): PerformanceMetrics {
         connectionSpeed,
         reducedMotion,
     };
+
+    return cachedMetrics;
 }
 
 /**

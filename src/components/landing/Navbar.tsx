@@ -130,6 +130,7 @@ const Navbar = ({ userId }: NavbarProps) => {
               alt="SkillTrade Logo"
               width={34}
               height={34}
+              priority
               className="object-contain transition-transform duration-500 group-hover:scale-110 relative z-10 sm:w-[38px] sm:h-[38px] icon-premium"
             />
           </div>

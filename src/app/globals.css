@@ -44,101 +44,114 @@
 }
 
 .elite-light {
-  /* Elite Mode Light - Apple iOS Inspired */
-  --background: 0 0% 100%;
-  /* #ffffff - Pure white */
-  --foreground: 0 0% 0%;
-  /* #000000 - True black */
+  /* Elite Mode Light - Professional "Alabaster" Luxury */
+  --background: 210 20% 98%;
+  /* #fafbfc - Off-white, not harsh */
+  --foreground: 220 15% 10%;
+  /* #16181d - Rich charcoal, readable */
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
+  /* Pure white cards */
+  --card-foreground: 220 15% 13%;
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 0%;
-  --primary: 211 100% 50%;
-  /* #007aff - iOS blue */
+  --popover-foreground: 220 15% 13%;
+
+  --primary: 215 25% 27%;
+  /* #334155 - Sophisticated Slate Blue */
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 5% 96%;
-  /* #f2f2f7 - iOS light gray */
-  --secondary-foreground: 0 0% 0%;
-  --muted: 240 5% 96%;
-  --muted-foreground: 0 0% 45%;
-  /* #737373 */
-  --accent: 240 5% 91%;
-  /* #e5e5ea */
-  --accent-foreground: 0 0% 0%;
-  --destructive: 0 100% 59%;
-  /* #ff3b30 - iOS red */
+
+  --secondary: 210 40% 96%;
+  /* #f1f5f9 - Subtle Cool Gray */
+  --secondary-foreground: 220 15% 13%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  /* #64748b */
+
+  --accent: 210 40% 96%;
+  --accent-foreground: 220 15% 13%;
+
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 6% 90%;
-  /* #d1d1d6 */
-  --input: 240 6% 90%;
-  --ring: 211 100% 50%;
+
+  --border: 214 32% 91%;
+  /* #e2e8f0 - Crisp border */
+  --input: 214 32% 91%;
+  --ring: 215 25% 27%;
   --radius: 0.75rem;
 }
 
 .elite-dark {
-  /* Elite Mode Dark - Apple iOS Dark Mode */
-  --background: 0 0% 0%;
-  /* #000000 - True black (OLED) */
-  --foreground: 0 0% 100%;
-  /* #ffffff */
-  --card: 0 0% 11%;
-  /* #1c1c1e - iOS dark gray */
-  --card-foreground: 0 0% 100%;
-  --popover: 0 0% 11%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 212 100% 52%;
-  /* #0a84ff - iOS blue (dark mode) */
+  /* Elite Mode Dark - "Gunmetal" Luxury */
+  --background: 220 20% 8%;
+  /* #101218 - Deep Gunmetal */
+  --foreground: 210 20% 98%;
+  /* #f8fafc */
+
+  --card: 220 18% 11%;
+  /* #161921 - Slightly lighter */
+  --card-foreground: 210 20% 98%;
+
+  --popover: 220 18% 11%;
+  --popover-foreground: 210 20% 98%;
+
+  --primary: 38 92% 50%;
+  /* #f59e0b - Amber Gold (Luxury Accent) */
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 6% 15%;
-  /* #2c2c2e */
-  --secondary-foreground: 0 0% 100%;
-  --muted: 240 6% 15%;
-  --muted-foreground: 0 0% 60%;
-  /* #999999 */
-  --accent: 240 6% 20%;
-  /* #3a3a3c */
+
+  --secondary: 220 15% 16%;
+  /* #23262f */
+  --secondary-foreground: 210 20% 98%;
+
+  --muted: 220 15% 16%;
+  --muted-foreground: 215 20% 65%;
+  /* #94a3b8 */
+
+  --accent: 220 15% 20%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 100% 64%;
-  /* #ff453a - iOS red (dark) */
+
+  --destructive: 0 62% 30%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 6% 20%;
-  /* #3a3a3c */
-  --input: 240 6% 20%;
-  --ring: 212 100% 52%;
+
+  --border: 220 15% 18%;
+  /* #262a36 */
+  --input: 220 15% 18%;
+  --ring: 38 92% 50%;
   --radius: 0.75rem;
 }
 
 .cybersecurity {
   /* Cybersecurity Mode - Deep, Secure & Technical */
   --background: 240 10% 4%;
-  /* #0a0a0c - Near black */
   --foreground: 180 100% 50%;
-  /* #00ffff - Electric cyan */
   --card: 240 10% 8%;
-  /* #121217 */
   --card-foreground: 180 100% 90%;
   --popover: 240 10% 8%;
   --popover-foreground: 180 100% 90%;
   --primary: 180 100% 50%;
-  /* #00ffff - Cyber Cyan */
   --primary-foreground: 240 10% 4%;
   --secondary: 150 100% 50%;
-  /* #00ff00 - Matrix Green */
   --secondary-foreground: 240 10% 4%;
   --muted: 240 10% 12%;
   --muted-foreground: 180 20% 60%;
   --accent: 280 100% 65%;
-  /* #bc66ff - Tech Purple */
   --accent-foreground: 0 0% 100%;
   --destructive: 0 100% 50%;
-  /* Pure Red */
   --destructive-foreground: 0 0% 100%;
   --border: 180 100% 20%;
-  /* Dim cyan border */
   --input: 180 100% 10%;
   --ring: 180 100% 50%;
   --radius: 0.25rem;
-  /* Sharp, technical corners */
+}
+
+/* --- MOBILE LANDSCAPE OPTIMIZATIONS --- */
+@media (max-height: 500px) and (orientation: landscape) {
+
+  /* Fix vertical cramping on phones in landscape */
+  section {
+    min-height: auto !important;
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+  }
 }
 
 @theme inline {

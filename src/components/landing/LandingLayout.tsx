@@ -1,28 +1,28 @@
 "use client";
 
-import Hero from "./Hero";
-import Features from "./Features";
-import Spotlight from "./Spotlight";
-import RecentReviews from "./RecentReviews";
 import Footer from "./Footer";
 import dynamic from "next/dynamic";
+import { ReactNode } from "react";
 
 // Dynamic imports for heavy immersive components (Client-only, non-blocking)
 const CursorFollower = dynamic(() => import("./CursorFollower"), { ssr: false });
 const ScrollProgress = dynamic(() => import("./ScrollProgress"), { ssr: false });
 const ParticleField = dynamic(() => import("./ParticleField"), { ssr: false });
 const AIChatbot = dynamic(() => import("./AIChatbot"), { ssr: false });
+const AnimatedBackground = dynamic(() => import("./AnimatedBackground"), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-background -z-50" />
+});
 
 interface LandingLayoutProps {
-  userId?: string | null;
-  proposals: any[];
-  reviews: any[];
+  children: ReactNode;
 }
 
-export default function LandingLayout({ userId, proposals, reviews }: LandingLayoutProps) {
+export default function LandingLayout({ children }: LandingLayoutProps) {
   return (
     <>
       {/* Immersive Effects Layer */}
+      <AnimatedBackground />
       <CursorFollower />
       <ScrollProgress />
       <ParticleField />
@@ -30,10 +30,7 @@ export default function LandingLayout({ userId, proposals, reviews }: LandingLay
 
       {/* Main Content */}
       <main className="relative z-10">
-        <Hero userId={userId} />
-        <Features />
-        <Spotlight proposals={proposals} />
-        <RecentReviews reviews={reviews} />
+        {children}
         <Footer />
       </main>
     </>

@@ -1,282 +1,15 @@
-"use client";
-
-import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Zap, Sparkles, Trophy } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import styles from "../../app/(public)/Landing.module.css";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
 import { PostProposalModal } from "@/components/PostProposalModal";
 import Image from "next/image";
-import { usePerformanceTier } from "@/lib/performance";
-// Audio removed for simplicity
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import HeroClient from "./HeroClient";
 
 export default function Hero({ userId }: { userId?: string | null }) {
-  const container = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const [cursorPos, setCursorPos] = useState({ x: 50, y: 50 });
-  const specs = usePerformanceTier();
-
-  const [particles, setParticles] = useState<{ left: string; top: string }[]>([]);
-
-  // Generate particles only once on mount to avoid double-render cycle
-  useEffect(() => {
-    if (!specs?.tier) return;
-    const particleCount = specs.tier === 'ultra' ? 40 :
-      specs.tier === 'high' ? 25 :
-        specs.tier === 'medium' ? 15 : 5;
-
-    setParticles([...Array(particleCount)].map(() => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-    })));
-  }, [specs?.tier]);
-
-  useGSAP(() => {
-    const originalHTML = titleRef.current?.innerHTML;
-
-    const splitTextWithLines = (selector: string): void => {
-      const title = container.current?.querySelector(selector) as HTMLElement | null;
-      if (!title || !originalHTML) return;
-
-      const processNode = (node: Node): string => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent || "";
-          return text.split("").map((c: string) =>
-            `<span class="char" style="display:inline-block; transform: translateZ(0); -webkit-backface-visibility: hidden; backface-visibility: hidden;">${c === " " ? "&nbsp;" : c}</span>`
-          ).join("");
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-          const element = node as HTMLElement;
-          if (element.tagName === "BR") return "<br>";
-          const content = Array.from(element.childNodes).map(processNode).join("");
-          const attributes = Array.from(element.attributes)
-            .map(attr => `${attr.name}="${attr.value}"`)
-            .join(" ");
-          return `<${element.tagName.toLowerCase()} ${attributes}>${content}</${element.tagName.toLowerCase()}>`;
-        }
-        return "";
-      };
-
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = originalHTML;
-      title.innerHTML = Array.from(tempDiv.childNodes).map(processNode).join("");
-    };
-
-    // Unified Smart Animation Sequence
-    const primaryEase = "power4.out";
-    const durationMultiplier = specs?.tier === 'ultra' ? 1.6 : specs?.tier === 'high' ? 1.4 : 1.2;
-    const isMobile = window.innerWidth < 768;
-    const isUltra = specs?.tier === 'ultra';
-
-    if (isUltra) {
-      splitTextWithLines(`.${styles.heroTitle}`);
-    }
-
-    const chars = gsap.utils.toArray(".char");
-    const introTl = gsap.timeline();
-
-    // Universal entrance sequence adjusted by spec tier
-    introTl
-      .fromTo(".hero-badge", {
-        opacity: 0,
-        y: isMobile ? -20 : -10,
-        scale: isMobile ? 0.9 : 1
-      }, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: (isMobile ? 1.2 : 1.8) * durationMultiplier,
-        ease: primaryEase,
-        clearProps: specs?.tier === 'ultra' ? "" : "all"
-      })
-      .fromTo(chars.length > 0 ? chars : `.${styles.heroTitle}`, {
-        opacity: 0,
-        y: 30,
-      }, {
-        opacity: 1,
-        y: 0,
-        stagger: specs?.tier === 'ultra' ? 0.02 : specs?.tier === 'high' ? 0.01 : 0,
-        duration: (isMobile ? 1.2 : 2) * durationMultiplier,
-        ease: primaryEase,
-        clearProps: specs?.tier === 'ultra' ? "" : "all"
-      }, "-=2.8")
-      .fromTo(`.${styles.heroDescription}`, {
-        opacity: 0,
-        y: 20,
-      }, {
-        opacity: 0.9,
-        y: 0,
-        duration: 1.2,
-        ease: "power3.out",
-        clearProps: "all"
-      }, "-=1.1")
-      .fromTo(`.${styles.heroActions}`, {
-        opacity: 0,
-        y: 20,
-        scale: 0.95
-      }, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 1.2,
-        ease: "expo.out",
-        clearProps: "all"
-      }, "-=1.0")
-      .fromTo(".stat-card", {
-        opacity: 0,
-        y: 30,
-        scale: 0.95,
-      }, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        stagger: specs?.tier === 'ultra' ? 0.1 : 0.05,
-        duration: 1.4,
-        ease: "expo.out",
-        clearProps: "all"
-      }, "-=1.1")
-      .fromTo(".anim-load", {
-        opacity: 0,
-        y: 30,
-      }, {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "expo.out",
-        clearProps: "all",
-        force3D: true
-      }, "-=1.2");
-
-    // Optimize GSAP ticker for 60fps target
-    gsap.ticker.fps(60);
-    gsap.ticker.lagSmoothing(1000, 16);
-
-    // Scroll-based parallax (Optimized)
-    gsap.to(".parallax-content", {
-      scrollTrigger: {
-        trigger: container.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-        fastScrollEnd: true,
-        preventOverlaps: true
-      },
-      y: 150,
-      opacity: 0.5,
-      ease: "none",
-      force3D: true
-    });
-
-    // Floating particles (Optimized)
-    gsap.to(".particle", {
-      y: "random(-100, 100)",
-      x: "random(-100, 100)",
-      opacity: "random(0.1, 0.4)",
-      duration: "random(15, 25)",
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-      force3D: true
-    });
-
-    // Cursor tracking for spotlight effect
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!container.current) return;
-      const rect = container.current.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      setCursorPos({ x, y });
-    };
-
-    container.current?.addEventListener("mousemove", handleMouseMove);
-
-    // Enhanced Magnetic Button Effect with Spring Physics
-    const magneticBtns = container.current?.querySelectorAll(".proto-btn") as NodeListOf<HTMLElement>;
-    magneticBtns.forEach(btn => {
-      btn.addEventListener("mouseenter", () => {
-        gsap.to(btn, {
-          scale: 1.05,
-          duration: 0.4,
-          ease: "power2.out"
-        });
-
-      });
-
-      btn.addEventListener("mousemove", (e) => {
-        const { left, top, width, height } = btn.getBoundingClientRect();
-        const x = e.clientX - (left + width / 2);
-        const y = e.clientY - (top + height / 2);
-        gsap.to(btn, {
-          x: x * 0.4,
-          y: y * 0.4,
-          duration: 0.5,
-          ease: "power3.out"
-        });
-      });
-
-      btn.addEventListener("mouseleave", () => {
-        gsap.to(btn, {
-          x: 0,
-          y: 0,
-          scale: 1,
-          duration: 1.2,
-          ease: "power3.out"
-        });
-      });
-    });
-
-    // Floating animation for hero badge
-    gsap.to(".hero-badge", {
-      y: -10,
-      duration: 2.5,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut"
-    });
-
-    return () => {
-      if (titleRef.current && originalHTML) {
-        titleRef.current.innerHTML = originalHTML;
-      }
-    };
-  }, { scope: container });
-
   return (
-    <section id="hero" ref={container} className={cn(styles.hero, "relative pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden min-h-[100dvh] flex items-center justify-center w-full max-w-full overflow-x-hidden")}>
-
-      {/* Cursor-following Spotlight */}
-      <div
-        className="absolute inset-0 pointer-events-none transition-opacity duration-300 opacity-0 hover:opacity-100"
-        style={{
-          background: `radial-gradient(circle 600px at ${cursorPos.x}% ${cursorPos.y}%, rgba(var(--primary), 0.15), transparent 40%)`,
-        }}
-      />
-
-      {/* Mesh Gradient Overlay - Softened for Elegance */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(var(--primary),0.07),transparent)] pointer-events-none" />
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full">
-        {particles.map((p, i) => (
-          <div
-            key={i}
-            className="particle absolute w-1 h-1 bg-primary/20 rounded-full will-change-transform"
-            style={{
-              left: p.left,
-              top: p.top,
-              willChange: "transform"
-            }}
-          />
-        ))}
-      </div>
-
+    <HeroClient userId={userId}>
       <div className={`${styles.container} relative z-10 text-center parallax-content`}>
 
         {/* Social Proof & Badge Stack */}
@@ -299,14 +32,16 @@ export default function Hero({ userId }: { userId?: string | null }) {
                 "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150",
                 "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150"
               ].map((src, i) => (
-                <div key={i} className="relative w-10 h-10 rounded-full border-2 border-background overflow-hidden relative shadow-lg cursor-pointer" title="Elite Learner">
+                <div key={i} className="relative w-10 h-10 rounded-full border-2 border-background overflow-hidden shadow-lg cursor-pointer" title="Elite Learner">
                   <Image
                     src={src}
                     alt="Elite Learner"
                     fill
                     className="object-cover"
                     sizes="40px"
-                    loading="eager"
+                    priority={i < 3} // Prioritize first few avatars
+                    loading={i < 3 ? "eager" : "lazy"}
+                    fetchPriority={i === 0 ? "high" : "auto"}
                   />
                 </div>
               ))}
@@ -324,7 +59,7 @@ export default function Hero({ userId }: { userId?: string | null }) {
         </div>
 
         {/* Hero Title - Maybach Typography */}
-        <h1 ref={titleRef} className={cn(styles.heroTitle, "mb-10 font-playfair font-medium px-4 break-words text-5xl sm:text-7xl md:text-8xl leading-[1.05] tracking-tight text-balance")}>
+        <h1 className={cn(styles.heroTitle, "mb-10 font-playfair font-medium px-4 break-words text-5xl sm:text-7xl md:text-8xl leading-[1.05] tracking-tight text-balance")}>
           The Pinnacle of <br className="hidden sm:block" />
           <span className="text-primary italic relative inline-block">
             Collaborative Expertise.
@@ -394,13 +129,18 @@ export default function Hero({ userId }: { userId?: string | null }) {
         </div>
 
         {/* Scroll Indicator - Softened and Refined */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 animate-pulse-slow opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer group" onClick={() => {
-          window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-        }}>
+        {/* Note: This interaction is handled in client logic by the fact that it's just scrolling, but we can't easily attach the click handler here in server component 
+            We should probably move this specific interactive bit to a small client component or just let HeroClient handle it if we can find it.
+            Actually, let's keep it simple: We can leave the onClick here if we wrap it in a client component or if we just remove the JS click dependency and use href="#footer" or similar, 
+            but for smooth scroll it needs JS. 
+            For now, let's just make it a simple anchor or accept that it might be static until hydrated. 
+            Better: Use a client component for this small button or just let HeroClient attach the listener if we give it a class.
+        */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 animate-pulse-slow opacity-30 hover:opacity-100 transition-all duration-500 cursor-pointer group scroll-indicator">
           <span className="text-[9px] font-medium uppercase tracking-[0.6em] text-primary/40 group-hover:text-primary/80 transition-all duration-700">Ascend</span>
           <div className="w-[1px] h-12 bg-gradient-to-b from-primary to-transparent" />
         </div>
       </div>
-    </section>
+    </HeroClient>
   );
 }

@@ -431,25 +431,27 @@ export function PostProposalModal({
                 />
               </div>
               {userSkills && userSkills.length > 0 && (
-                <Select onValueChange={(val) => {
-                  addOfferedSkill(val);
-                  if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
-                }}>
-                  <SelectTrigger className="h-12 w-12 p-0 flex items-center justify-center border-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 rounded-xl hover:bg-emerald-500/10 transition-all">
-                    <Plus className="w-5 h-5" />
-                  </SelectTrigger>
-                  <SelectContent align="end" className="rounded-xl border-2 border-border">
-                    {userSkills.map((s) => {
-                      const skillName = (s as any).skill?.name || s.name;
-                      const skillId = (s as any).skill?.id || s.id;
-                      return (
-                        <SelectItem key={skillId} value={skillName} className="font-bold">
-                          {skillName}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <div className="relative z-[100]">
+                  <Select onValueChange={(val) => {
+                    addOfferedSkill(val);
+                    if (errors.offered) setErrors(prev => ({ ...prev, offered: "" }));
+                  }}>
+                    <SelectTrigger className="h-12 w-12 p-0 flex items-center justify-center border-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 rounded-xl hover:bg-emerald-500/10 transition-all">
+                      <Plus className="w-5 h-5" />
+                    </SelectTrigger>
+                    <SelectContent align="end" className="rounded-xl border-2 border-border z-[1000]">
+                      {userSkills.map((s) => {
+                        const skillName = (s as any).skill?.name || s.name;
+                        const skillId = (s as any).skill?.id || s.id;
+                        return (
+                          <SelectItem key={skillId} value={skillName} className="font-bold">
+                            {skillName}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
             </div>
             {errors.offered && <p className="text-[9px] font-black uppercase text-destructive ml-1 animate-in fade-in slide-in-from-left-2">{errors.offered}</p>}

@@ -26,7 +26,7 @@ const createPrismaClient = () => {
     query: {
       $allModels: {
         async $allOperations({ operation, model, args, query }) {
-          const MAX_RETRIES = 3;
+          const MAX_RETRIES = 5;
           let lastError;
 
           for (let i = 0; i < MAX_RETRIES; i++) {
@@ -34,8 +34,21 @@ const createPrismaClient = () => {
               return await query(args);
             } catch (error: any) {
               lastError = error;
-              if (error?.code === 'P2024' && i < MAX_RETRIES - 1) {
-                await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, i)));
+              // P1001: Can't reach database server
+              // P1017: Server closed the connection
+              // P2024: Connection pool timeout
+              const recoverableErrors = ['P1001', 'P1017', 'P2024', 'P2023'];
+
+              // Check for Prisma codes OR low-level socket/connection reset errors (like 10054 on Windows)
+              const errorMsg = error?.message?.toLowerCase() || "";
+              const isSocketError = errorMsg.includes("connectionreset") ||
+                errorMsg.includes("forcibly closed") ||
+                errorMsg.includes("socket") ||
+                errorMsg.includes("10054");
+
+              if ((recoverableErrors.includes(error?.code) || isSocketError) && i < MAX_RETRIES - 1) {
+                const delay = 300 * Math.pow(2, i);
+                await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
               }
               throw error;

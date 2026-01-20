@@ -85,7 +85,7 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                     {proposals.map((p) => (
                         <div
                             key={p.id}
@@ -95,13 +95,14 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                             }}
                             className={cn(
                                 styles.glassCard,
-                                "group relative p-3 overflow-hidden spotlight-card cursor-pointer flex flex-col transition-all duration-300 hover:border-primary/30 will-change-transform"
+                                "group relative p-3 overflow-hidden spotlight-card cursor-pointer flex flex-col transition-all duration-300 hover:border-primary/30 will-change-transform",
+                                "active:scale-95 md:hover:scale-[1.02]" // Subtle touch feedback
                             )}
                         >
                             <div className={styles.viscousGlow} />
 
                             {/* IMAGE: Fixed aspect ratio prevents "jumping" */}
-                            <div className="relative aspect-[16/11] w-full overflow-hidden rounded-[1.2rem] border border-white/5 bg-neutral-900">
+                            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[1rem] border border-white/5 bg-neutral-900 shadow-inner">
                                 {p.imageUrl ? (
                                     <Image
                                         src={p.imageUrl}
@@ -116,21 +117,21 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                                     </div>
                                 )}
 
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
                                 <div className="absolute top-3 right-3 z-10">
-                                    <div className="bg-black/20 backdrop-blur-xl px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-primary" />
-                                        <span className="text-[9px] font-bold text-white uppercase tracking-widest">{p.modality}</span>
+                                    <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2 shadow-sm">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+                                        <span className="text-[10px] font-bold text-white uppercase tracking-widest leading-none">{p.modality}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* CONTENT */}
-                            <div className="px-5 py-7 flex flex-col flex-grow">
-                                <div className="flex items-center gap-3 mb-6">
+                            <div className="px-3 py-5 flex flex-col flex-grow relative">
+                                <div className="flex items-center gap-3 mb-4">
                                     <div className="relative shrink-0">
-                                        <Avatar className="h-9 w-9 border border-foreground/10 shadow-lg">
+                                        <Avatar className="h-8 w-8 border border-foreground/10 shadow-lg ring-2 ring-background">
                                             <AvatarImage src={p.owner?.avatarUrl || ""} />
                                             <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{p.owner?.name?.[0]}</AvatarFallback>
                                         </Avatar>
@@ -139,26 +140,26 @@ export default function Spotlight({ proposals }: SpotlightProps) {
                                         </div>
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <span className="text-xs font-bold text-foreground truncate">{p.owner?.name}</span>
+                                        <span className="text-xs font-bold text-foreground truncate max-w-[120px]">{p.owner?.name}</span>
                                         <div className="flex items-center gap-1">
                                             <Star className="w-2 h-2 text-amber-500 fill-current" />
-                                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest truncate">{p.owner?.reputation?.title || "Contributor"}</span>
+                                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest truncate">{p.owner?.reputation?.title || "Contributor"}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <h3 className="text-2xl font-black tracking-tight mb-8 group-hover:text-primary transition-colors line-clamp-2 leading-[0.85] uppercase italic border-l-4 border-primary/20 pl-4">
+                                <h3 className="text-xl sm:text-2xl font-black tracking-tighter mb-6 group-hover:text-primary transition-colors line-clamp-2 leading-[1.1] text-balance">
                                     {p.title}
                                 </h3>
 
-                                <div className="grid grid-cols-2 gap-3 p-4 rounded-[1.2rem] bg-foreground/[0.03] border border-foreground/5 mt-auto">
-                                    <div className="min-w-0">
-                                        <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-primary/60 block mb-0.5">Providing</span>
-                                        <span className="text-[10px] font-bold truncate block uppercase tracking-tighter">{formatSkills(p.offeredSkills)}</span>
+                                <div className="grid grid-cols-2 gap-2 mt-auto">
+                                    <div className="p-3 rounded-xl bg-foreground/[0.03] border border-foreground/5 min-w-0">
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70 block mb-1">Offered</span>
+                                        <span className="text-[11px] font-bold truncate block">{formatSkills(p.offeredSkills)}</span>
                                     </div>
-                                    <div className="border-l border-foreground/10 pl-3 min-w-0">
-                                        <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-orange-500/60 block mb-0.5">Seeking</span>
-                                        <span className="text-[10px] font-bold truncate block uppercase tracking-tighter">{formatSkills(p.neededSkills)}</span>
+                                    <div className="p-3 rounded-xl bg-foreground/[0.03] border border-foreground/5 min-w-0">
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-orange-500/70 block mb-1">Needed</span>
+                                        <span className="text-[11px] font-bold truncate block">{formatSkills(p.neededSkills)}</span>
                                     </div>
                                 </div>
                             </div>

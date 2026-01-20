@@ -1,7 +1,10 @@
 import React from "react";
 import Navbar from "@/components/landing/Navbar";
-import AnimatedBackground from "@/components/landing/AnimatedBackground";
-import LandingLayout from "@/components/landing/LandingLayout"; // We will create this
+import LandingLayout from "@/components/landing/LandingLayout";
+import Hero from "@/components/landing/Hero";
+import Features from "@/components/landing/Features";
+import Spotlight from "@/components/landing/Spotlight";
+import RecentReviews from "@/components/landing/RecentReviews";
 
 import { getCurrentUserId } from "@/actions/auth";
 import { listPublicProposals } from "@/actions/proposals";
@@ -16,14 +19,14 @@ export default async function Home() {
 
   return (
     <>
-      <AnimatedBackground />
       <Navbar userId={userId} />
       {/* LandingLayout handles the layout and immersive components */}
-      <LandingLayout
-        userId={userId}
-        proposals={proposals}
-        reviews={reviews}
-      />
+      <LandingLayout>
+        <Hero userId={userId} />
+        <Features />
+        <Spotlight proposals={proposals} />
+        <RecentReviews reviews={reviews} />
+      </LandingLayout>
     </>
   );
 }

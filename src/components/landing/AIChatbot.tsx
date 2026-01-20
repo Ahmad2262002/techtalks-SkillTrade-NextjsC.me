@@ -10,7 +10,7 @@ export default function AIChatbot() {
     const [isOpen, setIsOpen] = useState(false);
     const [isLowPerf, setIsLowPerf] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'assistant', content: 'Greetings. I am your Strategic Sync Orchestrator. How can I facilitate your next professional expertise exchange today?' }
+        { role: 'assistant', content: 'System Online. I am the SkillTrade Strategic Sync Orchestrator. How may I facilitate your professional expertise exchange today?' }
     ]);
     const [inputValue, setInputValue] = useState('');
     const chatEndRef = useRef<HTMLDivElement>(null);
@@ -56,20 +56,35 @@ export default function AIChatbot() {
         }
     };
 
-    const handleSend = () => {
-        if (!inputValue.trim()) return;
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSend = async () => {
+        if (!inputValue.trim() || isLoading) return;
 
         const userMsg = { role: 'user', content: inputValue };
         setMessages(prev => [...prev, userMsg]);
         setInputValue('');
+        setIsLoading(true);
 
-        // Simulated AI response
-        setTimeout(() => {
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: [...messages, userMsg] }),
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch response');
+
+            const data = await response.json();
+            setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+        } catch (error) {
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: "That's a great question! SkillTrade's cooperative growth protocol allows you to exchange your unique expertise for the skills you need. Our matching algorithm connects you with 2.4k+ elite learners."
+                content: "I apologize, but I am unable to process your request at this moment. Please check your connection."
             }]);
-        }, 1000);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     if (isLowPerf && !isOpen) {
@@ -143,13 +158,25 @@ export default function AIChatbot() {
                                         ? "bg-primary text-white rounded-tr-none shadow-lg"
                                         : "bg-muted/50 backdrop-blur-md border border-white/5 rounded-tl-none"
                                 )}>
-                                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                                 </div>
                                 <span className="text-[10px] text-muted-foreground font-black uppercase opacity-40">
                                     {msg.role === 'user' ? 'Sync User' : 'ST Intelligence'}
                                 </span>
                             </div>
                         ))}
+                        {isLoading && (
+                            <div className="flex flex-col gap-2 max-w-[85%] mr-auto items-start">
+                                <div className="p-4 rounded-[1.5rem] bg-muted/50 backdrop-blur-md border border-white/5 rounded-tl-none flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                    <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                    <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" />
+                                </div>
+                                <span className="text-[10px] text-muted-foreground font-black uppercase opacity-40">
+                                    Analyzing
+                                </span>
+                            </div>
+                        )}
                         <div ref={chatEndRef} />
                     </div>
 
